@@ -1,41 +1,8 @@
-import SwiftUI
-
-/// The main call-to-action button used across the app.
-struct PrimaryButton: View {
-    private let title: LocalizedStringKey
-    private let systemImage: String?
-    private let action: () -> Void
-
-    init(_ title: LocalizedStringKey, systemImage: String? = nil, action: @escaping () -> Void) {
-        self.title = title
-        self.systemImage = systemImage
-        self.action = action
-    }
-
-    var body: some View {
-        Button(action: action) {
-            Group {
-                if let systemImage {
-                    Label(title, systemImage: systemImage)
-                } else {
-                    Text(title)
-                }
-            }
-            .font(Theme.Fonts.headline)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, Theme.Spacing.xs)
-        }
-        .buttonStyle(.borderedProminent)
-        .buttonBorderShape(.capsule)
-        .controlSize(.large)
-    }
-}
-
-#Preview {
-    VStack {
-        PrimaryButton("Continue") {}
-        PrimaryButton("Start", systemImage: "play.fill") {}
-            .disabled(true)
-    }
-    .padding()
-}
+// PrimaryButton.swift - bottom button (ابدأ / التالي).
+//
+// Contains:
+// - A View with a full-width prominent button.
+// - Inputs: title, optional icon, action.
+// - Uses DesignSystem fonts and colors. Supports the disabled state.
+//
+// Used by: OnboardingView, TaskSheet, ActivityFlowView, InstructionsSheet.
