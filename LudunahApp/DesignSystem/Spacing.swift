@@ -23,6 +23,8 @@ struct Spacing {
     // أبعاد العناصر الثابتة (Layout Dimensions)
     static let pageMargin: CGFloat = 24      // الهامش الجانبي الافتراضي للصفحات
     static let controlHeight: CGFloat = 50   // الارتفاع الافتراضي للأزرار وحقول الإدخال الأساسية
+    static let ButtonWidth: CGFloat = 324    // العرض اللازرار
+    static let ButtonTextPaddingHeight: CGFloat = 34  // الطول اللازرار
     static let controlHeightSm: CGFloat = 44 // الارتفاع للأزرار وعناصر التحكم الثانوية
     static let chipHeight: CGFloat = 32      // الارتفاع الافتراضي للبطاقات الصغيرة (Chips/Badges)
     static let headerTitleOffset: CGFloat = 62 // الإزاحة المخصصة لعناوين الهيدر الكبيرة
