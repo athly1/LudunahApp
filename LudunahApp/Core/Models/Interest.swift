@@ -1,23 +1,52 @@
-// Enum with cases art, sport, gaming and a String raw value.
-// Computed title and icon name.
-
+// Interest.swift - enum: art, sport, gaming.
+//
+// Contains:
+// - Enum with cases art, sport, gaming and a String raw value.
+// - Conforms to CaseIterable, Identifiable, Codable, Hashable.
+// - Computed title and icon name.
+//
 // Used by: onboarding, Home, Activity screens, AppState, StorageService.
 
-// Conforms to CaseIterable ( make an array of the cases) , Identifiable (each with id to be able to run ForEach function)
-enum Interest: String, CaseIterable, Identifiable {
+// Interest.swift - تعريف الاهتمامات المتاحة للمستخدم.
+//
+// Contains:
+// - Interest enum with supported interests.
+// - Display title and icon for each interest.
+//
+// Used by: AppState, onboarding, Home, Activity screens.
+// Learn: enum, CaseIterable, Identifiable, Codable, Hashable.
+import Foundation
+//String    يعطي كل اهتمام قيمة نصية، مثل "art"
+//CaseIterable    يسمح لنا نعرض جميع الاهتمامات
+//Identifiable    يعطي كل اهتمام هوية مميزة
+//Codable    يساعدنا نحفظ الاهتمامات ونسترجعها
+//Hashable    يسمح لنا نخزن الاهتمامات في Set بدون تكرار
+enum Interest: String, CaseIterable, Identifiable, Codable, Hashable {
     case art
-    case sports
+    case sport
     case gaming
-    case cooking
-
-    var id: Self { self }
-
-    var name: String {
+    
+    var id: String { rawValue }
+    // اسم الاهتمام الذي يظهر للمستخدم بالعربي
+    var title: String {
         switch self {
-        case .art: "الفن السعودي"
-        case .sports: "الرياضة"
-        case .gaming: "الألعاب الإلكترونية"
-        case .cooking:  "الطبخ"
+        case .art:
+            return " الفن السعودي"
+        case .sport:
+            return "الرياضة"
+        case .gaming:
+            return " الألعاب الالكترونية"
         }
     }
-}
+    
+    // اسم الأيقونة المستخدمة من SF Symbols
+    var iconName: String {
+        switch self {
+        case .art:
+            return "paintpalette"
+        case .sport:
+            return "figure.run"
+        case .gaming:
+            return "gamecontroller"
+        }
+    }}
