@@ -58,6 +58,8 @@ struct gameLearnView: View {
                 .listRowInsets(.horizontal, Spacing.pageMargin)
                 // Remove the List's own extra side margins,
                 // so the space on each side is exactly the 24 above
+                
+                //FIX THIS REPLACE
                 .listSectionMargins(.horizontal, 0)
 
             }

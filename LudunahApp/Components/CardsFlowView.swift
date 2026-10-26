@@ -27,7 +27,7 @@ struct InfoCard: View {
                 .lineSpacing(8)
                 //text take the whole horizontal area but vetical contain safe area 23
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(minHeight: 95)
+
         }
         .padding(.horizontal, 24)
         .padding(.top, 14)
@@ -40,8 +40,8 @@ struct InfoCard: View {
 }
 
 //Shows the cards one by one, swipe up for the next one
-
 struct CardsFlowView: View {
+    
     //Inputs
     let cards: [CardData] //All cards in order
     var onFinish: () -> Void = {} //What happens when user taps "انتهيت"
@@ -51,12 +51,13 @@ struct CardsFlowView: View {
 
     var body: some View {
         
-        VStack(spacing: 40) {
+        VStack(spacing: -42) {
             
             //The current card
             let card = cards[index]
             let style = iconStyles[card.icon] ?? defaultStyle
 
+            //One Card
             InfoCard(
                 CardIcon: style.symbol,
                 iconBackground: style.background,
@@ -64,17 +65,26 @@ struct CardsFlowView: View {
                 text: card.text
             )
             .id(index) //new number = new card
-            .transition(.push(from: .bottom)) //new card comes from the bottom
+            .transition(.push(from: .bottom)) //Key Transition: new card comes from the bottom
             .frame(maxHeight: .infinity)
 
-            //Last card → button, otherwise → swipe hint
+            //if Last card Show Done button
+            //otherwise Show swipe hint
             if index == cards.count - 1 {
-                Button("انتهيت") { onFinish() }
+                PrimaryButton(Title: "انتهيت") {
+                    // Action Here going Home
+                    onFinish() }
             } else {
-                Image(systemName: "hand.point.up")
-                    .font(.system(size: 44))
+                Image(systemName: "hand.draw")
+                    .font(.system(size: 42))
                     .foregroundStyle(Color.textPrimary)
-                    .symbolEffect(.bounce, options: .repeating)
+                    .rotationEffect(.degrees(15)) //tilt the hand
+                  //move up then down, forever
+                  .phaseAnimator([false, true]) { content, isUp in
+                     content.offset(y: isUp ? -55 : 0)
+                 } animation: { _ in
+                     .easeInOut(duration: 0.8)
+                 }
             }
         }
         .padding(.horizontal, 16)
@@ -93,7 +103,7 @@ struct CardsFlowView: View {
 
 #Preview {
     CardsFlowView(cards: [
-        CardData(icon: "hook", text: "تخيّل إنك لعبت على نفس الخريطة ٥٠ مرة."),
+        CardData(icon: "hook", text: "تخيّل إنك لعبت على نفس الخريطة ٥٠ رتخيّل إنك لعبت على نفس الخريطة ٥٠ مرة. في أول مرة كنت تضيع وتسأل نفسك: وين أروح؟ الحين تعرف وين تختبئ، وأي طريق أقصر، ومن وين يجي الخصم، وكل هذا بدون ما تفكر."),
         CardData(icon: "brain", text: "في دماغك منطقة صغيرة اسمها الحُصين."),
         CardData(icon: "question", text: "تقدر ترسم خريطة لعبتك المفضلة من ذاكرتك؟")
     ])
