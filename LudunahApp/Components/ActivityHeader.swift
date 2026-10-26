@@ -1,86 +1,96 @@
-// ActivityHeader.swift - title + back + chips.
-//
-// Contains:
-// - A View with a back button, the interest title, and one chip per ActivityStep.
-// - The current and completed steps are highlighted.
-// - Inputs: interest, current step, back action.
-//
-// Used by: ActivityFlowView.
+// this file has title + back + chips. The top part that repeats on every activity screen
+// A struct view with a back button, the interest title, and one chip per Activity type based on energy level.
+// Inputs: interest, activity type, back action.
+// Used by: ActivityFlowView, Views of (create,learn,act)
 
 import SwiftUI
 
-// The top part that repeats on every activity screen:
-// back button + page title, then the interest chip + the step chip.
 struct ActivityHeader: View {
 
-    // Page title (same on every activity screen, so it's a constant)
+    // Page title
     let pageTitle: String = "النشاط اليومي"
 
-    // Interest chip: the screen passes its text and its color (e.g. gaming)
+    // Interest type chip
     var interestTitle: String
     var interestColor: Color
 
-    // Step chip when learn: the screen passes its text and SF Symbol name
+    // activity type chip
     var stepTitle: String
     var stepIcon: String
 
-    // What the back button does, passed in by the screen using the header
-    // (defaults to doing nothing so the screen can leave it out for now)
+    // What the back button does, passed in by the screen using this header, (defaults to doing nothing so the screen can leave it out for now)
     var onBack: () -> Void = {}
 
     var body: some View {
-        // VStack = items stacked top to bottom: first row, then the chips row
-        VStack(spacing: Spacing.space16) {
 
-            // Row 1: back button + page title
-            HStack {
-                Button {
-                    onBack()
-                } label: {
-                    Image(systemName: "chevron.backward")
-                        .font(.system(size: 12, weight: .bold))
-                }
-                .buttonStyle(.glass)
-                .frame(width: 37, height: 37)
+        VStack(spacing: Spacing.space24) {
 
-                // maxWidth: .infinity lets the title take the remaining space,
-                // and alignment: .center keeps it in the middle of that space
+            // Row 1: back button + page title (ZStacked)
+            // ZStack puts the title and the button on top of each other, so the title is centered on the whole screen width (not just the space left over next to the button).
+            ZStack {
                 Text(pageTitle)
+                    .font(.title1Heading)
                     .foregroundColor(.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .center)
+
+                HStack {
+                    Button {
+                        //Action
+                        onBack()
+                    } label: {
+                        Image(systemName: "chevron.backward")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.textPrimary)
+                    }
+                    .buttonStyle(.glass)
+                    .frame(width: 37, height: 37)
+
+                    // Spacer pushes the button to the start edge (right side in Arabic), the safe area 24px is added where this struct is used by an Activity page not in here
+                    Spacer()
+                }
             }
 
-            // Row 2: the two chips side by side
+            // Row 2 the two chips side by side
             HStack(spacing: Spacing.space8) {
 
-                // Interest chip (its color comes from the screen)
-                Text(interestTitle)
+                // Activity type chip
+                // HStack instead of Label so the icon sits close to the text with 4 spacing
+                HStack(spacing: Spacing.space4) {
+                    Image(systemName: stepIcon)
+                    Text(stepTitle)
+                }
+                    .font(.titleCards)
                     .foregroundColor(.textPrimary)
                     .padding(.horizontal, Spacing.space12)
-                    .padding(.vertical, Spacing.space8)
-                    .background(interestColor)
+                    .frame(height: Spacing.chipHeight)
+                    .background(Color.actionPrimary)
                     .cornerRadius(999) // a huge radius turns the box into a capsule
 
-                // Step chip (always the app's primary color)
-                Label(stepTitle, systemImage: stepIcon)
+                // Interest chip (its color comes from the screen uding this view struct)
+                Text(interestTitle)
+                    .font(.titleCards)
                     .foregroundColor(.textPrimary)
                     .padding(.horizontal, Spacing.space12)
-                    .padding(.vertical, Spacing.space8)
-                    .background(Color.actionPrimary)
+                    .frame(height: Spacing.chipHeight)
+                    .background(interestColor)
                     .cornerRadius(999)
             }
+            // Takes the full width and line the chips up at the start edge
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
 
+
+//Example to view it
 #Preview {
     ActivityHeader(
-        interestTitle: "الالعاب الالكترونيه",
-        interestColor: .gamingTint,
+        interestTitle: "الألعاب الإلكترونية",
+        interestColor: .gamingChip,
         stepTitle: "تعلّم",
         stepIcon: "lightbulb.max"
     )
-    // Preview in Arabic, right-to-left
+    
+    //right-to-left
     .environment(\.locale, Locale(identifier: "ar"))
     .environment(\.layoutDirection, .rightToLeft)
 }
