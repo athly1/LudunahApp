@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Alexandria-Regular.ttf</string>
+		<string>Alexandria-Medium.ttf</string>
+		<string>Alexandria-SemiBold.ttf</string>
+		<string>Alexandria-Bold.ttf</string>
+		<string>thmanyahsans-Regular.otf</string>
+		<string>thmanyahsans-Medium.otf</string>
+		<string>thmanyahsans-Bold.otf</string>
+		<string>thmanyahsans-Black.otf</string>
+	</array>
+</dict>
+</plist>

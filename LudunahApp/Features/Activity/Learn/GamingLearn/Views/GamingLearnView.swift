@@ -12,13 +12,6 @@ import SwiftUI
 // a struct is ightweighted thing not a class and this one of type View Protocol
 struct gameLearnView: View {
     
-    //Change Later When design System Happens
-    let BG: Color = Color(red: 244/255, green: 242/255, blue: 236/255)
-    let TxtPrimary: Color = Color(red: 0.416, green: 0.306, blue: 0.165, opacity: 1.00)
-    let LudunahPrimary: Color = Color(red: 0.761, green: 0.835, blue: 0.886, opacity: 1.00)
-    let GameTint: Color = Color(red: 0.867, green: 0.847, blue: 0.953, opacity: 1.00)
-    
-    
     //progress bar
     var currentCard: Double = 1
     var totalCards: Double = 4
@@ -35,55 +28,43 @@ struct gameLearnView: View {
     var body: some View {
         ZStack{
             List(){
-                // Modifiers on a Group are applied to every row inside it,
+                // Modifiers on a Section are applied to every row inside it,
                 // so the clear background + hidden separator are written once.
-                Group {
-                HStack{
-
-                    Button{
+                Section {
+                // Shared header: back button + page title + the 2 chips
+                // (lives in Components/ActivityHeader.swift)
+                ActivityHeader(
+                    interestTitle: "الألعاب الإلكترونية",
+                    interestColor: .gamingChip,
+                    stepTitle: "تعلّم",
+                    stepIcon: "lightbulb.max",
+                    onBack: {
                         //Action
                     }
-                    label: {
-                        Image(systemName: "chevron.backward")
-                            .font(.system(size: 12, weight: .bold))
-                    }.buttonStyle(.glass)
-                        .frame(width: 37,height: 37)
-                    
-                    Text("النشاط اليومي").foregroundColor(TxtPrimary)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                )
 
-                }
-
-                HStack(spacing: 8){
-                    
-                    Text("الالعاب الالكترونيه").foregroundColor(TxtPrimary)
-                        .padding(.horizontal,11)
-                        .padding(.vertical, 8)
-                        .background(GameTint)
-                        .cornerRadius(999)
-                   
-                    
-                    Label("تعلّم", systemImage: "lightbulb.max").foregroundColor(TxtPrimary)
-                        .padding(.horizontal,11)
-                        .padding(.vertical, 8)
-                        .background(LudunahPrimary)
-                        .cornerRadius(999)
-                }
-
+                // Progress bar: how many learning cards the user has gone through
                 ProgressView(value: currentCard,total:totalCards)
-                    .scaleEffect(y: 1.5)
-                    .tint(LudunahPrimary)
+                    .scaleEffect(y: 1.5) // makes the bar a bit thicker
+                    .tint(.actionPrimary)
 
+                // Title of today's learning topic
                 Text(title)
+                    .foregroundColor(.textPrimary)
                 }
                 .listRowBackground(Color.clear)
                 .listRowSeparator(.hidden)
+                // 24pt safe space on the left and right of every row
+                .listRowInsets(.horizontal, Spacing.pageMargin)
+                // Remove the List's own extra side margins,
+                // so the space on each side is exactly the 24 above
+                .listSectionMargins(.horizontal, 0)
 
             }
-            // Hide the List's default gray background so BG shows through
+            // Hide the List's default gray background so the page background shows through
             .scrollContentBackground(.hidden)
 
-        }.background(BG)
+        }.background(Color.pageBackground) // page background color from the design system
     }
   
 }
