@@ -58,7 +58,7 @@ struct InterestOneChip: View {
         // generating the buttons shaped as chips for the interests
         
         Button(action: action) {
-            Text(interest.name)
+            Text(interest.title)
                 .font(.titleCards)
                 .foregroundColor(.textPrimary)
                 .padding(.horizontal, Spacing.space16)
