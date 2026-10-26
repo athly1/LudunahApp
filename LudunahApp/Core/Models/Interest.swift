@@ -40,14 +40,13 @@ enum Interest: String, CaseIterable, Identifiable, Codable, Hashable {
     }
     
     // اسم الأيقونة المستخدمة من SF Symbols
-    //var iconName: String {
-      //  switch self {
-      //  case .art:
-            //return "paintpalette"
-       // case .sport:
-         //   return "figure.run"
-       // case .gaming:
-            //return "gamecontroller"
-       // }
-    }
-}
+    var iconName: String {
+        switch self {
+        case .art:
+            return "paintpalette"
+        case .sport:
+            return "figure.run"
+        case .gaming:
+            return "gamecontroller"
+        }
+    }}
