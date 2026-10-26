@@ -50,4 +50,5 @@ extension Color {
     static let mapTimerRing = Color("Gaming/MapTimerRing")          // #5EC8D8
     static let gamingBadges = Color("Gaming/Badges")                // #A598E3
     static let gamingTint = Color("Gaming/Tint")                    // #E0F4F7
+    static let gamingChip = Color("Gaming/Chip")                    // #DDD8F3
 }
