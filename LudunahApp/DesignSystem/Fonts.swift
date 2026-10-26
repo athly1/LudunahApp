@@ -24,7 +24,7 @@ extension Font {
     static let primaryButton = Font.custom("Alexandria", size: 17).weight(.semibold)
     
     /// حجم 18 - Bold (thmanyahsans)
-    static let supTitle1 = Font.custom("thmanyahsans", size: 18).weight(.bold)
+    static let supTitle1 = Font.custom("thmanyah sans",size: 18).weight(.bold)
     
     /// حجم 10 - Medium (Alexandria)
     static let suptitleCards = Font.custom("Alexandria", size: 10).weight(.medium)
@@ -33,7 +33,7 @@ extension Font {
     static let titleCards = Font.custom("Alexandria", size: 14).weight(.medium)
     
     /// حجم 24 - Bold (thmanyahsans)
-    static let title1Heading = Font.custom("thmanyahsans", size: 24).weight(.bold)
+    static let title1Heading = Font.custom("thmanyah sans",size: 24).weight(.bold)
     
     /// حجم 12 - Regular (Alexandria)
     static let dailyMinutesStyle = Font.custom("Alexandria", size: 12).weight(.regular)

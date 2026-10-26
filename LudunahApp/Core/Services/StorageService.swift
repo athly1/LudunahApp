@@ -9,7 +9,7 @@
 //
 // Used by: AppState, HomeViewModel.
 // Learn: UserDefaults, Codable, JSONEncoder, Calendar
-import Foundation 
+import Foundation
 // كلاس مسؤول عن حفظ واسترجاع بيانات التطبيق
 final class StorageService {
 
