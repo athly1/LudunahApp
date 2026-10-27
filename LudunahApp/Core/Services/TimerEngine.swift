@@ -1,4 +1,3 @@
-
 import Foundation
 import Combine
 
@@ -79,4 +78,3 @@ final class TimerEngine: ObservableObject {
         timer?.invalidate()
     }
 }
-
