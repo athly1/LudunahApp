@@ -1,4 +1,5 @@
 
+//
 // ArtCreateView.swift - واجهة نشاط ابتكر في الفن السعودي.
 //
 // Contains:
@@ -7,33 +8,39 @@
 // - Six-color palette and undo button.
 // - Reflection question and answer field.
 // - Instructions bottom sheet.
-// - Save button and success alert.
+// - Save activity and return to Home.
 //
 // Used by: ActivityFlowView (art, create).
+//
 // Learn: @State, @Environment, @FocusState,
-//       LazyVGrid, Button, sheet, alert, dismiss.
+//        LazyVGrid, ForEach, Button, sheet, dismiss.
+//
 
 import SwiftUI
 
 // MARK: - Art Create View
 
-// واجهة نشاط صمّم رمز يحكي يومك
 struct ArtCreateView: View {
 
-    // الاحتفاظ بمنطق النشاط وحالة الرسم
+    // MARK: - Properties
+
+    // مسؤول عن الرسم والألوان ومنطق النشاط
     @State private var viewModel = ArtCreateViewModel()
 
     // الرجوع للشاشة السابقة
     @Environment(\.dismiss) private var dismiss
 
-    // التحكم في ظهور نافذة التعليمات
+    // مدير التنقل المشترك في التطبيق
+    @Environment(AppRouter.self) private var appRouter
+
+    // إظهار وإخفاء نافذة التعليمات
     @State private var showInstructions = false
 
-    // التحكم في ظهور رسالة الحفظ
-    @State private var showSuccessAlert = false
-
-    // معرفة هل حقل الإجابة نشط
+    // التحكم في لوحة المفاتيح
     @FocusState private var isAnswerFocused: Bool
+
+    // منع الضغط المتكرر على زر الإنهاء
+    @State private var isFinishing = false
 
     // إعداد أعمدة شبكة الرسم الخمسة
     private let gridColumns = Array(
@@ -45,31 +52,28 @@ struct ArtCreateView: View {
 
     var body: some View {
 
-        // يسمح بتمرير الصفحة إذا كان المحتوى طويلًا
         ScrollView {
 
-            // ترتيب عناصر النشاط من الأعلى للأسفل
             VStack(spacing: Spacing.space24) {
 
-                // هيدر النشاط المشترك مع باقي شاشات الفريق
+                // الهيدر المشترك الخاص بالفريق
                 ActivityHeader(
                     interestTitle: "الفن السعودي",
                     interestColor: .artChipBackground,
                     stepTitle: "ابتكر",
                     stepIcon: "sparkles",
                     onBack: {
-                        // الرجوع للشاشة السابقة
                         dismiss()
                     }
                 )
 
-                // عنوان التحدي وزر المعلومات
+                // عنوان النشاط وزر المعلومات
                 activityTitle
 
-                // شبكة المربعات
+                // شبكة التلوين
                 pixelGrid
 
-                // الألوان وزر التراجع
+                // لوحة الألوان والتراجع
                 colorPalette
 
                 // سؤال معنى الرمز
@@ -80,7 +84,7 @@ struct ArtCreateView: View {
             .padding(.bottom, Spacing.space24)
         }
 
-        // وضع زر أنهيت أسفل الشاشة
+        // تثبيت زر أنهيت في أسفل الشاشة
         .safeAreaInset(edge: .bottom) {
 
             finishButton
@@ -89,41 +93,28 @@ struct ArtCreateView: View {
                 .background(Color.pageBackground)
         }
 
-        // خلفية لُدُونه
-        .background(Color.pageBackground.ignoresSafeArea())
+        // خلفية Design System
+        .background(
+            Color.pageBackground.ignoresSafeArea()
+        )
 
-        // إخفاء الهيدر الافتراضي لأن ActivityHeader يحل مكانه
+        // إخفاء شريط التنقل الافتراضي
         .toolbar(.hidden, for: .navigationBar)
 
-        // اتجاه الواجهة عربي
+        // اتجاه التطبيق العربي
         .environment(\.layoutDirection, .rightToLeft)
 
-        // MARK: - Instructions Sheet
-
-        // فتح نافذة طريقة أداء النشاط
+        // نافذة تعليمات النشاط
         .sheet(isPresented: $showInstructions) {
 
             instructionsContent
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
         }
-
-        // MARK: - Success Alert
-
-        // إظهار رسالة نجاح حفظ التصميم
-        .alert(
-            "تم حفظ التصميم",
-            isPresented: $showSuccessAlert
-        ) {
-            Button("حسنًا", role: .cancel) {}
-        } message: {
-            Text("تم حفظ رمزك بنجاح.")
-        }
     }
 
     // MARK: - Activity Title
 
-    // عنوان النشاط مع زر عرض التعليمات
     private var activityTitle: some View {
 
         HStack(spacing: Spacing.space8) {
@@ -133,10 +124,9 @@ struct ArtCreateView: View {
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
 
-            // زر المعلومات
+            // زر فتح التعليمات
             Button {
 
-                // إظهار نافذة التعليمات
                 showInstructions = true
 
             } label: {
@@ -153,7 +143,6 @@ struct ArtCreateView: View {
 
     // MARK: - Pixel Grid
 
-    // شبكة مربعات قابلة للتلوين
     private var pixelGrid: some View {
 
         LazyVGrid(
@@ -161,7 +150,7 @@ struct ArtCreateView: View {
             spacing: 3
         ) {
 
-            // إنشاء مربع لكل عنصر في المصفوفة
+            // عرض مربعات التصميم الـ 25
             ForEach(
                 viewModel.pattern.cellColors.indices,
                 id: \.self
@@ -169,7 +158,7 @@ struct ArtCreateView: View {
 
                 Button {
 
-                    // إغلاق لوحة المفاتيح عند الرسم
+                    // إغلاق لوحة المفاتيح
                     isAnswerFocused = false
 
                     // تلوين المربع المحدد
@@ -179,17 +168,20 @@ struct ArtCreateView: View {
 
                     Rectangle()
 
-                        // اللون المحفوظ لهذا المربع
+                        // قراءة لون المربع من Model
                         .fill(
                             Color(
                                 hex: viewModel.pattern.cellColors[index]
                             )
                         )
 
-                        // المحافظة على شكل مربع
-                        .aspectRatio(1, contentMode: .fit)
+                        // جعل الخلية مربعة
+                        .aspectRatio(
+                            1,
+                            contentMode: .fit
+                        )
 
-                        // إضافة حدود خفيفة
+                        // حدود المربع
                         .overlay {
 
                             Rectangle()
@@ -204,7 +196,6 @@ struct ArtCreateView: View {
             }
         }
 
-        // المسافة الداخلية حول المربعات
         .padding(Spacing.space16)
 
         // خلفية الشبكة
@@ -213,7 +204,7 @@ struct ArtCreateView: View {
             in: RoundedRectangle(cornerRadius: 20)
         )
 
-        // الظل الموجود في التصميم
+        // ظل الشبكة
         .shadow(
             color: Color.black.opacity(0.08),
             radius: 10,
@@ -223,12 +214,11 @@ struct ArtCreateView: View {
 
     // MARK: - Color Palette
 
-    // عرض لوحة الألوان وزر التراجع
     private var colorPalette: some View {
 
         HStack(spacing: Spacing.space4) {
 
-            // إنشاء دائرة لكل لون متاح
+            // الألوان الستة
             ForEach(
                 viewModel.availableColors,
                 id: \.self
@@ -236,17 +226,15 @@ struct ArtCreateView: View {
 
                 Button {
 
-                    // تحديث اللون المستخدم في الرسم
+                    // اختيار لون الرسم
                     viewModel.selectColor(color)
 
                 } label: {
 
                     Circle()
-
-                        // تعبئة الدائرة باللون
                         .fill(Color(hex: color))
 
-                        // تحديد اللون المختار
+                        // إبراز اللون المختار
                         .overlay {
 
                             Circle()
@@ -258,20 +246,17 @@ struct ArtCreateView: View {
                                 )
                         }
 
-                        // حجم دوائر الألوان
                         .frame(width: 34, height: 34)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("اختيار اللون \(color)")
             }
 
-            // استخدام المساحة المتبقية عند توفرها
             Spacer(minLength: 0)
 
             // زر التراجع
             Button {
 
-                // العودة لآخر حالة للشبكة
                 viewModel.undo()
 
             } label: {
@@ -280,7 +265,7 @@ struct ArtCreateView: View {
                     .font(.dailyMinutesStyle)
                     .foregroundStyle(Color.textPrimary)
 
-                    // منع ظهور النص على سطرين
+                    // منع النص من النزول لسطرين
                     .lineLimit(1)
                     .fixedSize(
                         horizontal: true,
@@ -290,7 +275,6 @@ struct ArtCreateView: View {
                     .padding(.horizontal, Spacing.space12)
                     .frame(height: 38)
 
-                    // حدود الزر
                     .overlay {
 
                         RoundedRectangle(cornerRadius: 12)
@@ -302,28 +286,25 @@ struct ArtCreateView: View {
             }
             .buttonStyle(.plain)
 
-            // منع التراجع عند عدم وجود خطوات
+            // تعطيل التراجع عندما لا يوجد تغيير سابق
             .disabled(!viewModel.canUndo)
-
-            // تقليل الشفافية عند التعطيل
             .opacity(viewModel.canUndo ? 1 : 0.5)
         }
     }
 
     // MARK: - Reflection Section
 
-    // سؤال المستخدم عن معنى التصميم
     private var reflectionSection: some View {
 
         VStack(spacing: Spacing.space16) {
 
-            // سؤال التأمل
+            // سؤال معنى التصميم
             Text("ما المعنى خلف هذا الرمز؟")
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
 
-            // حقل كتابة الإجابة
+            // حقل كتابة إجابة المستخدم
             TextField(
                 "سجّل جوابك",
                 text: $viewModel.answer
@@ -332,61 +313,73 @@ struct ArtCreateView: View {
             .foregroundStyle(Color.textPrimary)
             .multilineTextAlignment(.trailing)
 
-            // المسافة داخل الحقل
             .padding(Spacing.space16)
 
-            // خلفية حقل الإجابة
             .background(
                 Color.glassBackground,
                 in: Capsule()
             )
 
-            // ربط الحقل بحالة لوحة المفاتيح
             .focused($isAnswerFocused)
-
-            // شكل زر الإدخال في الكيبورد
             .submitLabel(.done)
         }
     }
 
     // MARK: - Finish Button
 
-    // زر إنهاء التصميم
     private var finishButton: some View {
 
         PrimaryButton(
             title: "أنهيت",
 
-            // يتفعّل بعد تلوين مربع وكتابة معنى
-            isDisabled: !viewModel.canFinish
+            // الزر يتفعل بعد الرسم وكتابة الإجابة
+            isDisabled: !viewModel.canFinish || isFinishing
         ) {
+
+            // منع تسجيل الإنجاز أكثر من مرة
+            guard !isFinishing else {
+                return
+            }
+
+            isFinishing = true
 
             // إغلاق لوحة المفاتيح
             isAnswerFocused = false
 
-            // حفظ التصميم
+            // حفظ تصميم المستخدم
             let saved = viewModel.save()
 
-            // عرض رسالة نجاح الحفظ
-            if saved {
-                showSuccessAlert = true
+            // إذا فشل الحفظ، نسمح بالمحاولة مجددًا
+            guard saved else {
+
+                print("Failed to save Art Create")
+
+                isFinishing = false
+                return
             }
+
+            // تسجيل إنجاز نشاط الفن
+            StorageService().recordCompletedActivity(
+                interest: .art
+            )
+
+            // الرجوع إلى الشاشة الرئيسية
+            appRouter.popToRoot()
         }
     }
 
     // MARK: - Instructions Content
 
-    // النافذة التي تشرح طريقة أداء النشاط
     private var instructionsContent: some View {
 
         VStack(spacing: Spacing.space24) {
 
-            // عنوان النافذة
+            // عنوان نافذة التعليمات
             Text("طريقة أداء النشاط")
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
 
-            // وصف الهدف من النشاط
+            // وصف النشاط
             Text("تمرين لربط الجانب البصري بالمعنى الشعوري")
                 .font(.titleCards)
                 .foregroundStyle(Color.appSecondary)
@@ -416,27 +409,24 @@ struct ArtCreateView: View {
 
             Spacer(minLength: 0)
 
-            // زر إغلاق التعليمات
+            // زر إغلاق نافذة التعليمات
             PrimaryButton(title: "فهمت") {
 
-                // إغلاق نافذة التعليمات
                 showInstructions = false
             }
         }
 
-        // هوامش المحتوى
         .padding(Spacing.pageMargin)
 
-        // خلفية النافذة
-        .background(Color.pageBackground.ignoresSafeArea())
+        .background(
+            Color.pageBackground.ignoresSafeArea()
+        )
 
-        // الاتجاه العربي
         .environment(\.layoutDirection, .rightToLeft)
     }
 
     // MARK: - Instruction Row
 
-    // صف يمثل خطوة واحدة في التعليمات
     private func instructionRow(
         number: Int,
         text: String
@@ -451,35 +441,70 @@ struct ArtCreateView: View {
             Text("\(number)")
                 .font(.titleCards)
                 .foregroundStyle(Color.textPrimary)
+
                 .frame(width: 30, height: 30)
+
                 .background(
                     Color.actionPrimary,
                     in: Circle()
                 )
 
-            // نص الخطوة
+            // وصف الخطوة
             Text(text)
                 .font(.titleCards)
                 .foregroundStyle(Color.textPrimary)
+
                 .fixedSize(
                     horizontal: false,
                     vertical: true
                 )
         }
     }
-}
+
+} // نهاية struct ArtCreateView
 
 // MARK: - Preview
 
-// تجربة زر الرجوع بوجود شاشة سابقة
 #Preview {
 
-    NavigationStack {
+    // مدير تنقل تجريبي
+    let router = AppRouter()
 
-        NavigationLink("افتح نشاط الفن") {
+    NavigationStack(
+        path: Binding(
+            get: { router.path },
+            set: { router.path = $0 }
+        )
+    ) {
 
-            ArtCreateView()
+        // شاشة رئيسية مؤقتة لاختبار التنقل
+        VStack(spacing: 20) {
+
+            Text("الرئيسية")
+                .font(.title)
+
+            Button("افتح نشاط الفن") {
+
+                router.push(.activity(.art))
+            }
+        }
+
+        .navigationDestination(for: AppRoute.self) { route in
+
+            switch route {
+
+            case .activity:
+                ArtCreateView()
+
+            case .settings:
+                Text("الإعدادات")
+            }
         }
     }
+
+    // تمرير مدير التنقل إلى الواجهة
+    .environment(router)
+
+    // تفعيل الاتجاه العربي
     .environment(\.layoutDirection, .rightToLeft)
 }

@@ -1,3 +1,4 @@
+
 import Foundation
 
 //Model of the top level JSON 

@@ -1,3 +1,11 @@
+//
+//  Activity.swift
+//  LudunahApp
+//
+//  Created by nuha on 26/10/2026.
+//
+
+
 import Foundation
 
 //Object of the second level of JSON
