@@ -1,119 +1,198 @@
-// InterestChip.swift - selectable capsule for one interest.
-// A View showing the interest icon and title in a capsule.
-// Inputs: interest, isSelected, action.
-// Filled color when selected, light color when not.
+
+// InterestChip.swift - عرض واختيار الاهتمامات.
+//
+// Contains:
+// - InterestChip displaying all interests.
+// - InterestOneChip for a single interest.
+// - FlowLayout for wrapping items.
+//
 // Used by: OnboardingView, SettingsView.
+// Learn: closures, ForEach, Layout, Set.
+
 import SwiftUI
 
+// MARK: - InterestChip
 
+// يعرض جميع الاهتمامات
 struct InterestChip: View {
 
-    // The interests the user picked (empty at start)
-    @State private var selectedInterests: Set<Interest> = []
+    // الاهتمامات المحددة من الـ ViewModel
+    let selectedInterests: Set<Interest>
 
-    // The most the user can pick
-    let maxSelections = 3
+    // الإجراء عند الضغط على اهتمام
+    let onToggle: (Interest) -> Void
 
     var body: some View {
 
-        // Puts chips side by side and wraps to a new line when full
+        // ترتيب الكبسولات في صفوف
         FlowLayout(spacing: Spacing.space8) {
 
-            // Make one chip for every interest in the enum
+            // إنشاء كبسولة لكل اهتمام
             ForEach(Interest.allCases) { interest in
 
                 InterestOneChip(
                     interest: interest,
-                    // Is this interest in the set? → selected look
                     isSelected: selectedInterests.contains(interest)
                 ) {
-                    // When tapped → add or remove it
-                    toggle(interest)
+                    // إرسال الاهتمام المختار للشاشة الأم
+                    onToggle(interest)
                 }
             }
         }
     }
-
-    // Selects or deselects one interest
-    private func toggle(_ interest: Interest) {
-        if selectedInterests.contains(interest) {
-            // Already picked → remove it
-            selectedInterests.remove(interest)
-        } else if selectedInterests.count < maxSelections {
-            // Not picked and still room → add it
-            selectedInterests.insert(interest)
-        }
-    }
 }
 
+// MARK: - InterestOneChip
 
+// كبسولة اهتمام واحدة
 struct InterestOneChip: View {
-    
+
+    // نوع الاهتمام
     let interest: Interest
+
+    // هل الاهتمام محدد؟
     let isSelected: Bool
+
+    // الوظيفة عند الضغط
     let action: () -> Void
-    
+
     var body: some View {
-        
-        // generating the buttons shaped as chips for the interests
-        
+
         Button(action: action) {
+
             Text(interest.title)
                 .font(.titleCards)
-                .foregroundColor(.textPrimary)
+                .foregroundStyle(Color.textPrimary)
+
+                // المسافات داخل الكبسولة
                 .padding(.horizontal, Spacing.space16)
                 .padding(.vertical, Spacing.space12)
-                .background(isSelected ? Color.blue.opacity(0.2) : .clear, in: Capsule())
-                .overlay(
-                    Capsule().stroke(Color.gray.opacity(0.9), lineWidth: isSelected ? 0 : 1)
+
+                // خلفية تتغير عند الاختيار
+                .background(
+                    isSelected
+                        ? selectedColor.opacity(0.7)
+                        : Color.interestCardBg,
+                    in: Capsule()
                 )
+
+                // حدود الكبسولة
+                .overlay {
+                    Capsule()
+                        .stroke(
+                            isSelected ? Color.clear : Color.gray.opacity(0.5),
+                            lineWidth: 1
+                        )
+                }
         }
         .buttonStyle(.plain)
     }
+
+    // اللون المخصص لكل اهتمام
+    private var selectedColor: Color {
+        switch interest {
+        case .art:
+            return .artChipBackground
+        case .sport:
+            return .sportChip
+        case .gaming:
+            return .gamingChip
+        }
+    }
 }
 
+// MARK: - FlowLayout
 
+// ترتيب العناصر تلقائيًا على عدة صفوف
 struct FlowLayout: Layout {
+
+    // المسافة بين العناصر
     var spacing: CGFloat = 8
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    // حساب الحجم المطلوب
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) -> CGSize {
+
         let maxWidth = proposal.width ?? .infinity
-        var x: CGFloat = 0, y: CGFloat = 0, rowHeight: CGFloat = 0, widest: CGFloat = 0
+
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        var widest: CGFloat = 0
+
         for view in subviews {
+
+            // قياس العنصر
             let size = view.sizeThatFits(.unspecified)
-            if x + size.width > maxWidth, x > 0 {
+
+            // الانتقال إلى صف جديد عند الحاجة
+            if x + size.width > maxWidth && x > 0 {
                 x = 0
                 y += rowHeight + spacing
                 rowHeight = 0
             }
+
+            // حساب موقع العنصر التالي
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
             widest = max(widest, x - spacing)
         }
-        return CGSize(width: widest, height: y + rowHeight)
+
+        // الحجم النهائي
+        return CGSize(
+            width: widest,
+            height: y + rowHeight
+        )
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var x = bounds.minX, y = bounds.minY, rowHeight: CGFloat = 0
+    // تحديد مواقع العناصر
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) {
+
+        var x = bounds.minX
+        var y = bounds.minY
+        var rowHeight: CGFloat = 0
+
         for view in subviews {
+
             let size = view.sizeThatFits(.unspecified)
-            if x + size.width > bounds.maxX, x > bounds.minX {
+
+            // بدء صف جديد إذا انتهت المساحة
+            if x + size.width > bounds.maxX && x > bounds.minX {
                 x = bounds.minX
                 y += rowHeight + spacing
                 rowHeight = 0
             }
-            view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
+
+            // وضع العنصر في مكانه
+            view.place(
+                at: CGPoint(x: x, y: y),
+                proposal: ProposedViewSize(size)
+            )
+
+            // تحديث إحداثيات العنصر القادم
             x += size.width + spacing
             rowHeight = max(rowHeight, size.height)
         }
     }
 }
 
+// MARK: - Preview
 
 #Preview {
-    InterestChip()
-              .environment(\.locale, Locale(identifier: "ar"))
-              .environment(\.layoutDirection, .rightToLeft)
-      }
-
-
+    InterestChip(
+        selectedInterests: [.art],
+        onToggle: { interest in
+            print("Selected: \(interest.title)")
+        }
+    )
+    .padding()
+    .environment(\.layoutDirection, .rightToLeft)
+}
