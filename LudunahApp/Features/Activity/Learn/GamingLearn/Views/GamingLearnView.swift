@@ -70,13 +70,11 @@ struct gameLearnView: View {
                     onNext: {
                         // Update the parent-owned index.
                         // The progress bar updates automatically.
-                        func UpdateProgressBar(){
                             if viewModel.index < viewModel.totalCards - 1{
                                 withAnimation {
                                     viewModel.index += 1
                                 }
                             }
-                        }
                     }
                 )
                 // MARK: - Bottom End Button
@@ -84,8 +82,8 @@ struct gameLearnView: View {
                 //the button outside the ScrollView.
                 // It stays at the bottom and takes the available width.
                 if viewModel.isLastCard {
-                    PrimaryButton(Title: "انتهيت") {
-                        // Your finish action goes here.
+                    PrimaryButton(title: "انتهيت",) {
+                        dismiss()
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, Spacing.pageMargin)

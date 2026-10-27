@@ -1,11 +1,3 @@
-//
-//  Activity.swift
-//  LudunahApp
-//
-//  Created by nuha on 26/10/2026.
-//
-
-
 import Foundation
 
 //Object of the second level of JSON
@@ -18,7 +10,7 @@ struct Activity: Decodable, Identifiable {
     let howTo: [String]?
 
     let options: [ActivityOption]?
-    let cards: [ActivityCard]?
+    let cards: [ActivityCard]? //Used in Learn Cards
 
     let insight: String?
     let sources: [String]?
