@@ -8,6 +8,7 @@
 
 import Foundation
 
+//Object of the second level of JSON
 struct Activity: Decodable, Identifiable {
     let id: String
     let type: ActivityStep
@@ -65,6 +66,7 @@ struct ActivityOption: Decodable, Identifiable {
     let text: String
 }
 
+//Object of the 3rd level of JSON
 struct ActivityCard: Decodable {
     let icon: String
     let text: String

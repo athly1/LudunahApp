@@ -1,13 +1,6 @@
-//
-//  contenServices.swift
-//  LudunahApp
-//
-//  Created by Athari Alotaibi on 10/05/1448 AH.
-//
-
-
 import Foundation
 
+// Loads the JSON files content and decodes it into Model Objects
 enum ContentService {
 
     static func loadActivities(for interest: Interest) throws -> [Activity] {
@@ -23,6 +16,7 @@ enum ContentService {
             fileName = "Sport"
         }
 
+        //Finds JSON files in the app
         guard let url = Bundle.main.url(
             forResource: fileName,
             withExtension: "json"
@@ -30,13 +24,16 @@ enum ContentService {
             throw ContentServiceError.fileNotFound(fileName)
         }
 
+        //Read the files and store in data
         let data = try Data(contentsOf: url)
 
+        //Converts the JSON into your ActivityContent model.
         let content = try JSONDecoder().decode(
             ActivityContent.self,
             from: data
         )
 
+        //Array of Activity objects.
         return content.activities
     }
 }
@@ -44,3 +41,4 @@ enum ContentService {
 enum ContentServiceError: Error {
     case fileNotFound(String)
 }
+

@@ -9,6 +9,7 @@
 
 import Foundation
 
+//Model of the top level JSON 
 struct ActivityContent: Decodable {
     let interest: String
     let interestName: String
@@ -20,3 +21,4 @@ struct ActivityContent: Decodable {
         case activities
     }
 }
+

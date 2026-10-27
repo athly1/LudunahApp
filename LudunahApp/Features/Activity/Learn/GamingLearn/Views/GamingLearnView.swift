@@ -1,79 +1,107 @@
-// GamingLearnView.swift - Gaming "Learn" step.
-//
-// Contains:
-// - A View that explains today's game idea and rules.
-// - Reads its data from GamingLearnViewModel.
-//
-// Used by: ActivityFlowView (gaming, learn).
-
 import SwiftUI
 
-
-// a struct is ightweighted thing not a class and this one of type View Protocol
 struct gameLearnView: View {
+
+    //linking ViewModel, with it $ is used when using a projected value where binding happens in 2 way, where its binded with a published property
     
-    //progress bar
-    var currentCard: Double = 1
-    var totalCards: Double = 4
+    //Note Use Use the $ when the var is @Binding when where the child view needs to change a value owned by its parent.
+    @StateObject private var viewModel = GamingLearnViewModel()
     
-    //Learning Content
-    var title: String = "مثال"
+    //Exit button
+    @Environment(\.dismiss) private var dismiss
     
-    //data var & let (considered its attributes and can be passed to the view when its called), Swift auto-creates its init
-    //state (properites tht lesson for changes, owned by this view and it the values that change, so lessiong for any changes)
-    
-    // the properity veiw struct must hold which holds all that appears in screen
-    
-    //having 'some' View makes the type decided at run time where the body cah retruend any builded screen elements witouh having to complay to spcesif type
     var body: some View {
-        ZStack{
-            List(){
-                // Modifiers on a Section are applied to every row inside it,
-                // so the clear background + hidden separator are written once.
-                Section {
-                // Shared header: back button + page title + the 2 chips
-                // (lives in Components/ActivityHeader.swift)
+   
+
+        ZStack {
+            Color.pageBackground
+                .ignoresSafeArea()
+
+            // The main page is a VStack
+            VStack(alignment: .leading,spacing:0) {
+
+                // MARK: - Fixed Header, Progress, and Title
+
+                // Shared header: back button + title + chips
                 ActivityHeader(
                     interestTitle: "الألعاب الإلكترونية",
                     interestColor: .gamingChip,
                     stepTitle: "تعلّم",
                     stepIcon: "lightbulb.max",
                     onBack: {
-                        //Action
+                        if viewModel.index > 0 {
+                            withAnimation {
+                                viewModel.index -= 1
+                            } }
+                            else {
+                                dismiss()
+                            }
+                        }                    
+                )
+                .padding(.horizontal, Spacing.pageMargin)
+
+                // MARK: - Progress follows the index owned by this view.
+                ProgressView(
+                    value: viewModel.currentProgress,
+                    total: Double(viewModel.totalCards)
+                )
+                .scaleEffect(y: 1.5) // Make the bar a bit thicker
+                .tint(.actionPrimary)
+                .padding(.horizontal, Spacing.pageMargin)
+                .padding(.top, Spacing.pageMargin)
+
+                // MARK: - Title of today's learning topic
+                Text(viewModel.title)
+                    .font(.title1Heading)
+                    .foregroundStyle(Color.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, Spacing.pageMargin)
+                    .padding(.top, Spacing.chipHeight)
+                    .padding(.bottom, Spacing.headerTitleOffset + 40)
+
+                // MARK: - Card Area
+                
+                // CardsFlowView contains the ScrollView
+                CardsFlowView(
+                    iconColor: .mapSequers,
+                    iconActivityBackground: .gamingTint,
+                    cards: viewModel.cards,
+                    index: viewModel.index,
+                    onNext: {
+                        // Update the parent-owned index.
+                        // The progress bar updates automatically.
+                        func UpdateProgressBar(){
+                            if viewModel.index < viewModel.totalCards - 1{
+                                withAnimation {
+                                    viewModel.index += 1
+                                }
+                            }
+                        }
                     }
                 )
+                // MARK: - Bottom End Button
 
-                // Progress bar: how many learning cards the user has gone through
-                ProgressView(value: currentCard,total:totalCards)
-                    .scaleEffect(y: 1.5) // makes the bar a bit thicker
-                    .tint(.actionPrimary)
-
-                // Title of today's learning topic
-                Text(title)
-                    .foregroundColor(.textPrimary)
+                //the button outside the ScrollView.
+                // It stays at the bottom and takes the available width.
+                if viewModel.isLastCard {
+                    PrimaryButton(Title: "انتهيت") {
+                        // Your finish action goes here.
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, Spacing.pageMargin)
+                    .padding(.top, Spacing.headerTitleOffset)
+                    .padding(.bottom, Spacing.pageMargin)
                 }
-                .listRowBackground(Color.clear)
-                .listRowSeparator(.hidden)
-                // 24pt safe space on the left and right of every row
-                .listRowInsets(.horizontal, Spacing.pageMargin)
-                // Remove the List's own extra side margins,
-                // so the space on each side is exactly the 24 above
-                .listSectionMargins(.horizontal, 0)
-
             }
-            // Hide the List's default gray background so the page background shows through
-            .scrollContentBackground(.hidden)
-
-        }.background(Color.pageBackground) // page background color from the design system
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        // Keep the Arabic layout direction.
+        .environment(\.layoutDirection, .rightToLeft)
     }
-  
 }
 
 #Preview {
-          gameLearnView()
-              .environment(\.locale, Locale(identifier: "ar"))
-              .environment(\.layoutDirection, .rightToLeft)
-      }
-
-
-
+    gameLearnView()
+        .environment(\.locale, Locale(identifier: "ar"))
+        .environment(\.layoutDirection, .rightToLeft)
+}

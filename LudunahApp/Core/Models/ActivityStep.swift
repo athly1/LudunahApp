@@ -65,3 +65,4 @@ enum ActivityStep: String, CaseIterable, Identifiable, Codable, Hashable {
         }
     }
 }
+
