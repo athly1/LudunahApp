@@ -7,8 +7,6 @@
 //
 // Used by: ActivityFlowView, ActivityHeader.
 
-
-
 import Foundation
 
 enum ActivityStep: String, CaseIterable, Identifiable, Codable, Hashable {
@@ -65,3 +63,4 @@ enum ActivityStep: String, CaseIterable, Identifiable, Codable, Hashable {
         }
     }
 }
+
