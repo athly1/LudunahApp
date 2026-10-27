@@ -26,6 +26,9 @@ extension Font {
     /// حجم 18 - Bold (thmanyahsans)
     static let supTitle1 = Font.custom("thmanyah sans",size: 18).weight(.bold)
     
+    /// حجم 18 - Bold (thmanyahsans)
+    static let supTitle2 = Font.custom("thmanyah sans",size: 18).weight(.regular)
+    
     /// حجم 10 - Medium (Alexandria)
     static let suptitleCards = Font.custom("Alexandria", size: 10).weight(.medium)
     

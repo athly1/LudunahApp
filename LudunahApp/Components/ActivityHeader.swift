@@ -2,7 +2,6 @@
 // A struct view with a back button, the interest title, and one chip per Activity type based on energy level.
 // Inputs: interest, activity type, back action.
 // Used by: ActivityFlowView, Views of (create,learn,act)
-
 import SwiftUI
 
 struct ActivityHeader: View {
