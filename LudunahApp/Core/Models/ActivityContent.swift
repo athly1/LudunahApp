@@ -1,6 +1,6 @@
 import Foundation
 
-/// الملف الكامل للمحتوى المحمّل من ملفات Art.json وSport.json وGaming.json.
+//Model of the top level JSON 
 struct ActivityContent: Decodable {
     let interest: String
     let interestName: String
