@@ -1,10 +1,6 @@
 // @Observable class that loads today's GamingLearnModel.
 import Foundation
 import Combine
-import SwiftUI
-
-
-
 
 // the states needs to be maintiend an presist, so a Class and its able to be observed
 final class GamingLearnViewModel: ObservableObject {
@@ -13,11 +9,6 @@ final class GamingLearnViewModel: ObservableObject {
     @Published var index = 0
     @Published var cards: [ActivityCard] = []
     @Published var title = ""
-    
-    private let activities: [Activity]
-    private let learnactivities: [Activity]
-    private let randomActivity: Activity
-    
  
     init() {
         do {
@@ -37,11 +28,8 @@ final class GamingLearnViewModel: ObservableObject {
 
             // 4. Populate the view model.
             title = randomActivity.title
-            if let activityCards = randomActivity.cards {
-                cards = activityCards
-            } else {
-                cards = []
-            }
+            cards = randomActivity.cards ?? []
+
         } catch {
             print("Failed to load activities: \(error)")
         }
@@ -58,13 +46,4 @@ final class GamingLearnViewModel: ObservableObject {
     // Checks whether the user is viewing the final card.
     var isLastCard: Bool { index == totalCards - 1 }
 
-    // Advance to the next card.
-    func UpdateProgressBar(){
-        if index < totalCards - 1{
-            withAnimation {
-                index += 1
-            }
-        }
-    }
-                
 }

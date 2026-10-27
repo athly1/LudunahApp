@@ -3,9 +3,15 @@ import SwiftUI
 struct gameLearnView: View {
 
     //linking ViewModel, with it $ is used when using a projected value where binding happens in 2 way, where its binded with a published property
+    
+    //Note Use Use the $ when the var is @Binding when where the child view needs to change a value owned by its parent.
     @StateObject private var viewModel = GamingLearnViewModel()
-
+    
+    //Exit button
+    @Environment(\.dismiss) private var dismiss
+    
     var body: some View {
+   
 
         ZStack {
             Color.pageBackground
@@ -23,8 +29,14 @@ struct gameLearnView: View {
                     stepTitle: "تعلّم",
                     stepIcon: "lightbulb.max",
                     onBack: {
-                        // the back-navigation action goes here.
-                    }
+                        if viewModel.index > 0 {
+                            withAnimation {
+                                viewModel.index -= 1
+                            } }
+                            else {
+                                dismiss()
+                            }
+                        }                    
                 )
                 .padding(.horizontal, Spacing.pageMargin)
 
@@ -53,19 +65,25 @@ struct gameLearnView: View {
                 CardsFlowView(
                     iconColor: .mapSequers,
                     iconActivityBackground: .gamingTint,
-                    cards: $viewModel.cards,
-                    index: $viewModel.index,
+                    cards: viewModel.cards,
+                    index: viewModel.index,
                     onNext: {
                         // Update the parent-owned index.
                         // The progress bar updates automatically.
-                        viewModel.UpdateProgressBar()
+                        func UpdateProgressBar(){
+                            if viewModel.index < viewModel.totalCards - 1{
+                                withAnimation {
+                                    viewModel.index += 1
+                                }
+                            }
+                        }
                     }
                 )
                 // MARK: - Bottom End Button
 
                 //the button outside the ScrollView.
                 // It stays at the bottom and takes the available width.
-                if $viewModel.isLastCard {
+                if viewModel.isLastCard {
                     PrimaryButton(Title: "انتهيت") {
                         // Your finish action goes here.
                     }
