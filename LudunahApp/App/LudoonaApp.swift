@@ -34,47 +34,14 @@ struct LudoonaApp: App {
                 if appState.isOnboardingCompleted {
 
                     // نظام التنقل
+                    
                     NavigationStack(path: $appRouter.path) {
-
-                        // Home مؤقتة
-                        VStack(spacing: Spacing.space24) {
-
-                            // عنوان الصفحة
-                            Text("أهلًا بك في لُدُونه")
-                                .font(.title1Heading)
-                                .foregroundStyle(Color.textPrimary)
-
-                            // وصف الصفحة
-                            Text("اختر التحدي اللي يناسبك")
-                                .font(.titleCards)
-                                .foregroundStyle(Color.appSecondary)
-
-                            // نشاط الفن
-                            Button("تحدي الفن") {
-                                appRouter.push(.activity(.art))
+                        HomeView()
+                            .navigationDestination(for: AppRoute.self) { route in
+                                appRouter.destination(for: route)
                             }
-
-                            // الإعدادات
-                            Button("الإعدادات") {
-                                appRouter.push(.settings)
-                            }
-
-                            // إعادة صفحات البداية
-                            Button("إعادة البداية") {
-
-                                // العودة للمسار الأساسي
-                                appRouter.popToRoot()
-
-                                // مسح حالة البداية والاهتمامات
-                                appState.reset()
-                            }
-                        }
-
-                        // ربط الوجهات بالشاشات
-                        .navigationDestination(for: AppRoute.self) { route in
-                            appRouter.destination(for: route)
-                        }
                     }
+
 
                 } else {
 
