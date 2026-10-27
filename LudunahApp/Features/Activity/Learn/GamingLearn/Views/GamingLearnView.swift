@@ -84,8 +84,8 @@ struct gameLearnView: View {
                 //the button outside the ScrollView.
                 // It stays at the bottom and takes the available width.
                 if viewModel.isLastCard {
-                    PrimaryButton(Title: "انتهيت") {
-                        // Your finish action goes here.
+                    PrimaryButton(title: "انتهيت",) {
+                        dismiss()
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, Spacing.pageMargin)
