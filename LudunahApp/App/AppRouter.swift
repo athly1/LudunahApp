@@ -32,8 +32,12 @@ final class AppRouter {
 
     // الانتقال إلى شاشة جديدة
     func push(_ route: AppRoute) {
+
+        // إضافة الوجهة الجديدة لمسار التنقل
         path.append(route)
     }
+
+    // MARK: - Pop
 
     // الرجوع إلى الشاشة السابقة
     func pop() {
