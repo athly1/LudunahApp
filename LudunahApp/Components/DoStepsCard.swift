@@ -1,30 +1,58 @@
-/*import SwiftUI
+import SwiftUI
 
-//Shows number of Steps in a Do activity
+// Shows the steps in a Do activity.
 struct DoStepsCard: View {
-    
-    //Inputs that changes from card to card
-    let HowTo: [String] = []//Steps
-    var stepRingColor: Color // Step color
+
+    // Steps supplied by the ViewModel.
+    let howTo: [String]
+
+    // Color of the step number circles.
+    let stepRingColor: Color
 
     var body: some View {
-        
-        VStack(spacing: 12) {
-            //Body text
-            List(HowTo, .) {
-                
-         Text(HowTo)
-                .font(.titleCards)
-                .foregroundStyle(Color.textPrimary)
-                .multilineTextAlignment(.center)
-                .lineSpacing(8)
-                //text take the whole horizontal area but vetical contain safe area 23
-                .fixedSize(horizontal: false, vertical: true)
 
+        VStack(spacing: Spacing.space12) {
+
+            // Loop through every step.
+            ForEach(Array(howTo.enumerated()), id: \.offset) { index, step in
+
+                HStack(alignment: .center, spacing: 8) {
+
+                    // MARK: - Number Circle
+                    ZStack {
+                        Circle()
+                            .stroke(stepRingColor, lineWidth: 2)
+                            .frame(width: 24, height: 24)
+
+                        Text("\(index + 1)")
+                            .font(.titleCards)
+                            .foregroundStyle(stepRingColor)
+                    }
+
+                    // MARK: - Step Instruction
+                    Text(step)
+                        .font(.titleCards)
+                        .foregroundStyle(Color.textPrimary)
+                        .multilineTextAlignment(.leading)
+                        .lineSpacing(8)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // MARK: - Subtle Divider
+                                if index < howTo.count - 1 {
+                                    Rectangle()
+                                        .fill(Color.textPrimary.opacity(0.11))
+                                        .frame(height: 1)
+                                        .padding(.leading, 8)
+                                }
+                
+            }
         }
         .padding(.horizontal, 24)
-        .padding(.top, 14)
-        .padding(.bottom, 28)
+        .padding(.top, Spacing.pageMargin)
+        .padding(.bottom, Spacing.pageMargin)
         .frame(maxWidth: .infinity)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24))
@@ -32,7 +60,15 @@ struct DoStepsCard: View {
     }
 }
 
-#Preview{
-    DoStepsCard(HowTo: "", stepRingColor: Color.blue )
+#Preview {
+    DoStepsCard(
+        howTo: [
+            "اخفِ الخريطة المصغّرة من إعدادات اللعبة",
+            "استكشف منطقة ما زرتها قبل",
+            "ارجع لنقطة البداية بالاعتماد على المعالم بس"
+        ],
+        stepRingColor: Color.mapSequers
+    )
+    .environment(\.locale, Locale(identifier: "ar"))
+    .environment(\.layoutDirection, .rightToLeft)
 }
-*/
