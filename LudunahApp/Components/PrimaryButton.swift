@@ -1,37 +1,71 @@
-// bottom button (ابدأ / التالي).
-// A View with a full-width prominent button.
-// Inputs: title, action.
-// Uses DesignSystem fonts and colors. Supports the disabled state.
-// Used by: OnboardingView, TaskSheet, ActivityFlowView, InstructionsSheet.
+
+// PrimaryButton.swift - الزر الرئيسي لتطبيق لُدُونه.
+//
+// Contains:
+// - Reusable primary button.
+// - Custom title and action.
+// - Disabled state.
+// - Design System styling.
+//
+// Used by: OnboardingView, TaskSheet,
+// ActivityFlowView, InstructionsSheet.
+// Learn: Button, closure, disabled.
 
 import SwiftUI
 
 struct PrimaryButton: View {
-    
-    var Title: String
-    //the action it does, passed when calling the Button in a View Struct
+
+    // عنوان الزر
+    let title: String
+
+    // هل الزر معطل؟
+    var isDisabled: Bool = false
+
+    // الدالة التي تنفذ عند الضغط
     let action: () -> Void
-    
+
     var body: some View {
-        
-        Button{
-        //Action
-        } label:{
-            Text(Title)
+
+        // تنفيذ الوظيفة التي استقبلناها
+        Button(action: action) {
+
+            Text(title)
                 .font(.primaryButton)
-                .foregroundColor(.textPrimary)
-                .frame(maxHeight: Spacing.ButtonTextPaddingHeight)
-        
-        }.buttonStyle(.glass)
-            .buttonSizing(.flexible) //to size with frame
-            .frame(maxWidth: Spacing.ButtonWidth ,alignment: .center)
-        
+                .foregroundStyle(Color.textPrimary)
+                .frame(maxWidth: .infinity)
+                .frame(minHeight: Spacing.controlHeight)
+        }
+
+        // تصميم Liquid Glass
+        .buttonStyle(.glass)
+
+        // أقصى عرض للزر
+        .frame(maxWidth: Spacing.ButtonWidth)
+
+        // تعطيل الزر عند الحاجة
+        .disabled(isDisabled)
+
+        // تقليل الشفافية عند التعطيل
+        .opacity(isDisabled ? 0.5 : 1)
     }
 }
 
-//Example on using it as start button with a simple action passed to it
+// MARK: - Preview
+
 #Preview {
-    PrimaryButton(Title: "ابدأ") {
-        print("pressed")
+    VStack(spacing: Spacing.space16) {
+
+        PrimaryButton(title: "التالي") {
+            print("Next tapped")
+        }
+
+        PrimaryButton(
+            title: "ابدأ",
+            isDisabled: true
+        ) {
+            print("Start tapped")
+        }
     }
+    .padding()
+    .background(Color.pageBackground)
 }
