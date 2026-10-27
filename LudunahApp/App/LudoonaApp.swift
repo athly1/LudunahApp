@@ -7,3 +7,12 @@
 // - AppState and AppRouter passed down with .environment.
 //
 // Learn: App, WindowGroup, NavigationStack, .environment
+
+import SwiftUI
+
+@main
+struct LudunahApp: App {
+    var body: some Scene {
+        //
+    }
+}

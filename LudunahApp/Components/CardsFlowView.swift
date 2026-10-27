@@ -1,10 +1,14 @@
+// Used By Learn type of Activity (Sport + Gaming), Swipe Up Stack of Cards
 import SwiftUI
 
+
+// MARK: - One Card Build
 struct InfoCard: View {
+    
     //Inputs that changes from card to card
     let CardIcon: String // SF Symbol name
     let iconBackground: Color // color of the soft box behind the icon
-    var iconColor: Color = Color.mapSequers // icon color
+    var iconColor: Color // icon color
     let text: String // Content
 
     var body: some View {
@@ -35,78 +39,95 @@ struct InfoCard: View {
         .frame(maxWidth: .infinity)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: .black.opacity(0.12), radius: 24, x: 0, y: 8)
+        .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 8)
     }
 }
 
-//Shows the cards one by one, swipe up for the next one
+
+// MARK: - Shows the cards one by one, swipe up for the next one
 struct CardsFlowView: View {
-    
-    //Inputs
-    let cards: [CardData] //All cards in order
-    var onFinish: () -> Void = {} //What happens when user taps "انتهيت"
 
-    //Number of the card on screen (starts at 0)
-    @State private var index = 0
+   // Inputs
+   var iconColor: Color // Icon color
+   var iconActivityBackground: Color // Color behind the icon
 
-    var body: some View {
-        
-        VStack(spacing: -42) {
-            
-            //The current card
-            let card = cards[index]
-            let style = iconStyles[card.icon] ?? defaultStyle
+   let cards: [ActivityCard] // All cards in order
 
-            //One Card
-            InfoCard(
-                CardIcon: style.symbol,
-                iconBackground: style.background,
-                iconColor: style.color,
-                text: card.text
-            )
-            .id(index) //new number = new card
-            .transition(.push(from: .bottom)) //Key Transition: new card comes from the bottom
-            .frame(maxHeight: .infinity)
+   // The parent view owns the index and passes it here.
+   // CardsFlowView displays the requested card but does not
+   // decide which card is currently selected.
+   let index: Int
 
-            //if Last card Show Done button
-            //otherwise Show swipe hint
-            if index == cards.count - 1 {
-                PrimaryButton(Title: "انتهيت") {
-                    // Action Here going Home
-                    onFinish() }
-            } else {
-                Image(systemName: "hand.draw")
-                    .font(.system(size: 42))
-                    .foregroundStyle(Color.textPrimary)
-                    .rotationEffect(.degrees(15)) //tilt the hand
-                  //move up then down, forever
-                  .phaseAnimator([false, true]) { content, isUp in
-                     content.offset(y: isUp ? -55 : 0)
-                 } animation: { _ in
-                     .easeInOut(duration: 0.8)
-                 }
-            }
-        }
-        .padding(.horizontal, 16)
-        .contentShape(Rectangle()) //whole screen can be swiped
-        .gesture(
-            DragGesture().onEnded { drag in
-                //swiped up enough and not on the last card → next card
-                if drag.translation.height < -80 && index < cards.count - 1 {
-                    withAnimation { index += 1 }
-                }
-            }
-        )
-        .environment(\.layoutDirection, .rightToLeft)  // Arabic layout
-    }
-}
+   // Called when the user swipes up.
+   // The parent decides how to update the index.
+   var onNext: () -> Void
 
-#Preview {
-    CardsFlowView(cards: [
-        CardData(icon: "hook", text: "تخيّل إنك لعبت على نفس الخريطة ٥٠ رتخيّل إنك لعبت على نفس الخريطة ٥٠ مرة. في أول مرة كنت تضيع وتسأل نفسك: وين أروح؟ الحين تعرف وين تختبئ، وأي طريق أقصر، ومن وين يجي الخصم، وكل هذا بدون ما تفكر."),
-        CardData(icon: "brain", text: "في دماغك منطقة صغيرة اسمها الحُصين."),
-        CardData(icon: "question", text: "تقدر ترسم خريطة لعبتك المفضلة من ذاكرتك؟")
-    ])
+   var body: some View {
+
+       // Only this ScrollView making it scrollable
+       ScrollView {
+           VStack(spacing: 200) {
+
+               // Check that the index points to a real card.
+               // This also prevents a crash if the array is empty.
+               if cards.indices.contains(index) {
+
+                   // The current card
+                   let card = cards[index]
+
+                   // One Card
+                   InfoCard(
+                       CardIcon: card.icon,
+                       iconBackground: iconActivityBackground,
+                       iconColor: iconColor,
+                       text: card.text
+                   )
+                   .id(index) // A new index means a new card
+                   .transition(.push(from: .bottom)) // THE transition
+                   // New card comes from the bottom
+                   .frame(maxWidth: .infinity)
+
+                   // If NOT the last card, show the swipe hint
+                   if index < cards.count - 1 {
+                       Image(systemName: "hand.draw")
+                           .font(.system(size: 42))
+                           .foregroundStyle(Color.textPrimary)
+                           .rotationEffect(.degrees(15)) // Tilt the hand
+                           // Move up then down, forever
+                           //animate bettwen 2 phases
+                           .phaseAnimator([false, true]) { content, isUp in
+                               //Moves it 55 upward then to original position
+                               content.offset(y: isUp ? -55 : 0)
+                           } animation: { _ in
+                               .easeInOut(duration: 0.8)
+                           }
+                   }
+               }
+           }
+           .padding(.horizontal, 16)
+           .padding(.vertical, 24)
+           .frame(maxWidth: .infinity)
+           //make the intended rectangular card area interactive.
+           .contentShape(Rectangle())
+           
+           
+           // Makes the card area respond to a swipe
+           .gesture(
+               DragGesture().onEnded { drag in
+
+                   // An upward swipe must exceed 80 points.
+                   // Ask the parent to advance to the next card.
+                   if drag.translation.height < -80 &&
+                       index < cards.count - 1 {
+                       onNext()
+                   }
+               }
+           )
+           .environment(\.layoutDirection, .rightToLeft)
+           // Keep the Arabic layout
+       }
+       .scrollIndicators(.hidden) // Hide the scroll bar
+   }
 }
 
 
