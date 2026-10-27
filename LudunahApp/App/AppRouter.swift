@@ -1,113 +1,94 @@
 
-// AppRouter.swift - إدارة التنقل بين شاشات التطبيق.
+// AppRouter.swift - إدارة التنقل بين شاشات لُدُونه.
 //
 // Contains:
-// - A Hashable enum representing app destinations.
-// - An @Observable class holding NavigationPath.
-// - Methods to push, pop, and return to root.
-// - A destination mapping for activity and settings.
+// - Routes for activities and settings.
+// - NavigationPath for navigation history.
+// - Push, pop, and popToRoot methods.
+// - Temporary destination views.
 //
-// Used by: LudoonaApp, HomeView, TaskSheet, ActivityFlowView.
-// Learn: enum, associated values, NavigationPath,
-//       NavigationStack, navigationDestination.
+// Used by: LudoonaApp, HomeView, TaskSheet.
+// Learn: NavigationPath, enum, @Observable, @ViewBuilder.
 
-import SwiftUI // يوفر واجهات SwiftUI وأدوات التنقل
-import Observation // يوفر @Observable
+import SwiftUI
+import Observation
 
-// MARK: - App Routes
-
-// تعريف الشاشات التي يمكن الانتقال إليها
+// تعريف وجهات التنقل
 enum AppRoute: Hashable {
 
-    // شاشة نشاط مرتبط باهتمام معين
+    // نشاط مرتبط باهتمام
     case activity(Interest)
 
-    // شاشة الإعدادات
+    // صفحة الإعدادات
     case settings
 }
 
-// MARK: - App Router
-
-// يجعل SwiftUI تتابع تغييرات التنقل
+// مدير التنقل
 @Observable
 final class AppRouter {
 
-    // يحتفظ بمسار الشاشات المفتوحة
+    // مسار الشاشات المفتوحة
     var path = NavigationPath()
-
-    // MARK: - Push
 
     // الانتقال إلى شاشة جديدة
     func push(_ route: AppRoute) {
-
-        // إضافة الوجهة الجديدة لمسار التنقل
         path.append(route)
     }
-
-    // MARK: - Pop
 
     // الرجوع إلى الشاشة السابقة
     func pop() {
 
-        // نتأكد أن فيه شاشة يمكن الرجوع منها
+        // لا نحذف من مسار فارغ
         guard !path.isEmpty else {
             return
         }
 
-        // حذف آخر شاشة من المسار
+        // حذف آخر وجهة
         path.removeLast()
     }
 
-    // MARK: - Pop to Root
-
-    // الرجوع إلى الصفحة الرئيسية
+    // الرجوع للشاشة الأساسية
     func popToRoot() {
-
-        // إزالة جميع الشاشات من مسار التنقل
         path = NavigationPath()
     }
 
-    
-    // MARK: - Destination Mapping
-
-    // تحديد الشاشة المناسبة لكل وجهة
+    // تحديد الواجهة المناسبة
     @ViewBuilder
     func destination(for route: AppRoute) -> some View {
 
-        // نحدد الشاشة المطلوبة حسب نوع الوجهة
         switch route {
 
-        // إذا اختار المستخدم أحد الأنشطة
+        // شاشة نشاط مؤقتة
         case .activity(let interest):
 
-            // شاشة مؤقتة إلى أن نبني ActivityFlowView
-            VStack(spacing: 20) {
+            VStack(spacing: Spacing.space24) {
 
                 Image(systemName: interest.iconName)
                     .font(.system(size: 50))
 
                 Text("تحدي \(interest.title)")
-                    .font(.title)
+                    .font(.title1Heading)
 
                 Text("قريبًا سنضيف شاشة التحدي")
-                    .foregroundStyle(.secondary)
+                    .font(.titleCards)
             }
+            .foregroundStyle(Color.textPrimary)
 
-        // إذا اختار المستخدم الإعدادات
+        // شاشة إعدادات مؤقتة
         case .settings:
 
-            // شاشة مؤقتة إلى أن نبني SettingsView
-            VStack(spacing: 20) {
+            VStack(spacing: Spacing.space24) {
 
                 Image(systemName: "gearshape")
                     .font(.system(size: 50))
 
                 Text("الإعدادات")
-                    .font(.title)
+                    .font(.title1Heading)
 
                 Text("قريبًا سنضيف إعدادات التطبيق")
-                    .foregroundStyle(.secondary)
+                    .font(.titleCards)
             }
+            .foregroundStyle(Color.textPrimary)
         }
-    }}
-
+    }
+}

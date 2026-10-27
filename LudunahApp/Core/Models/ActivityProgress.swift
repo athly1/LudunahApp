@@ -1,24 +1,31 @@
-// ActivityProgress.swift - one completed activity, used for weekly progress.
+
+// ActivityProgress.swift - سجل نشاط مكتمل.
 //
 // Contains:
-// - Struct with: date, interest.
-// - Conforms to Codable, Hashable.
+// - Date and interest of completed activity.
+// - Codable and Hashable support.
 //
 // Used by: StorageService, WeeklyProgressChart.
-//يجمع الاهتمام مع تاريخ الإنجاز
+// Learn: struct, Date, init, Codable.
 
 import Foundation
 
-struct ActivityProgress: Codable,Hashable{
-    let date:Date
-    
-    let interest : Interest
-    // ينشئ سجل إنجاز جديد
-    init(date: Date = Date(), interest: Interest){
-        // يخزن التاريخ الذي استقبلناه
-        self.date=date
-        // يخزن الاهتمام الذي استقبلناه
-        self.interest=interest
-        
+// يمثل سجل إنجاز واحد
+struct ActivityProgress: Codable, Hashable {
+
+    // وقت إكمال النشاط
+    let date: Date
+
+    // الاهتمام المرتبط بالنشاط
+    let interest: Interest
+
+    // إنشاء سجل جديد
+    init(date: Date = Date(), interest: Interest) {
+
+        // حفظ التاريخ
+        self.date = date
+
+        // حفظ الاهتمام
+        self.interest = interest
     }
 }

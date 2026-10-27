@@ -1,45 +1,40 @@
-// Interest.swift - enum: art, sport, gaming.
-//
-// Contains:
-// - Enum with cases art, sport, gaming and a String raw value.
-// - Conforms to CaseIterable, Identifiable, Codable, Hashable.
-// - Computed title and icon name.
-//
-// Used by: onboarding, Home, Activity screens, AppState, StorageService.
 
-// Interest.swift - تعريف الاهتمامات المتاحة للمستخدم.
+// Interest.swift - تعريف اهتمامات المستخدم.
 //
 // Contains:
-// - Interest enum with supported interests.
-// - Display title and icon for each interest.
+// - Enum for art, sport, gaming.
+// - Arabic titles and SF Symbol names.
 //
-// Used by: AppState, onboarding, Home, Activity screens.
-// Learn: enum, CaseIterable, Identifiable, Codable, Hashable.
+// Used by: AppState, Onboarding, Home, Activities.
+// Learn: enum, CaseIterable, Codable, Hashable.
+
 import Foundation
-//String    يعطي كل اهتمام قيمة نصية، مثل "art"
-//CaseIterable    يسمح لنا نعرض جميع الاهتمامات
-//Identifiable    يعطي كل اهتمام هوية مميزة
-//Codable    يساعدنا نحفظ الاهتمامات ونسترجعها
-//Hashable    يسمح لنا نخزن الاهتمامات في Set بدون تكرار
+
+// أنواع الاهتمامات المتاحة
 enum Interest: String, CaseIterable, Identifiable, Codable, Hashable {
-    case art
-    case sport
-    case gaming
-    
-    var id: String { rawValue }
-    // اسم الاهتمام الذي يظهر للمستخدم بالعربي
+
+    case art      // الفن
+    case sport    // الرياضة
+    case gaming   // القايمنق
+
+    // معرف كل اهتمام
+    var id: String {
+        rawValue
+    }
+
+    // الاسم الذي يظهر للمستخدم
     var title: String {
         switch self {
         case .art:
-            return " الفن السعودي"
+            return "الفن السعودي"
         case .sport:
             return "الرياضة"
         case .gaming:
-            return " الألعاب الالكترونية"
+            return "القايمنق"
         }
     }
-    
-    // اسم الأيقونة المستخدمة من SF Symbols
+
+    // أيقونة الاهتمام من SF Symbols
     var iconName: String {
         switch self {
         case .art:
@@ -49,4 +44,5 @@ enum Interest: String, CaseIterable, Identifiable, Codable, Hashable {
         case .gaming:
             return "gamecontroller"
         }
-    }}
+    }
+}
