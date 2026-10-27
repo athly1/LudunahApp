@@ -1,65 +1,66 @@
 
-// AppState.swift - إدارة حالة التطبيق واهتمامات المستخدم.
+// AppState.swift - حالة التطبيق واهتمامات المستخدم.
 //
 // Contains:
-// - An @Observable class for application state.
-// - Tracks onboarding completion and selected interests.
-// - Loads and saves values through StorageService.
-// - Methods to complete onboarding, update interests, and reset.
+// - Observable application state.
+// - Onboarding completion status.
+// - Selected interests.
+// - Save and load through StorageService.
 //
-// Used by: LudoonaApp, OnboardingViewModel, HomeViewModel, SettingsView.
-// Learn: @Observable, @Environment, init, Set, dependency injection.
+// Used by: LudoonaApp, OnboardingViewModel,
+// HomeViewModel, SettingsView.
+// Learn: @Observable, init, private(set).
 
 import Foundation
-import Observation // يوفر @Observable لمتابعة تغيّر البيانات
+import Observation
 
-// يجعل SwiftUI قادرة على متابعة حالة التطبيق
+// حالة التطبيق القابلة للملاحظة
 @Observable
 final class AppState {
 
-    // هل المستخدم أكمل صفحات البداية؟
+    // هل المستخدم أكمل البداية؟
     private(set) var isOnboardingCompleted: Bool
 
-    // الاهتمامات التي اختارها المستخدم
+    // الاهتمامات المختارة
     private(set) var selectedInterests: Set<Interest>
 
-    // خدمة التخزين التي سنستخدمها للحفظ والقراءة
+    // خدمة التخزين
     private let storage: StorageService
 
-    // تجهيز حالة التطبيق عند إنشائها
+    // تجهيز حالة التطبيق
     init(storage: StorageService = StorageService()) {
 
-        // الاحتفاظ بخدمة التخزين لاستخدامها لاحقًا
+        // الاحتفاظ بخدمة التخزين
         self.storage = storage
 
-        // قراءة حالة صفحات البداية من التخزين
+        // قراءة حالة البداية المحفوظة
         self.isOnboardingCompleted = storage.loadOnboardingCompleted()
 
-        // قراءة اهتمامات المستخدم المحفوظة
+        // قراءة الاهتمامات المحفوظة
         self.selectedInterests = storage.loadSelectedInterests()
     }
 
     // MARK: - Onboarding
 
-    // إنهاء صفحات البداية وحفظ الحالة
+    // إكمال صفحات البداية
     func completeOnboarding() {
 
-        // تحديث الحالة داخل التطبيق
+        // تحديث الحالة
         isOnboardingCompleted = true
 
-        // حفظ الحالة لاستخدامها عند فتح التطبيق لاحقًا
+        // حفظ الحالة
         storage.saveOnboardingCompleted(true)
     }
 
     // MARK: - Interests
 
-    // تحديث الاهتمامات التي اختارها المستخدم
+    // تحديث الاهتمامات
     func updateInterests(_ interests: Set<Interest>) {
 
-        // تحديث الاهتمامات في حالة التطبيق
+        // تحديث الاختيارات الحالية
         selectedInterests = interests
 
-        // حفظ الاهتمامات الجديدة على الجهاز
+        // حفظ الاختيارات
         storage.saveSelectedInterests(interests)
     }
 
@@ -68,13 +69,13 @@ final class AppState {
     // إعادة التطبيق لحالة البداية
     func reset() {
 
-        // حذف البيانات المحفوظة التي يديرها StorageService
+        // حذف البيانات المحفوظة
         storage.resetEverything()
 
-        // إعادة حالة صفحات البداية إلى غير مكتملة
+        // إعادة حالة البداية
         isOnboardingCompleted = false
 
-        // إزالة جميع الاهتمامات المحددة
+        // إلغاء اختيار جميع الاهتمامات
         selectedInterests = []
     }
 }
