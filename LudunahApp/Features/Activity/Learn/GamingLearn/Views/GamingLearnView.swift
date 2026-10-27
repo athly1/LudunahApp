@@ -70,13 +70,11 @@ struct gameLearnView: View {
                     onNext: {
                         // Update the parent-owned index.
                         // The progress bar updates automatically.
-                        func UpdateProgressBar(){
                             if viewModel.index < viewModel.totalCards - 1{
                                 withAnimation {
                                     viewModel.index += 1
                                 }
                             }
-                        }
                     }
                 )
                 // MARK: - Bottom End Button

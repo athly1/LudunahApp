@@ -1,17 +1,18 @@
-import SwiftUI
+/*import SwiftUI
 
 //Shows number of Steps in a Do activity
 struct DoStepsCard: View {
     
     //Inputs that changes from card to card
-    let HowTo: String="" //Steps
-    var srepRingColor: Color // Step color
+    let HowTo: [String] = []//Steps
+    var stepRingColor: Color // Step color
 
     var body: some View {
         
         VStack(spacing: 12) {
-            
             //Body text
+            List(HowTo, .) {
+                
          Text(HowTo)
                 .font(.titleCards)
                 .foregroundStyle(Color.textPrimary)
@@ -30,3 +31,8 @@ struct DoStepsCard: View {
         .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 8)
     }
 }
+
+#Preview{
+    DoStepsCard(HowTo: "", stepRingColor: Color.blue )
+}
+*/
