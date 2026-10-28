@@ -1,10 +1,3 @@
-//
-//  DailyChallengeCard.swift
-//  LudunahApp
-//
-//  Created by nuha on 27/10/2026.
-//
-
 
 import SwiftUI
 
@@ -13,67 +6,107 @@ struct DailyChallengeCard: View {
     let category: String
     let minutes: Int
     let isCompleted: Bool
+
+    // اسم الصورة في Assets.xcassets
     let iconName: String
-    let iconColor: Color
+    let iconBackground: Color
+
     let onSwap: () -> Void
     let onTap: () -> Void
 
     var body: some View {
         HStack(spacing: Spacing.space16) {
 
-            // أيقونة التحدي
-            Image(systemName: iconName)
-                .font(.system(size: 24, weight: .medium))
-                .foregroundStyle(iconColor)
-                .frame(width: 48, height: 48)
-                .background(iconColor.opacity(0.12))
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+            // البطاقة نفسها
+            HStack(spacing: Spacing.space12) {
 
-            // تفاصيل التحدي
-            Button(action: onTap) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(title)
-                        .font(.titleCards)
-                        .foregroundStyle(Color.textPrimary)
+                // أيقونة الفئة من Assets.xcassets
+                Image(iconName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 54, height: 54)
+                    .background(iconBackground)
+                    .clipShape(
+                        RoundedRectangle(
+                            cornerRadius: 16,
+                            style: .continuous
+                        )
+                    )
+                    .accessibilityHidden(true)
 
-                    Text("\(category) · \(minutes) دقائق")
-                        .font(.caption)
-                        .foregroundStyle(Color.appSecondary)
+                // تفاصيل التحدي
+                Button(action: onTap) {
+                    VStack(alignment: .leading, spacing: Spacing.space8) {
+                        Text(title)
+                            .font(.challengeCardTitle)
+                            .foregroundStyle(Color.textPrimary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .frame(
+                                maxWidth: .infinity,
+                                alignment: .leading
+                            )
+
+                        Text("\(category) · \(minutes) دقائق")
+                            .font(.challengeCardSubtitle)
+                            .foregroundStyle(Color.appSecondary)
+                            .lineLimit(1)
+                            .frame(
+                                maxWidth: .infinity,
+                                alignment: .leading
+                            )
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
+                .buttonStyle(.plain)
 
-            // تبديل التحدي
+                // حالة الإنجاز
+                Image(
+                    systemName: isCompleted
+                        ? "checkmark.circle.fill"
+                        : "circle"
+                )
+                .font(.system(size: 24))
+                .foregroundStyle(
+                    isCompleted
+                        ? Color.actionPrimary
+                        : Color.challengeRadioInactive
+                )
+                .frame(width: 24, height: 24)
+                .accessibilityLabel(
+                    isCompleted ? "مكتمل" : "غير مكتمل"
+                )
+            }
+            .padding(.horizontal, Spacing.space16)
+            .frame(maxWidth: .infinity)
+            .frame(height: 88)
+            .background(Color.glassBackground)
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: 25,
+                    style: .continuous
+                )
+            )
+            .shadow(
+                color: Color.black.opacity(0.06),
+                radius: 10,
+                x: 0,
+                y: 4
+            )
+
+            // زر التبديل خارج البطاقة وعلى يسارها
             Button(action: onSwap) {
                 Image(systemName: "arrow.left.arrow.right")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(Color.appSecondary)
-                    .frame(width: 32, height: 40)
+                    .frame(width: 10, height: 20)
+                    .contentShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glass)
+            .frame(width: 10, height: 20)
             .accessibilityLabel("تبديل التحدي")
-
-            // حالة الإنجاز
-            Image(
-                systemName: isCompleted
-                    ? "checkmark.circle.fill"
-                    : "circle"
-            )
-            .font(.system(size: 22))
-            .foregroundStyle(
-                isCompleted ? Color.appSecondary : Color.textPrimary.opacity(0.4)
-            )
-        }
-        .padding(Spacing.space16)
-        .background(Color.pageBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.appSecondary.opacity(0.2), lineWidth: 1)
         }
         .environment(\.layoutDirection, .rightToLeft)
     }
 }
-

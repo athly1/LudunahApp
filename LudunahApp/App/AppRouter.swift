@@ -1,4 +1,3 @@
-
 // AppRouter.swift - إدارة التنقل بين شاشات لُدُونه.
 //
 // Contains:
@@ -13,76 +12,70 @@
 import SwiftUI
 import Observation
 
-// تعريف وجهات التنقل
 enum AppRoute: Hashable {
-
-    // نشاط مرتبط باهتمام
     case activity(Interest)
-
-    // صفحة الإعدادات
     case settings
 }
 
-// مدير التنقل
 @Observable
 final class AppRouter {
 
-    // مسار الشاشات المفتوحة
     var path = NavigationPath()
 
-    // الانتقال إلى شاشة جديدة
-    func push(_ route: AppRoute) {
+    // التحديات التي انتهى المستخدم منها
+    private(set) var completedInterests: Set<Interest> = []
 
-        // إضافة الوجهة الجديدة لمسار التنقل
+    func push(_ route: AppRoute) {
         path.append(route)
     }
 
-    // MARK: - Pop
-
-    // الرجوع إلى الشاشة السابقة
     func pop() {
-
-        // لا نحذف من مسار فارغ
-        guard !path.isEmpty else {
-            return
-        }
-
-        // حذف آخر وجهة
+        guard !path.isEmpty else { return }
         path.removeLast()
     }
 
-    // الرجوع للشاشة الأساسية
     func popToRoot() {
         path = NavigationPath()
     }
 
-    // تحديد الواجهة المناسبة
+    // تسجيل الإنجاز عند الانتهاء فقط
+    func markCompleted(_ interest: Interest) {
+        completedInterests.insert(interest)
+    }
+
+    // إزالة الإنجاز إذا استُبدل التحدي
+    func resetCompletion(_ interest: Interest) {
+        completedInterests.remove(interest)
+    }
+
     @ViewBuilder
     func destination(for route: AppRoute) -> some View {
-
         switch route {
 
-        // شاشة نشاط مؤقتة
         case .activity(let interest):
-
             VStack(spacing: Spacing.space24) {
-
                 Image(systemName: interest.iconName)
                     .font(.system(size: 50))
 
                 Text("تحدي \(interest.title)")
                     .font(.title1Heading)
 
-                Text("قريبًا سنضيف شاشة التحدي")
+                Text("هذه شاشة مؤقتة لاختبار تسجيل الإنجاز.")
                     .font(.titleCards)
+                    .multilineTextAlignment(.center)
+
+                PrimaryButton(title: "إنهاء التحدي") {
+                    self.markCompleted(interest)
+                    self.pop()
+                }
             }
+            .padding(Spacing.pageMargin)
             .foregroundStyle(Color.textPrimary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.pageBackground.ignoresSafeArea())
 
-        // شاشة إعدادات مؤقتة
         case .settings:
-
             VStack(spacing: Spacing.space24) {
-
                 Image(systemName: "gearshape")
                     .font(.system(size: 50))
 
@@ -93,6 +86,8 @@ final class AppRouter {
                     .font(.titleCards)
             }
             .foregroundStyle(Color.textPrimary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.pageBackground.ignoresSafeArea())
         }
     }
 }

@@ -129,5 +129,3 @@ struct CardsFlowView: View {
        .scrollIndicators(.hidden) // Hide the scroll bar
    }
 }
-
-
