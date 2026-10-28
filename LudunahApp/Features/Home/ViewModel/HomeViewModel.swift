@@ -6,37 +6,46 @@
 //
 // Used by: HomeView.
 
-
 import Foundation
 import Observation
 
 @Observable
 final class HomeViewModel {
 
-    // MARK: - User Selections
-
+    // مستوى الطاقة من 0 إلى 100
     var energyValue: Int = 50
-    var selectedInterests: Set<Interest> = []
 
-    // MARK: - Current Activity
+    // ملخص النشاط الذي سيظهر للمستخدم
+    private(set) var currentTask: DailyTask?
 
+    // بيانات النشاط الكاملة من JSON
     private(set) var currentActivity: Activity?
+
+    // الاهتمام المرتبط بالنشاط
     private(set) var currentInterest: Interest?
+
+    // عدد الخيارات التي ظهرت
     private(set) var choicesShown: Int = 0
+
+    // رسالة الخطأ إن وجدت
     private(set) var errorMessage: String?
 
-    // الأنشطة المتاحة للاهتمام والنوع الحاليين
-    private var alternatives: [Activity] = []
+    // الأنشطة البديلة
+    private var alternatives: [
+        (interest: Interest, activity: Activity)
+    ] = []
 
-    // MARK: - Energy
-
+    // تحويل قيمة الطاقة إلى مستوى
     var energyLevel: EnergyLevel {
         EnergyLevel.from(value: energyValue)
     }
 
+    // نوع النشاط المطلوب حسب الطاقة
     var requiredActivityStep: ActivityStep {
         energyLevel.activityStep
     }
+
+    // MARK: - Energy
 
     func selectEnergy(value: Int) {
         energyValue = min(max(value, 0), 100)
@@ -45,67 +54,89 @@ final class HomeViewModel {
 
     // MARK: - Build Today's Task
 
-    func buildTodaysTask() {
-        resetActivity()
-        errorMessage = nil
+    func buildTodaysTask(using appState: AppState) {
 
-        guard !selectedInterests.isEmpty else {
-            errorMessage = "اختاري اهتمامًا واحدًا على الأقل."
+        resetActivity()
+
+        // قراءة الاهتمامات المحفوظة
+        let interests = appState.selectedInterests
+
+        guard !interests.isEmpty else {
+            errorMessage = "اختار اهتمامًا واحدًا على الأقل."
             return
         }
 
         do {
-            // تحميل الأنشطة من الاهتمامات المختارة فقط
             var availableActivities: [
-                (interest: Interest, activities: [Activity])
+                (interest: Interest, activity: Activity)
             ] = []
 
+            // قراءة أنشطة كل اهتمام مختار
             for interest in Interest.allCases
-            where selectedInterests.contains(interest) {
+            where interests.contains(interest) {
 
                 let activities = try ContentService
                     .loadActivities(for: interest)
-                    .filter { $0.type == requiredActivityStep }
+                    .filter {
+                        $0.type == requiredActivityStep
+                    }
 
-                if !activities.isEmpty {
+                for activity in activities {
                     availableActivities.append(
-                        (interest: interest, activities: activities)
+                        (interest: interest, activity: activity)
                     )
                 }
             }
 
-            guard let selection = availableActivities.randomElement(),
-                  let firstActivity = selection.activities.randomElement()
+            // اختيار نشاط مناسب عشوائيًا
+            guard let selected = availableActivities.randomElement()
             else {
-                errorMessage = "لم نجد نشاطًا مناسبًا للاختيارات الحالية."
+                errorMessage =
+                    "لم نجد نشاطًا مناسبًا لاختيارك."
                 return
             }
 
-            // الاحتفاظ بالبدائل من الاهتمام والنوع نفسيهما
-            currentInterest = selection.interest
-            currentActivity = firstActivity
+            // الاحتفاظ ببيانات النشاط
+            currentActivity = selected.activity
+            currentInterest = selected.interest
 
-            alternatives = selection.activities.filter {
-                $0.id != firstActivity.id
+            // إنشاء ملخص النشاط
+            currentTask = DailyTask(
+                activity: selected.activity,
+                interest: selected.interest
+            )
+
+            // تجهيز الخيارات البديلة
+            alternatives = availableActivities.filter {
+                $0.activity.id != selected.activity.id
             }
 
             choicesShown = 1
 
         } catch {
-            errorMessage = "تعذّر تحميل الأنشطة. حاولي مرة أخرى."
+            errorMessage =
+                "تعذّر تحميل الأنشطة. حاول مرة أخرى."
         }
     }
 
-    // MARK: - Alternative Activity
+    // MARK: - Alternative
 
     func showAlternative() {
+
+        // نعرض خيارين كحد أقصى
         guard choicesShown < 2,
-              let nextActivity = alternatives.first
-        else {
+              let next = alternatives.first else {
             return
         }
 
-        currentActivity = nextActivity
+        currentActivity = next.activity
+        currentInterest = next.interest
+
+        currentTask = DailyTask(
+            activity: next.activity,
+            interest: next.interest
+        )
+
         alternatives.removeFirst()
         choicesShown += 1
     }
@@ -113,6 +144,7 @@ final class HomeViewModel {
     // MARK: - Reset
 
     private func resetActivity() {
+        currentTask = nil
         currentActivity = nil
         currentInterest = nil
         alternatives = []

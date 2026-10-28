@@ -10,7 +10,8 @@ struct gamingDoView: View {
 
         _viewModel = StateObject(wrappedValue: viewModel)
         _timerEngine = StateObject(
-            wrappedValue: TimerEngine(duration: viewModel.durationMin * 60)
+            wrappedValue: TimerEngine(
+                duration: viewModel.durationMin * 60)
         )
     }
     

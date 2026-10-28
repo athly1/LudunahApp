@@ -76,7 +76,7 @@ struct gamingCreateView: View {
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
     }
 }
 
