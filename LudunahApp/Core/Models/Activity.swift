@@ -1,11 +1,3 @@
-//
-//  Activity.swift
-//  LudunahApp
-//
-//  Created by nuha on 26/10/2026.
-//
-
-
 import Foundation
 
 struct Activity: Decodable, Identifiable {
@@ -94,11 +86,29 @@ struct ActivityPhase: Decodable {
 }
 
 struct ActivityGain: Decodable {
+    let title: String?
     let now: String
     let withPractice: String
 
     enum CodingKeys: String, CodingKey {
+        case title
         case now
         case withPractice = "with_practice"
+        case description
+    }
+
+    // يدعم الصيغتين:
+    // - now / with_practice
+    // - title / description (ملفات الفن الجديدة)
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+
+        title = try container.decodeIfPresent(String.self, forKey: .title)
+
+        let nowValue = try container.decodeIfPresent(String.self, forKey: .now)
+        let descriptionValue = try container.decodeIfPresent(String.self, forKey: .description)
+
+        now = nowValue ?? descriptionValue ?? ""
+        withPractice = try container.decodeIfPresent(String.self, forKey: .withPractice) ?? ""
     }
 }

@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 struct InstructionsSheet: View {
@@ -36,24 +35,43 @@ struct InstructionsSheet: View {
     // Receive activity data from the ViewModel.
     @StateObject private var viewModel: InstructionsSheetViewModel
 
-    init(interest: Interest, InterestImage:String ) {
+    // Closes the card and returns to Home (provided by HomeView).
+    var onClose: () -> Void
+
+    // Used to open the temporary screens.
+    @Environment(AppRouter.self) private var appRouter
+
+    // `activity` is the challenge the user tapped on Home.
+    init(
+        interest: Interest,
+        InterestImage: String,
+        activity: Activity? = nil,
+        onClose: @escaping () -> Void = {}
+    ) {
         self.InterestImage = InterestImage
+        self.onClose = onClose
 
         _viewModel = StateObject(
-            wrappedValue: InstructionsSheetViewModel(interest: interest)
+            wrappedValue: InstructionsSheetViewModel(
+                interest: interest,
+                activity: activity
+            )
         )
+    }
+
+    // Gaming has real screens. Art and Sport still use the router screen.
+    private func startActivity() {
+        if viewModel.interest == .gaming {
+            showActivity = true
+        } else {
+            onClose()
+            appRouter.push(.activity(viewModel.interest))
+        }
     }
     
     var body: some View {
 
-        ZStack {
-
-            Color.pageBackground
-                .ignoresSafeArea()
-
-                // Bottom sheet.
-                .sheet(isPresented: .constant(true)) {
-
+        // The view itself is the sheet content (presented from Home).
                     VStack(spacing: 0) {
 
                         // MARK: - Header
@@ -133,7 +151,7 @@ struct InstructionsSheet: View {
                         
                             // MARK: - Start button
                             PrimaryButton(title: "ابدأ التحدي") {
-                                showActivity = true
+                                startActivity()
                             }
                         
                     }
@@ -143,15 +161,29 @@ struct InstructionsSheet: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.pageBackground)
 
+                    // Drag indicator + swipe down to close.
+                    .overlay(alignment: .top) {
+                        Capsule()
+                            .fill(Color.textPrimary.opacity(0.25))
+                            .frame(width: 40, height: 5)
+                            .padding(.top, 10)
+                    }
+                    .gesture(
+                        DragGesture().onEnded { value in
+                            if value.translation.height > 80 {
+                                onClose()
+                            }
+                        }
+                    )
+
                     // Bottom-sheet height.
-                    .presentationDetents([.fraction(0.65)])
-                    .presentationDragIndicator(.visible)
                     .environment(\.layoutDirection, .rightToLeft)
-                    .fullScreenCover(isPresented: $showActivity) {
+                    .fullScreenCover(isPresented: $showActivity, onDismiss: {
+                        // After the challenge ends, go back to Home directly.
+                        onClose()
+                    }) {
                         activityDestination
                     }
-                }
-        }
     }
 }
 
@@ -225,8 +257,6 @@ struct SetOfShips: View {
     
     //called at home
     InstructionsSheet(interest: .gaming, InterestImage: "GameLudunah" )
+        .environment(AppRouter())
         .environment(\.layoutDirection, .rightToLeft)
 }
-
-
-

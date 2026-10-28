@@ -1,4 +1,3 @@
-
 import Foundation
 import Combine
 import SwiftUI
@@ -23,14 +22,15 @@ final class InstructionsSheetViewModel: ObservableObject {
     let interest: Interest
     @Published var activity: Activity?
         
-        init(interest: Interest) {
+        init(interest: Interest, activity preselected: Activity? = nil) {
             self.interest = interest
 
             do {
                 let activities = try ContentService.loadActivities(for: interest)
 
                 // Select one random activity.
-                guard let activity = activities.randomElement() else {
+                // Use the activity chosen on Home, or pick a random one.
+                guard let activity = preselected ?? activities.randomElement() else {
                     print("No activities found.")
                     return
                 }
