@@ -89,7 +89,8 @@ struct ArtLearnView: View {
                 Image(imageName)
 
                     // السماح بتغيير حجم الصورة
-                    .resizable()
+                    .resizable().shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 4)
+
 
                     // المحافظة على أبعادها
                     .scaledToFit()
