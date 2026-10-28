@@ -25,10 +25,12 @@ final class AppRouter {
     // التحديات التي انتهى المستخدم منها
     private(set) var completedInterests: Set<Interest> = []
 
+    // الانتقال إلى شاشة جديدة
     func push(_ route: AppRoute) {
         path.append(route)
     }
 
+    // الرجوع إلى الشاشة السابقة
     func pop() {
         guard !path.isEmpty else { return }
         path.removeLast()
@@ -76,7 +78,6 @@ final class AppRouter {
 
         case .settings:
             SettingsView()
-            
         }
     }
 }
