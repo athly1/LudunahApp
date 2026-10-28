@@ -1,232 +1,437 @@
 
-// OnboardingView.swift - صفحات البداية لتطبيق لُدُونه.
-//
-// Contains:
-// - Splash, Intro, How It Works, Interests.
-// - InterestChip for interest selection.
-// - PrimaryButton for navigation.
-// - LudunahLogo from Assets.
-// - Design System styling.
-//
-// Used by: LudoonaApp.
-// Learn: TabView, @State, @Environment, Binding.
-
 import SwiftUI
-
-// MARK: - Onboarding View
 
 struct OnboardingView: View {
 
-    // منطق صفحات البداية
-    @State private var viewModel = OnboardingViewModel()
+    // MARK: - Navigation State
 
-    // حالة التطبيق المشتركة
-    @Environment(AppState.self) private var appState
-
-    // رقم الصفحة الأخيرة
-    private let lastPage = 3
+    // 0 = الشاشة الأولى، 1 = المميزات، 2 = الاهتمامات
+    @State private var step = 0
 
     var body: some View {
 
-        VStack(spacing: Spacing.space24) {
+        GeometryReader { proxy in
 
-            // عرض صفحات البداية
-            TabView(
-                selection: Binding(
-                    get: {
-                        viewModel.currentPage
-                    },
-                    set: { newPage in
-                        viewModel.goToPage(newPage)
-                    }
+        ZStack {
+
+            switch step {
+
+            case 1:
+
+                // Second Onboarding Screen
+
+                OnboardingBenefitsView(
+                    onNext: { goTo(2) },
+                    onSelectPage: goTo
                 )
-            ) {
+                .transition(.slideToRight(width: proxy.size.width))
 
-                // الصفحة الأولى
-                splashPage
-                    .tag(0)
+            case 2:
 
-                // الصفحة الثانية
-                introPage
-                    .tag(1)
+                // Third Onboarding Screen
 
-                // الصفحة الثالثة
-                howItWorksPage
-                    .tag(2)
+                OnboardingInterestsView(onSelectPage: goTo)
+                    .transition(.slideToRight(width: proxy.size.width))
 
-                // الصفحة الرابعة
-                interestsPage
-                    .tag(3)
+            default:
+
+                // First Onboarding Screen
+
+                GeometryReader { geometry in
+
+                    VStack(spacing: 0) {
+
+                        // MARK: - Page Indicator
+
+                        // في RTL أول عنصر يكون على اليمين، لذلك النقاط قبل الـ Spacer
+                        HStack {
+
+                            PageIndicator(currentPage: 0, onSelect: goTo)
+
+                            Spacer()
+                        }
+                        .padding(.top, 12)
+                        .padding(.horizontal, 24)
+
+                        Spacer()
+                            .frame(height: geometry.size.height * 0.05)
+
+                        // MARK: - Illustration
+
+                        InterestIllustration()
+                            .frame(
+                                height: geometry.size.height * 0.38
+                            )
+                            .padding(.horizontal, 24)
+
+                        // MARK: - Text Content
+
+                        VStack(alignment: .leading, spacing: 12) {
+
+                            Text("دماغك ينمو كل يوم!")
+                                .font(.system(size: 32, weight: .bold))
+                                .foregroundStyle(
+                                    Color(
+                                        red: 0.42,
+                                        green: 0.30,
+                                        blue: 0.17
+                                    )
+                                )
+                                .frame(
+                                    maxWidth: .infinity,
+                                    alignment: .leading
+                                )
+                                .multilineTextAlignment(.leading)
+
+                            Text(
+                                "المرونة العصبية تعني أن دماغك يبني روابط جديدة مع كل شيء تتعلمه وتتدرب عليه، هذا التطبيق يساعدك على توجيه هذا التغيير."
+                            )
+                            .font(.system(size: 20, weight: .medium))
+                            .foregroundStyle(
+                                Color(
+                                    red: 0.42,
+                                    green: 0.30,
+                                    blue: 0.17
+                                )
+                            )
+                            .lineSpacing(3)
+                            .frame(
+                                maxWidth: .infinity,
+                                alignment: .leading
+                            )
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(
+                                horizontal: false,
+                                vertical: true
+                            )
+                        }
+                        .frame(maxWidth: .infinity)
+                        .environment(\.layoutDirection, .rightToLeft)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 28)
+
+                        Spacer(minLength: 24)
+
+                  
+                        // MARK: - Next Button
+
+                        PrimaryButton(title: "التالي") {
+                            withAnimation(.easeInOut(duration: 0.3)) {
+                                goTo(1)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 24)
+                        }
+                        .frame(
+                            maxWidth: .infinity,
+                            maxHeight: .infinity
+                        )
+                        .background(
+                            Color(
+                                red: 0.96,
+                                green: 0.95,
+                                blue: 0.92
+                            )
+                        )
+                        }
+                        .transition(.slideToRight(width: proxy.size.width))
             }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-
-            // زر التالي أو ابدأ
-            PrimaryButton(
-                title: viewModel.currentPage == lastPage
-                    ? "ابدأ"
-                    : "التالي",
-
-                isDisabled: viewModel.currentPage == lastPage
-                    && !viewModel.canFinish
-            ) {
-
-                // هل وصل المستخدم إلى آخر صفحة؟
-                if viewModel.currentPage == lastPage {
-
-                    // حفظ الاهتمامات وإنهاء البداية
-                    viewModel.finish(using: appState)
-
-                } else {
-
-                    // الانتقال للصفحة التالية
-                    viewModel.nextPage()
-                }
-            }
-            .padding(.horizontal, Spacing.pageMargin)
-            .padding(.bottom, Spacing.space16)
         }
-        .background(Color.pageBackground.ignoresSafeArea())
+        }
         .environment(\.layoutDirection, .rightToLeft)
     }
 
-    // MARK: - Splash
-
-    private var splashPage: some View {
-
-        VStack(spacing: Spacing.space24) {
-
-            Spacer()
-
-            // شعار لُدُونه من Assets
-            Image("LudunahLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 150, height: 150)
-                .accessibilityLabel("شعار لُدُونه")
-
-            // اسم التطبيق
-            Text("لُدُونه")
-                .font(.title1Heading)
-                .foregroundStyle(Color.textPrimary)
-
-            // وصف التطبيق
-            Text("مساحة صغيرة لتنشيط عقلك كل يوم")
-                .font(.titleCards)
-                .foregroundStyle(Color.textPrimary)
-                .multilineTextAlignment(.center)
-
-            Spacer()
+    // الانتقال لصفحة معيّنة (من الأزرار أو من نقاط الصفحات)
+    private func goTo(_ page: Int) {
+        guard page != step else { return }
+        withAnimation(.easeInOut(duration: 0.3)) {
+            step = page
         }
-        .padding(Spacing.pageMargin)
     }
+}
 
-    // MARK: - Intro
+// MARK: - Slide Transition
 
-    private var introPage: some View {
+// يحرك الشاشة أفقيًا بعدد نقاط ثابت.
+// offset لا ينعكس مع RTL، لذلك اتجاه الحركة ثابت دائمًا.
+private struct HorizontalSlide: ViewModifier {
 
-        VStack(spacing: Spacing.space24) {
+    let x: CGFloat
 
-            Spacer()
+    func body(content: Content) -> some View {
+        content.offset(x: x)
+    }
+}
 
-            Image(systemName: "sparkles")
-                .font(.system(size: 70))
-                .foregroundStyle(Color.appPrimary)
+private extension AnyTransition {
 
-            Text("كل يوم فرصة تتعلم شيء جديد")
-                .font(.title1Heading)
-                .foregroundStyle(Color.textPrimary)
-                .multilineTextAlignment(.center)
+    // الشاشة الجديدة تدخل من اليسار والقديمة تخرج لليمين
+    // (كل شيء يتحرك باتجاه اليمين).
+    static func slideToRight(width: CGFloat) -> AnyTransition {
+        .asymmetric(
+            insertion: .modifier(
+                active: HorizontalSlide(x: -width),
+                identity: HorizontalSlide(x: 0)
+            ),
+            removal: .modifier(
+                active: HorizontalSlide(x: width),
+                identity: HorizontalSlide(x: 0)
+            )
+        )
+        .combined(with: .opacity)
+    }
+}
 
-            Text("أنشطة ذهنية قصيرة مستوحاة من اهتماماتك، تجمع بين التعلم والتطبيق والإبداع.")
-                .font(.titleCards)
-                .foregroundStyle(Color.appSecondary)
-                .multilineTextAlignment(.center)
+// MARK: - Interest Illustration
 
-            Spacer()
+private struct InterestIllustration: View {
+
+    var body: some View {
+
+        GeometryReader { geometry in
+
+            let cardWidth = (geometry.size.width - 64) / 3
+            let cardHeight = geometry.size.height * 0.78
+
+            HStack(spacing: 12) {
+
+                ArtCard()
+                    .frame(width: cardWidth, height: cardHeight)
+
+                PuzzleCard()
+                    .frame(width: cardWidth, height: cardHeight)
+
+                MountainCard()
+                    .frame(width: cardWidth, height: cardHeight)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.horizontal, 20)
+            .background(Color.white.opacity(0.75))
+            .clipShape(RoundedRectangle(cornerRadius: 48))
+            .shadow(
+                color: .black.opacity(0.08),
+                radius: 18,
+                y: 8
+            )
         }
-        .padding(Spacing.pageMargin)
     }
+}
 
-    // MARK: - How It Works
+// MARK: - Art Card
 
-    private var howItWorksPage: some View {
+private struct ArtCard: View {
 
-        VStack(spacing: Spacing.space24) {
+    var body: some View {
 
-            Spacer()
+        GeometryReader { geometry in
 
-            Image(systemName: "lightbulb")
-                .font(.system(size: 65))
-                .foregroundStyle(Color.appPrimary)
+            ZStack {
 
-            Text("كيف يعمل لُدُونه؟")
-                .font(.title1Heading)
-                .foregroundStyle(Color.textPrimary)
+                RoundedRectangle(cornerRadius: 22)
+                    .fill(
+                        Color(
+                            red: 0.10,
+                            green: 0.32,
+                            blue: 0.25
+                        )
+                    )
 
-            // مراحل النشاط
-            VStack(
-                alignment: .leading,
-                spacing: Spacing.space16
-            ) {
+                Rectangle()
+                    .fill(
+                        Color(
+                            red: 0.85,
+                            green: 0.61,
+                            blue: 0.28
+                        )
+                    )
+                    .frame(width: 4)
+                    .offset(x: geometry.size.width * 0.28)
 
-                Label(
-                    "تعلّم: اكتشف معلومة جديدة",
-                    systemImage: "book"
-                )
+                VStack(spacing: 13) {
 
-                Label(
-                    "طبّق: جرّب نشاطًا قصيرًا",
-                    systemImage: "hand.tap"
-                )
+                    Rectangle()
+                        .fill(
+                            Color(
+                                red: 0.65,
+                                green: 0.78,
+                                blue: 0.47
+                            )
+                        )
+                        .frame(height: 3)
 
-                Label(
-                    "ابتكر: عبّر عن أفكارك",
-                    systemImage: "paintbrush"
+                    Rectangle()
+                        .fill(.white)
+                        .frame(height: 3)
+
+                    Rectangle()
+                        .fill(
+                            Color(
+                                red: 0.65,
+                                green: 0.78,
+                                blue: 0.47
+                            )
+                        )
+                        .frame(height: 3)
+                }
+                .padding(.horizontal, 12)
+                .offset(y: geometry.size.height * 0.12)
+            }
+            .shadow(
+                color: .black.opacity(0.16),
+                radius: 5,
+                y: 4
+            )
+        }
+    }
+}
+
+// MARK: - Puzzle Card
+
+private struct PuzzleCard: View {
+
+    var body: some View {
+
+        GeometryReader { geometry in
+
+            ZStack {
+
+                RoundedRectangle(cornerRadius: 22)
+                    .fill(
+                        Color(
+                            red: 0.65,
+                            green: 0.60,
+                            blue: 0.88
+                        )
+                    )
+
+                let positions: [(CGFloat, CGFloat, Color)] = [
+                    (-0.25, -0.10, Color.cyan.opacity(0.65)),
+                    (0.25, -0.10, Color.purple.opacity(0.65)),
+                    (0, 0.10, .white),
+                    (-0.25, 0.30, Color.purple.opacity(0.65)),
+                    (0.25, 0.30, Color.cyan.opacity(0.65))
+                ]
+
+                ForEach(positions.indices, id: \.self) { index in
+
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(positions[index].2)
+                        .frame(width: 16, height: 16)
+                        .position(
+                            x: geometry.size.width
+                                * (0.5 + positions[index].0),
+                            y: geometry.size.height
+                                * (0.5 + positions[index].1)
+                        )
+                }
+            }
+            .shadow(
+                color: .black.opacity(0.16),
+                radius: 5,
+                y: 4
+            )
+        }
+    }
+}
+
+// MARK: - Mountain Card
+
+private struct MountainCard: View {
+
+    var body: some View {
+
+        GeometryReader { geometry in
+
+            ZStack {
+
+                RoundedRectangle(cornerRadius: 22)
+                    .fill(
+                        Color(
+                            red: 0.96,
+                            green: 0.88,
+                            blue: 0.82
+                        )
+                    )
+
+                HStack(alignment: .bottom, spacing: 8) {
+
+                    Mountain()
+                        .fill(
+                            Color(
+                                red: 0.57,
+                                green: 0.23,
+                                blue: 0.20
+                            )
+                        )
+
+                    Mountain()
+                        .fill(
+                            Color(
+                                red: 0.82,
+                                green: 0.56,
+                                blue: 0.43
+                            )
+                        )
+
+                    Mountain()
+                        .fill(
+                            Color(
+                                red: 0.36,
+                                green: 0.52,
+                                blue: 0.46
+                            )
+                        )
+                }
+                .frame(height: 22)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 8)
+                .frame(
+                    maxHeight: .infinity,
+                    alignment: .bottom
                 )
             }
-            .font(.titleCards)
-            .foregroundStyle(Color.textPrimary)
-
-            Spacer()
+            .shadow(
+                color: .black.opacity(0.12),
+                radius: 5,
+                y: 4
+            )
         }
-        .padding(Spacing.pageMargin)
     }
+}
 
-    // MARK: - Interests
+// MARK: - Mountain Shape
 
-    private var interestsPage: some View {
+private struct Mountain: Shape {
 
-        VStack(spacing: Spacing.space24) {
+    func path(in rect: CGRect) -> Path {
 
-            Spacer()
+        Path { path in
 
-            Text("وش اهتماماتك؟")
-                .font(.title1Heading)
-                .foregroundStyle(Color.textPrimary)
-
-            Text("اختاري المجالات اللي تحبينها عشان نخصص لك الأنشطة.")
-                .font(.titleCards)
-                .foregroundStyle(Color.appSecondary)
-                .multilineTextAlignment(.center)
-
-            // عرض الاهتمامات
-            InterestChip(
-                selectedInterests: viewModel.selectedInterests,
-                onToggle: { interest in
-
-                    // إضافة أو إزالة اهتمام
-                    viewModel.toggleInterest(interest)
-                }
+            path.move(
+                to: CGPoint(
+                    x: rect.minX,
+                    y: rect.maxY
+                )
             )
 
-            // عدد الاهتمامات المختارة
-            Text("اخترتِ \(viewModel.selectedInterests.count) من 3")
-                .font(.dailyMinutesStyle)
-                .foregroundStyle(Color.appSecondary)
+            path.addLine(
+                to: CGPoint(
+                    x: rect.midX,
+                    y: rect.minY
+                )
+            )
 
-            Spacer()
+            path.addLine(
+                to: CGPoint(
+                    x: rect.maxX,
+                    y: rect.maxY
+                )
+            )
+
+            path.closeSubpath()
         }
-        .padding(Spacing.pageMargin)
     }
 }
 
@@ -235,6 +440,5 @@ struct OnboardingView: View {
 #Preview {
     OnboardingView()
         .environment(AppState())
-        .environment(\.locale, Locale(identifier: "ar"))
-        .environment(\.layoutDirection, .rightToLeft)
 }
+

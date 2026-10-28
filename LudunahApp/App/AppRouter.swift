@@ -75,19 +75,8 @@ final class AppRouter {
             .background(Color.pageBackground.ignoresSafeArea())
 
         case .settings:
-            VStack(spacing: Spacing.space24) {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 50))
-
-                Text("الإعدادات")
-                    .font(.title1Heading)
-
-                Text("قريبًا سنضيف إعدادات التطبيق")
-                    .font(.titleCards)
-            }
-            .foregroundStyle(Color.textPrimary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.pageBackground.ignoresSafeArea())
+            SettingsView()
+            
         }
     }
 }

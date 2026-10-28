@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 struct HomeView: View {
@@ -15,6 +14,7 @@ struct HomeView: View {
     @State private var swapErrorMessage = ""
 
     var body: some View {
+        let _ = print("HomeView body")
         ScrollView {
             VStack(alignment: .leading, spacing: Spacing.space24) {
 
@@ -110,6 +110,7 @@ struct HomeView: View {
         .background(Color.pageBackground.ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear { print("HomeView onAppear") }
 
         // تحديث التحديات عند الانتقال إلى مستوى طاقة آخر
         .onChange(of: EnergyLevel.from(value: energyValue)) { _, _ in

@@ -24,7 +24,7 @@ final class OnboardingViewModel {
     private(set) var selectedInterests: Set<Interest> = []
 
     // آخر صفحة هي صفحة الاهتمامات
-    private let lastPage: Int = 3
+    private let lastPage: Int = 2
 
     // MARK: - Navigation
 
