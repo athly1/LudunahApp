@@ -81,34 +81,53 @@ struct ArtLearnView: View {
                 .padding(.top, Spacing.space16)
                 .padding(.bottom, Spacing.space12)
 
+            
+            
+            
+            
             // MARK: - Activity Image
 
-            // عرض صورة الفسيفساء أو القط العسيري
             if let imageName = viewModel.imageName {
 
-                Image(imageName)
+                GeometryReader { geometry in
 
-                    // السماح بتغيير حجم الصورة
-                    .resizable().shadow(color: Color.black.opacity(0.12), radius: 24, x: 0, y: 4)
+                    Image(imageName)
+                        .resizable()
+                        .scaledToFill()
 
+                        // نفس أبعاد الصورة في النشاطين
+                        .frame(
+                            width: geometry.size.width,
+                            height: 160
+                        )
 
-                    // المحافظة على أبعادها
-                    .scaledToFit()
+                        // تكبير محتوى الفسيفساء لإزالة الفراغات
+                        .scaleEffect(
+                            imageName == "art_mosaic" ? 1.15 : 1.0
+                        )
 
-                    // حجم مناسب داخل الشاشة
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: 160
-                    )
+                        // قص الصورة داخل إطار موحد
+                        .frame(
+                            width: geometry.size.width,
+                            height: 160
+                        )
+                        .clipShape(
+                            RoundedRectangle(cornerRadius: 16)
+                        )
 
-                    // زوايا دائرية
-                    .clipShape(
-                        RoundedRectangle(cornerRadius: 16)
-                    )
-
-                    .padding(.horizontal, Spacing.pageMargin)
-                    .padding(.bottom, Spacing.space12)
+                        // نفس إعدادات الظل
+                        .shadow(
+                            color: .black.opacity(0.12),
+                            radius: 12,
+                            x: 0,
+                            y: 4
+                        )
+                }
+                .frame(height: 160)
+                .padding(.horizontal, Spacing.pageMargin)
+                .padding(.bottom, Spacing.space12)
             }
+
 
             // MARK: - Learning Cards
 

@@ -1,37 +1,44 @@
 
-// ArtDoView.swift - واجهة التكوين البصري الصامت.
+// ArtDoView.swift - واجهة نشاط التكوين البصري الصامت.
 //
 // Contains:
 // - Shared ActivityHeader.
+// - DoStepsCard for instructions.
+// - Shared CountdownTimerView and TimerEngine.
 // - Five-minute collecting activity.
-// - Sunset color palette.
-// - Ten-second reflection screen.
-// - Automatic return to Home.
+// - Ten-second reflection.
+// - RTL circular timer movement.
+// - Manual finish and return to Home.
 //
 // Used by: ActivityFlowView (art, do).
-// Learn: @State, @Environment, @ViewBuilder,
-//       conditional views, onChange, sheet.
+//
+// Learn: @StateObject, @State, @Environment,
+//        conditional views, functions.
 
 import SwiftUI
+
+// MARK: - Art Do View
 
 struct ArtDoView: View {
 
     // MARK: - Properties
 
-    // منطق النشاط والمؤقت
+    // منطق مراحل النشاط
     @State private var viewModel = ArtDoViewModel()
+
+    // مؤقت جمع العناصر: 5 دقائق
+    @StateObject private var collectingTimer =
+        TimerEngine(duration: 300)
+
+    // مؤقت التأمل: 10 ثوانٍ
+    @StateObject private var reflectionTimer =
+        TimerEngine(duration: 10)
 
     // مدير التنقل
     @Environment(AppRouter.self) private var appRouter
 
-    // زر الرجوع إلى الصفحة السابقة
+    // الرجوع للشاشة السابقة
     @Environment(\.dismiss) private var dismiss
-
-    // حالة التطبيق
-    @Environment(\.scenePhase) private var scenePhase
-
-    // إظهار التعليمات
-    @State private var showInstructions = false
 
     // منع تسجيل الإنجاز مرتين
     @State private var didFinish = false
@@ -40,140 +47,122 @@ struct ArtDoView: View {
 
     var body: some View {
 
-        ScrollView {
+        VStack(spacing: 0) {
 
-            VStack(spacing: Spacing.space24) {
-
-                // الهيدر المشترك
-                ActivityHeader(
-                    interestTitle: "الفن السعودي",
-                    interestColor: .artChipBackground,
-                    stepTitle: "طبّق",
-                    stepIcon: "hand.draw",
-                    onBack: {
-                        viewModel.pause()
-                        dismiss()
-                    }
-                )
-
-                // شريط تقدم المؤقت
-                ProgressView(value: viewModel.progress)
-                    .tint(Color.actionPrimary)
-
-                // محتوى الشاشة حسب المرحلة
-                if viewModel.isReflecting {
-
-                    // شاشة التأمل
-                    reflectionContent
-
-                } else {
-
-                    // شاشة جمع العناصر
-                    collectingContent
+            // الهيدر المشترك للفريق
+            ActivityHeader(
+                interestTitle: "الفن السعودي",
+                interestColor: .artChipBackground,
+                stepTitle: "طبّق",
+                stepIcon: "hand.draw",
+                onBack: {
+                    collectingTimer.pause()
+                    reflectionTimer.pause()
+                    dismiss()
                 }
-            }
+            )
             .padding(.horizontal, Spacing.pageMargin)
             .padding(.top, Spacing.space16)
-            .padding(.bottom, Spacing.space24)
-        }
 
-        // زر أسفل شاشة جمع العناصر فقط
-        
-        .safeAreaInset(edge: .bottom) {
+            // محتوى النشاط
+            ScrollView {
 
-            // عرض الزر في شاشة الجمع وشاشة التأمل
-            if !viewModel.isCompleted {
+                VStack(spacing: Spacing.space24) {
+
+                    // عنوان النشاط
+                    Text(viewModel.activity.title)
+                        .font(.title1Heading)
+                        .foregroundStyle(Color.textPrimary)
+                        .frame(
+                            maxWidth: .infinity,
+                            alignment: .leading
+                        )
+
+                    // المحتوى حسب مرحلة النشاط
+                    if viewModel.stage == .reflecting {
+
+                        reflectionContent
+
+                    } else {
+
+                        collectingContent
+                    }
+                }
+                .padding(.horizontal, Spacing.pageMargin)
+                .padding(.top, Spacing.space24)
+                .padding(.bottom, Spacing.space24)
+            }
+
+            // زر النشاط أسفل الشاشة
+            if viewModel.stage != .completed {
 
                 bottomButton
                     .padding(.horizontal, Spacing.pageMargin)
-                    .padding(.vertical, Spacing.space8)
-                    .background(Color.pageBackground)
+                    .padding(.vertical, Spacing.space16)
             }
         }
 
-
-        // Design System
+        // خلفية التطبيق
         .background(
             Color.pageBackground.ignoresSafeArea()
         )
 
+        // إخفاء Navigation Bar الافتراضي
         .toolbar(.hidden, for: .navigationBar)
 
+        // اتجاه الواجهة العربية
         .environment(
             \.layoutDirection,
             .rightToLeft
         )
 
-        // تعليمات النشاط
-        .sheet(isPresented: $showInstructions) {
-
-            instructionsContent
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
-        }
-
-        // عند اكتمال التأمل تلقائيًا
-        .onChange(of: viewModel.isCompleted) { _, completed in
-
-            if completed {
-                finishActivity()
-            }
-        }
-
-        // إيقاف المؤقت عند مغادرة الشاشة
+        // إيقاف المؤقتات عند مغادرة الشاشة
         .onDisappear {
-            viewModel.pause()
-        }
-
-        // إيقاف المؤقت إذا خرج التطبيق للخلفية
-        .onChange(of: scenePhase) { _, newPhase in
-
-            if newPhase != .active {
-                viewModel.pause()
-            }
+            collectingTimer.pause()
+            reflectionTimer.pause()
         }
     }
 
     // MARK: - Collecting Content
 
-    // شاشة جمع العناصر وترتيبها
+    // مرحلة جمع العناصر وترتيبها
     private var collectingContent: some View {
 
         VStack(spacing: Spacing.space24) {
 
-            // عنوان النشاط
+            // وصف مدة النشاط
             HStack(spacing: Spacing.space8) {
 
-                Text(viewModel.activity.title)
-                    .font(.title1Heading)
+                Image(systemName: "gauge.with.needle")
                     .foregroundStyle(Color.textPrimary)
 
-                Button {
-                    showInstructions = true
-                } label: {
-                    Image(systemName: "info.circle")
-                        .foregroundStyle(Color.textPrimary)
-                }
+                Text("أمامك ٥ دقائق")
+                    .font(.titleCards)
+                    .foregroundStyle(Color.textPrimary)
 
                 Spacer()
             }
 
-            // وصف الوقت
-            Text("المدة: ٥ دقائق")
-                .font(.titleCards)
-                .foregroundStyle(Color.textPrimary)
+            // لوحة ألوان غروب الشمس
+            sunsetColorsCard
 
-            // بطاقة الألوان
-            colorsCard
+            // خطوات النشاط باستخدام مكون الفريق
+            DoStepsCard(
+                howTo: Array(
+                    viewModel.activity.howTo.prefix(2)
+                ),
+                stepRingColor: .artChipBackground
+            )
 
-            // المؤقت الدائري
-            timerView
+            // مؤقت جمع العناصر
+            currentTimerView
         }
     }
 
-    // MARK: - Colors Card
+    // MARK: - Sunset Colors
 
-    private var colorsCard: some View {
+    // بطاقة الألوان المستخدمة في النشاط
+    private var sunsetColorsCard: some View {
 
         VStack(spacing: Spacing.space16) {
 
@@ -181,7 +170,6 @@ struct ArtDoView: View {
                 .font(.titleCards)
                 .foregroundStyle(Color.textPrimary)
 
-            // ثلاثة ألوان لغروب الشمس
             HStack(spacing: Spacing.space16) {
 
                 ForEach(
@@ -191,52 +179,29 @@ struct ArtDoView: View {
 
                     Circle()
                         .fill(Color(hex: color))
-                        .frame(width: 64, height: 64)
+                        .frame(width: 60, height: 60)
                 }
             }
-
-            // شرح المطلوب
-            Text(
-                "اجمع ٣ عناصر من حولك تحمل هذه الألوان أو درجات قريبة منها، ثم رتّبها أمامك كلوحة صامتة."
-            )
-            .font(.titleCards)
-            .foregroundStyle(Color.textPrimary)
-            .multilineTextAlignment(.center)
-            .fixedSize(
-                horizontal: false,
-                vertical: true
-            )
         }
-
         .frame(maxWidth: .infinity)
-
         .padding(Spacing.space16)
-
         .background(
             Color.glassBackground,
             in: RoundedRectangle(cornerRadius: 18)
-        )
-
-        .shadow(
-            color: .black.opacity(0.07),
-            radius: 8,
-            y: 4
         )
     }
 
     // MARK: - Reflection Content
 
-    // شاشة التأمل بعد الضغط على أنهيت
+    // مرحلة التأمل لمدة 10 ثوانٍ
     private var reflectionContent: some View {
 
         VStack(spacing: Spacing.space24) {
 
-            // عنوان النشاط
-            Text(viewModel.activity.title)
+            Text("تأمل لوحتك")
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
 
-            // تعليمات التأمل
             Text(viewModel.activity.reflectionText)
                 .font(.titleCards)
                 .foregroundStyle(Color.textPrimary)
@@ -246,37 +211,55 @@ struct ArtDoView: View {
                     vertical: true
                 )
 
-            // عداد 10 ثوانٍ
-            timerView
+            // مؤقت التأمل
+            currentTimerView
         }
         .padding(.top, Spacing.space24)
     }
 
-    // MARK: - Timer View
+    // MARK: - Current Timer
 
-    // مؤقت واحد تتغير مدته حسب المرحلة
-    private var timerView: some View {
+    // تحديد المؤقت حسب مرحلة النشاط
+    @ViewBuilder
+    private var currentTimerView: some View {
 
-        ZStack {
+        if viewModel.stage == .reflecting {
 
-            Circle()
-                .stroke(
-                    Color(hex: "#8B3A2F"),
-                    lineWidth: 3
-                )
+            // مؤقت التأمل: 10 ثوانٍ
+            CountdownTimerView(
+                engine: reflectionTimer,
+                color: Color(hex: "#8B3A2F"),
+                size: 145,
 
-            Text(viewModel.formattedTime)
-                .font(.title1Heading)
-                .monospacedDigit()
-                .foregroundStyle(Color.textPrimary)
+                // عكس اتجاه حركة الدائرة
+                isRTL: true,
+
+                // إظهار انتهاء الوقت داخل الدائرة فقط
+                showsFinishedCaption: false
+            )
+            .frame(maxWidth: .infinity)
+
+        } else {
+
+            // مؤقت جمع العناصر: 5 دقائق
+            CountdownTimerView(
+                engine: collectingTimer,
+                color: Color(hex: "#8B3A2F"),
+                size: 145,
+
+                // عكس اتجاه حركة الدائرة
+                isRTL: true,
+
+                // إظهار انتهاء الوقت داخل الدائرة فقط
+                showsFinishedCaption: false
+            )
+            .frame(maxWidth: .infinity)
         }
-        .frame(width: 130, height: 130)
-        .padding(.vertical, Spacing.space16)
     }
 
-    
     // MARK: - Bottom Button
 
+    // الزر يتغير حسب مرحلة النشاط
     @ViewBuilder
     private var bottomButton: some View {
 
@@ -285,20 +268,29 @@ struct ArtDoView: View {
 
             PrimaryButton(title: "ابدأ") {
 
-                // بدء مؤقت الخمس دقائق
+                // الانتقال إلى مرحلة جمع العناصر
                 viewModel.startActivity()
+
+                // تشغيل مؤقت الخمس دقائق
+                collectingTimer.start()
             }
 
-        // أثناء جمع العناصر وترتيبها
+        // أثناء جمع العناصر أو بعد انتهاء الوقت
         } else if viewModel.stage == .collecting {
 
             PrimaryButton(title: "أنهيت") {
 
-                // الانتقال إلى شاشة التأمل
+                // إيقاف مؤقت جمع العناصر
+                collectingTimer.pause()
+
+                // الانتقال إلى التأمل
                 viewModel.startReflection()
+
+                // تشغيل مؤقت 10 ثوانٍ
+                reflectionTimer.start()
             }
 
-        // أثناء التأمل لمدة 10 ثوانٍ
+        // أثناء التأمل أو بعد انتهاء 10 ثوانٍ
         } else if viewModel.stage == .reflecting {
 
             PrimaryButton(
@@ -306,97 +298,42 @@ struct ArtDoView: View {
                 isDisabled: didFinish
             ) {
 
-                // إيقاف مؤقت التأمل
-                viewModel.pause()
-
-                // تسجيل الإنجاز والرجوع إلى Home
+                // إنهاء النشاط يدويًا
                 finishActivity()
             }
         }
     }
 
-    
     // MARK: - Finish Activity
 
     private func finishActivity() {
 
-        // منع تنفيذ الإنهاء مرتين
+        // منع تسجيل الإنجاز مرتين
         guard !didFinish else {
             return
         }
 
+        // الإنهاء مسموح بعد الوصول إلى التأمل
+        guard viewModel.stage == .reflecting else {
+            return
+        }
+
         didFinish = true
+
+        // إيقاف المؤقتين
+        collectingTimer.pause()
+        reflectionTimer.pause()
+
+        // تحديث مرحلة النشاط
+        viewModel.finishActivity()
 
         // تسجيل النشاط المكتمل
         StorageService().recordCompletedActivity(
             interest: .art
         )
 
-        // الرجوع إلى الرئيسية
+        // العودة للرئيسية بعد ضغط المستخدم
         appRouter.popToRoot()
-    }
-
-    // MARK: - Instructions Sheet
-
-    private var instructionsContent: some View {
-
-        VStack(spacing: Spacing.space24) {
-
-            Text("طريقة أداء النشاط")
-                .font(.title1Heading)
-                .foregroundStyle(Color.textPrimary)
-
-            VStack(
-                alignment: .leading,
-                spacing: Spacing.space16
-            ) {
-
-                ForEach(
-                    Array(viewModel.activity.howTo.enumerated()),
-                    id: \.offset
-                ) { index, instruction in
-
-                    HStack(
-                        alignment: .top,
-                        spacing: Spacing.space12
-                    ) {
-
-                        // رقم الخطوة
-                        Text("\(index + 1)")
-                            .font(.titleCards)
-                            .foregroundStyle(Color.textPrimary)
-                            .frame(width: 30, height: 30)
-                            .background(
-                                Color.actionPrimary,
-                                in: Circle()
-                            )
-
-                        // نص التعليمات
-                        Text(instruction)
-                            .font(.titleCards)
-                            .foregroundStyle(Color.textPrimary)
-                            .fixedSize(
-                                horizontal: false,
-                                vertical: true
-                            )
-                    }
-                }
-            }
-
-            Spacer(minLength: 0)
-
-            PrimaryButton(title: "فهمت") {
-                showInstructions = false
-            }
-        }
-        .padding(Spacing.pageMargin)
-        .background(
-            Color.pageBackground.ignoresSafeArea()
-        )
-        .environment(
-            \.layoutDirection,
-            .rightToLeft
-        )
     }
 }
 
@@ -418,7 +355,7 @@ struct ArtDoView: View {
             Text("الرئيسية")
                 .font(.title)
 
-            Button("افتح نشاط الفن Do") {
+            Button("افتح Art Do") {
                 router.push(.activity(.art))
             }
         }
