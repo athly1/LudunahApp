@@ -1,29 +1,37 @@
+
+
+
 import Foundation
 
-//Object of the second level of JSON
 struct Activity: Decodable, Identifiable {
     let id: String
     let type: ActivityStep
     let title: String
 
+    // وصف مختصر ومهارات النشاط
+    let summary: String?
+    let skills: [String]?
+
+    // بيانات التعلّم
     let layout: String?
     let howTo: [String]?
-
     let options: [ActivityOption]?
-    let cards: [ActivityCard]? //Used in Learn Cards
-
+    let cards: [ActivityCard]?
     let insight: String?
     let sources: [String]?
 
+    // بيانات التطبيق
     let durationMin: Int?
     let theme: String?
     let colors: [String]?
     let phases: [ActivityPhase]?
 
+    // بيانات الابتكار
     let canvas: String?
     let materials: [String]?
     let question: String?
 
+    // بيانات إضافية
     let needs: String?
     let safetyNote: String?
     let gain: ActivityGain?
@@ -32,19 +40,26 @@ struct Activity: Decodable, Identifiable {
         case id
         case type
         case title
+
+        case summary = "description"
+        case skills
+
         case layout
         case howTo = "how_to"
         case options
         case cards
         case insight
         case sources
+
         case durationMin = "duration_min"
         case theme
         case colors
         case phases
+
         case canvas
         case materials
         case question
+
         case needs
         case safetyNote = "safety_note"
         case gain
@@ -58,7 +73,6 @@ struct ActivityOption: Decodable, Identifiable {
     let text: String
 }
 
-//Object of the 3rd level of JSON
 struct ActivityCard: Decodable {
     let icon: String
     let text: String
