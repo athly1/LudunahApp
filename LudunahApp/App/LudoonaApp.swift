@@ -23,6 +23,9 @@ struct LudoonaApp: App {
     // مدير التنقل
     @State private var appRouter = AppRouter()
 
+    // هل شاشة البداية (Splash) ما زالت ظاهرة؟
+    @State private var showSplash = true
+
     // النافذة الرئيسية
     var body: some Scene {
 
@@ -30,8 +33,17 @@ struct LudoonaApp: App {
 
             Group {
 
+                // شاشة الـ Splash تظهر ثانيتين عند كل فتح للتطبيق
+                if showSplash {
+
+                    SplashView {
+                        withAnimation(.easeInOut(duration: 0.4)) {
+                            showSplash = false
+                        }
+                    }
+
                 // إذا أكمل المستخدم البداية
-                if appState.isOnboardingCompleted {
+                } else if appState.isOnboardingCompleted {
 
                     // نظام التنقل
                     NavigationStack(path: $appRouter.path) {

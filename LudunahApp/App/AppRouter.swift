@@ -78,21 +78,10 @@ final class AppRouter {
             }
             .foregroundStyle(Color.textPrimary)
 
-        // شاشة إعدادات مؤقتة
+        // شاشة الإعدادات
         case .settings:
 
-            VStack(spacing: Spacing.space24) {
-
-                Image(systemName: "gearshape")
-                    .font(.system(size: 50))
-
-                Text("الإعدادات")
-                    .font(.title1Heading)
-
-                Text("قريبًا سنضيف إعدادات التطبيق")
-                    .font(.titleCards)
-            }
-            .foregroundStyle(Color.textPrimary)
+            SettingsView()
         }
     }
 }
