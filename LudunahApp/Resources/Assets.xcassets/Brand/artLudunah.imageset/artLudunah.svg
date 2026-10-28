@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="57px" height="58px" viewBox="0 0 57 58" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>Group</title>
+    <g id="Screens" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Task-bottom-sheet---info---Art" transform="translate(-319, -421)">
+            <g id="Group" transform="translate(319, 421)">
+                <rect id="Rectangle-12" fill="#F4E4D8" x="0" y="0" width="57" height="58" rx="12"></rect>
+                <polygon id="Triangle" fill="#5E8A7A" points="45 13.8409091 53 40.8409091 37 40.8409091"></polygon>
+                <polygon id="Triangle-2" fill="#8A3A32" points="29 13.8409091 37 40.8409091 21 40.8409091"></polygon>
+                <polygon id="Triangle-3" fill="#D69A84" points="13 13.8409091 21 40.8409091 5 40.8409091"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>
