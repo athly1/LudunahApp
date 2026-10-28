@@ -7,7 +7,6 @@ struct DailyChallengeCard: View {
     let minutes: Int
     let isCompleted: Bool
 
-    // اسم الصورة في Assets.xcassets
     let iconName: String
     let iconBackground: Color
 
@@ -20,7 +19,6 @@ struct DailyChallengeCard: View {
             // البطاقة نفسها
             HStack(spacing: Spacing.space12) {
 
-                // أيقونة الفئة من Assets.xcassets
                 Image(iconName)
                     .resizable()
                     .scaledToFit()
@@ -36,12 +34,19 @@ struct DailyChallengeCard: View {
 
                 // تفاصيل التحدي
                 Button(action: onTap) {
-                    VStack(alignment: .leading, spacing: Spacing.space8) {
+                    VStack(
+                        alignment: .leading,
+                        spacing: Spacing.space8
+                    ) {
                         Text(title)
                             .font(.challengeCardTitle)
                             .foregroundStyle(Color.textPrimary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
+                            .fixedSize(
+                                horizontal: false,
+                                vertical: true
+                            )
                             .frame(
                                 maxWidth: .infinity,
                                 alignment: .leading
@@ -95,16 +100,16 @@ struct DailyChallengeCard: View {
                 y: 4
             )
 
-            // زر التبديل خارج البطاقة وعلى يسارها
+            // زر التبديل خارج البطاقة
             Button(action: onSwap) {
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 16, weight: .medium))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(Color.appSecondary)
-                    .frame(width: 10, height: 20)
+                    .frame(width: 34, height: 34)
                     .contentShape(Circle())
             }
             .buttonStyle(.glass)
-            .frame(width: 10, height: 20)
+            .frame(width: 34, height: 34)
             .accessibilityLabel("تبديل التحدي")
         }
         .environment(\.layoutDirection, .rightToLeft)
