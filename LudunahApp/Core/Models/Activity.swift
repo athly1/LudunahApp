@@ -1,6 +1,3 @@
-
-
-
 import Foundation
 
 struct Activity: Decodable, Identifiable {
