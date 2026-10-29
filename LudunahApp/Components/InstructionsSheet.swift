@@ -27,8 +27,16 @@ struct InstructionsSheet: View {
                 }
 
             case .sport:
-                EmptyView()
+                switch activity.type {
+                case .learn:
+                    SportLearnView()
+                case .doActivity:
+                    SportDoView()
+                case .create:
+                    SportCreateView()
+                }
             }
+            
         } else {
             EmptyView()
         }
@@ -69,14 +77,9 @@ struct InstructionsSheet: View {
         )
     }
 
-    // Gaming and Art have real screens. Sport still uses the router screen.
+    // Gaming, Art and Sport all have real screens now.
     private func startActivity() {
-        if viewModel.interest == .gaming || viewModel.interest == .art {
-            showActivity = true
-        } else {
-            onClose()
-            appRouter.push(.activity(viewModel.interest))
-        }
+        showActivity = true
     }
     
     var body: some View {
