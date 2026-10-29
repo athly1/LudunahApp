@@ -21,6 +21,7 @@ struct EnergyCheckInView: View {
     var body: some View {
         VStack(alignment: .trailing, spacing: Spacing.space8) {
 
+            
             // عنوان القسم بمحاذاة اليمين
             HStack {
                 Spacer(minLength: 0)
@@ -36,29 +37,27 @@ struct EnergyCheckInView: View {
             GeometryReader { geometry in
                 let width = geometry.size.width
                 let progress = CGFloat(energyValue) / 100
-                let thumbPosition = 16 + progress * (width - 32)
-
+                let thumbPosition = 16 + (1 - progress) * (width - 32)
+                
                 ZStack(alignment: .leading) {
 
                     HStack(spacing: 4) {
-                        Capsule()
-                            .fill(Color.artPalette1)
-                            .opacity(
-                                currentEnergyLevel == .low ? 1 : 0.4
-                            )
-
-                        Capsule()
-                            .fill(Color.artPalette3)
-                            .opacity(
-                                currentEnergyLevel == .medium ? 1 : 0.4
-                            )
-
+                        // HIGH — green (first, on the left)
                         Capsule()
                             .fill(Color.sportFieldBall)
-                            .opacity(
-                                currentEnergyLevel == .high ? 1 : 0.4
-                            )
+                            .opacity(currentEnergyLevel == .high ? 1 : 0.4)
+
+                        // MEDIUM — yellow/orange
+                        Capsule()
+                            .fill(Color.artPalette3)
+                            .opacity(currentEnergyLevel == .medium ? 1 : 0.4)
+
+                        // LOW — red (last, on the right)
+                        Capsule()
+                            .fill(Color.artPalette1)
+                            .opacity(currentEnergyLevel == .low ? 1 : 0.4)
                     }
+                    .frame(height: 16)
                     .frame(height: 16)
 
                     // مؤشر الطاقة والنسبة المئوية
@@ -86,8 +85,7 @@ struct EnergyCheckInView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
-                            let percentage =
-                                value.location.x / width * 100
+                            let percentage = (1 - value.location.x / width) * 100
 
                             energyValue = min(
                                 max(Int(percentage), 0),

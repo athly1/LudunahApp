@@ -33,7 +33,7 @@ struct PrimaryButton: View {
                 .font(.primaryButton)
                 .foregroundStyle(Color.textPrimary)
                 .frame(maxWidth: .infinity)
-                .frame(minHeight: Spacing.controlHeight)
+                .frame(minHeight: Spacing.controlHeight - 12 )
         }
 
         // تصميم Liquid Glass
