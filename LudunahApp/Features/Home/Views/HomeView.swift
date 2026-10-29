@@ -1,3 +1,19 @@
+
+// HomeView.swift - الشاشة الرئيسية في لُدُونه.
+//
+// Contains:
+// - Settings navigation with debug messages.
+// - Energy level check-in.
+// - Daily challenge cards.
+// - Challenge swapping.
+// - Instructions sheet.
+// - Completion status.
+//
+// Used by: RootView, AppRouter.
+//
+// Learn: @Environment, @State, NavigationStack,
+//        Button, overlay, onChange.
+
 import SwiftUI
 
 struct HomeView: View {
@@ -9,7 +25,7 @@ struct HomeView: View {
     // النشاط البديل لكل بطاقة
     @State private var alternateActivities: [Int: Activity] = [:]
 
-    // التحدي الذي تم الضغط عليه (يفتح InstructionsSheet)
+    // التحدي الذي تم الضغط عليه
     @State private var selectedChallenge: ChallengeSheetItem?
 
     // رسائل الخطأ
@@ -17,17 +33,21 @@ struct HomeView: View {
     @State private var swapErrorMessage = ""
 
     var body: some View {
-        
+
         ScrollView {
+
             Spacer(minLength: -32)
 
             VStack(alignment: .leading, spacing: Spacing.space24) {
-            
-                // الإعدادات - أعلى اليمين
+
+                // MARK: - Settings Button
+
                 HStack {
+
                     Button {
                         appRouter.push(.settings)
                     } label: {
+
                         Image(systemName: "gearshape")
                             .font(.system(size: 20))
                             .foregroundStyle(Color.textPrimary)
@@ -40,25 +60,35 @@ struct HomeView: View {
                     Spacer()
                 }
 
-                // مستوى الطاقة
+                // MARK: - Energy Check-In
+
                 EnergyCheckInView(
                     energyValue: $energyValue
                 )
 
-                // عنوان التحديات
+                // MARK: - Challenges Title
+
                 Text("تحدياتك")
                     .font(.title1Heading)
                     .foregroundStyle(Color.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
-                // التحدي الأول: الفن
+                // MARK: - Art Challenge
+
                 DailyChallengeCard(
                     title: alternateActivities[1]?.title
                         ?? "التكوين البصري الصامت",
+
                     category: "الفن السعودي",
+
                     minutes: alternateActivities[1]?.durationMin ?? 5,
-                    isCompleted: appRouter.completedInterests.contains(.art),                    iconName: "artLudunah",
+
+                    isCompleted: appRouter.completedInterests.contains(.art),
+
+                    iconName: "artLudunah",
+
                     iconBackground: Color.challengeArtBadge,
+
                     onSwap: {
                         swapChallenge(
                             id: 1,
@@ -66,6 +96,7 @@ struct HomeView: View {
                             originalTitle: "التكوين البصري الصامت"
                         )
                     },
+
                     onTap: {
                         showInstructions(
                             id: 1,
@@ -73,16 +104,25 @@ struct HomeView: View {
                             image: "artLudunah",
                             defaultTitle: "التكوين البصري الصامت"
                         )
-                    }                )
+                    }
+                )
 
-                // التحدي الثاني: الألعاب
+                // MARK: - Gaming Challenge
+
                 DailyChallengeCard(
                     title: alternateActivities[2]?.title
                         ?? "خريطة اللعبة في رأسك",
+
                     category: "الرياضات الإلكترونية",
+
                     minutes: alternateActivities[2]?.durationMin ?? 5,
-                    isCompleted: appRouter.completedInterests.contains(.gaming),                    iconName: "GameLudunah",
+
+                    isCompleted: appRouter.completedInterests.contains(.gaming),
+
+                    iconName: "GameLudunah",
+
                     iconBackground: Color.challengeGamingBadge,
+
                     onSwap: {
                         swapChallenge(
                             id: 2,
@@ -90,6 +130,7 @@ struct HomeView: View {
                             originalTitle: "خريطة اللعبة في رأسك"
                         )
                     },
+
                     onTap: {
                         showInstructions(
                             id: 2,
@@ -100,14 +141,22 @@ struct HomeView: View {
                     }
                 )
 
-                // التحدي الثالث: الرياضة
+                // MARK: - Sport Challenge
+
                 DailyChallengeCard(
                     title: alternateActivities[3]?.title
                         ?? "الجدران جزء من اللعبة",
+
                     category: "كرة القدم",
+
                     minutes: alternateActivities[3]?.durationMin ?? 8,
-                    isCompleted: appRouter.completedInterests.contains(.sport),                   iconName: "SportLudunah",
+
+                    isCompleted: appRouter.completedInterests.contains(.sport),
+
+                    iconName: "SportLudunah",
+
                     iconBackground: Color.challengeSportBadge,
+
                     onSwap: {
                         swapChallenge(
                             id: 3,
@@ -115,6 +164,7 @@ struct HomeView: View {
                             originalTitle: "الجدران جزء من اللعبة"
                         )
                     },
+
                     onTap: {
                         showInstructions(
                             id: 3,
@@ -124,6 +174,7 @@ struct HomeView: View {
                         )
                     }
                 )
+
             }
             .padding(Spacing.pageMargin)
         }
@@ -131,8 +182,10 @@ struct HomeView: View {
         .environment(\.layoutDirection, .rightToLeft)
         .toolbar(.hidden, for: .navigationBar)
 
-        // تحديث التحديات عند الانتقال إلى مستوى طاقة آخر
+        // MARK: - Energy Changes
+
         .onChange(of: EnergyLevel.from(value: energyValue)) { _, _ in
+
             swapChallenge(
                 id: 1,
                 interest: .art,
@@ -152,21 +205,28 @@ struct HomeView: View {
             )
         }
 
-        // بطاقة تعليمات التحدي (بعرض الشاشة كاملًا)
+        // MARK: - Instructions Sheet
+
         .overlay {
+
             if let item = selectedChallenge {
+
                 ZStack(alignment: .bottom) {
 
-                    // خلفية معتمة، الضغط عليها يغلق البطاقة
+                    // خلفية معتمة
                     Color.black.opacity(0.35)
                         .ignoresSafeArea()
-                        .onTapGesture { closeInstructions() }
+                        .onTapGesture {
+                            closeInstructions()
+                        }
 
                     InstructionsSheet(
                         interest: item.interest,
                         InterestImage: item.image,
                         activity: item.activity,
-                        onClose: { closeInstructions() }
+                        onClose: {
+                            closeInstructions()
+                        }
                     )
                     .id(item.id)
                     .frame(maxWidth: .infinity)
@@ -186,7 +246,8 @@ struct HomeView: View {
             }
         }
 
-        // عرض رسائل الخطأ
+        // MARK: - Error Alert
+
         .alert(
             "تعذّر تبديل التحدي",
             isPresented: $showSwapError
@@ -197,21 +258,26 @@ struct HomeView: View {
         }
     }
 
-    // إغلاق بطاقة التعليمات والرجوع للهوم
+    // MARK: - Close Instructions
+
     private func closeInstructions() {
+
         withAnimation(.easeInOut(duration: 0.3)) {
             selectedChallenge = nil
         }
     }
 
-    // فتح شيت التعليمات للتحدي المعروض على البطاقة
+    // MARK: - Open Instructions
+
     private func showInstructions(
         id: Int,
         interest: Interest,
         image: String,
         defaultTitle: String
     ) {
+
         withAnimation(.easeInOut(duration: 0.3)) {
+
             selectedChallenge = ChallengeSheetItem(
                 interest: interest,
                 image: image,
@@ -224,14 +290,15 @@ struct HomeView: View {
         }
     }
 
-    // النشاط المعروض الآن على البطاقة
+    // MARK: - Current Activity
+
     private func currentActivity(
         id: Int,
         interest: Interest,
         defaultTitle: String
     ) -> Activity? {
 
-        // 1. النشاط البديل بعد التبديل
+        // 1. النشاط البديل
         if let swapped = alternateActivities[id] {
             return swapped
         }
@@ -245,20 +312,24 @@ struct HomeView: View {
 
         // 3. أول نشاط يناسب مستوى الطاقة
         let step = EnergyLevel.from(value: energyValue).activityStep
+
         return all.first(where: { $0.type == step })
     }
 
-    // اختيار تحدٍ عشوائي من الفئة نفسها حسب مستوى الطاقة
+    // MARK: - Swap Challenge
+
     private func swapChallenge(
         id: Int,
         interest: Interest,
         originalTitle: String
     ) {
+
         let requiredStep = EnergyLevel
             .from(value: energyValue)
             .activityStep
 
         do {
+
             let activities = try ContentService
                 .loadActivities(for: interest)
                 .filter { $0.type == requiredStep }
@@ -271,34 +342,43 @@ struct HomeView: View {
             }
 
             guard let selected = alternatives.randomElement() else {
+
                 swapErrorMessage =
                     "لا يوجد تحدٍ بديل مناسب لمستوى طاقتك في هذه الفئة."
+
                 showSwapError = true
                 return
             }
 
             alternateActivities[id] = selected
-            
+
+            // إزالة الإنجاز عند تغيير التحدي
             appRouter.resetCompletion(interest)
-            
-            appRouter.resetCompletion(interest)
+
         } catch {
+
             swapErrorMessage =
                 "تعذّر تحميل الأنشطة. تحققي من ملفات JSON."
+
             showSwapError = true
         }
     }
 }
 
-// بيانات الشيت المفتوح من البطاقة
+// MARK: - Challenge Sheet Item
+
 struct ChallengeSheetItem: Identifiable {
+
     let id = UUID()
     let interest: Interest
     let image: String
     let activity: Activity?
 }
 
+// MARK: - Preview
+
 #Preview {
+
     HomeView()
         .environment(AppRouter())
 }

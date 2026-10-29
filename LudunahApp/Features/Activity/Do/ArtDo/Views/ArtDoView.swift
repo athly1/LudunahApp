@@ -3,19 +3,20 @@
 //
 // Contains:
 // - Shared ActivityHeader.
-// - Random activity from Art.json.
+// - Selected activity from Art.json.
 // - Activity description.
 // - Colors or SF Symbols.
 // - Instructions bottom sheet.
 // - Dynamic activity phases.
 // - Shared CountdownTimerView.
-// - Optional pause and resume.
-// - Manual completion and Home navigation.
+// - Reactive pause and resume button.
+// - Fixed space for pause and resume controls.
+// - Manual completion and progress recording.
 //
-// Used by: ActivityFlowView (art, do).
+// Used by: InstructionsSheet (art, do).
 //
-// Learn: @StateObject, @State, @Environment,
-//        sheet, functions, conditional views.
+// Learn: @State, @StateObject, @ObservedObject,
+//        @Environment, ScrollView, sheet, functions.
 
 import SwiftUI
 import Combine
@@ -26,18 +27,10 @@ struct ArtDoView: View {
 
     // MARK: - Properties
 
-    // إدارة النشاط المختار عشوائيًا ومراحله
+    // إدارة النشاط المختار ومراحله
     @State private var viewModel: ArtDoViewModel
 
-    init(activityID: String? = nil) {
-        _viewModel = State(
-            initialValue: ArtDoViewModel(
-                activityID: activityID
-            )
-        )
-    }
-
-    // إدارة مؤقتات المراحل باستخدام StateObject
+    // إدارة المؤقتات الخاصة بالمراحل
     @StateObject private var timers = ArtDoTimers()
 
     // التحكم في نافذة التعليمات
@@ -46,15 +39,25 @@ struct ArtDoView: View {
     // منع تسجيل الإنجاز مرتين
     @State private var didFinish = false
 
-    // مدير التنقل
-    @Environment(AppRouter.self) private var appRouter
+    // MARK: - Environment
 
-    // الرجوع للشاشة السابقة
+    @Environment(AppRouter.self) private var appRouter
     @Environment(\.dismiss) private var dismiss
+
+    // MARK: - Initialization
+
+    init(activityID: String? = nil) {
+
+        _viewModel = State(
+            initialValue: ArtDoViewModel(
+                activityID: activityID
+            )
+        )
+    }
 
     // MARK: - Current Timer
 
-    // المؤقت الخاص بالمرحلة الحالية
+    // مؤقت المرحلة الحالية
     private var currentTimer: TimerEngine? {
         timers.timer(at: viewModel.phaseIndex)
     }
@@ -73,11 +76,7 @@ struct ArtDoView: View {
                 stepTitle: "طبّق",
                 stepIcon: "hand.draw",
                 onBack: {
-
-                    // إيقاف المؤقتات عند الرجوع
                     timers.stopAll()
-
-                    // العودة للشاشة السابقة
                     dismiss()
                 }
             )
@@ -114,14 +113,13 @@ struct ArtDoView: View {
                         // عنوان النشاط
                         activityTitle(activity.title)
 
+                        // محتوى النشاط حسب المرحلة
                         if viewModel.stage == .ready {
 
-                            // قبل بدء النشاط
                             readyContent
 
                         } else if viewModel.stage == .running {
 
-                            // أثناء تنفيذ النشاط
                             phaseContent
                         }
 
@@ -137,7 +135,7 @@ struct ArtDoView: View {
 
                 } else {
 
-                    // رسالة عند فشل تحميل النشاط
+                    // رسالة في حال عدم تحميل النشاط
                     Text(
                         viewModel.errorMessage
                             ?? "لا يوجد نشاط متاح."
@@ -148,6 +146,7 @@ struct ArtDoView: View {
                     .padding(Spacing.pageMargin)
                 }
             }
+            .scrollIndicators(.hidden)
 
             // MARK: - Bottom Controls
 
@@ -171,10 +170,7 @@ struct ArtDoView: View {
         .background(
             Color.pageBackground.ignoresSafeArea()
         )
-
         .toolbar(.hidden, for: .navigationBar)
-
-        // الاتجاه العربي للواجهة
         .environment(
             \.layoutDirection,
             .rightToLeft
@@ -204,14 +200,13 @@ struct ArtDoView: View {
 
         .onDisappear {
 
-            // إيقاف جميع المؤقتات عند مغادرة الشاشة
+            // إيقاف المؤقتات عند مغادرة الشاشة
             timers.stopAll()
         }
     }
 
     // MARK: - Activity Title
 
-    // عرض عنوان النشاط وأيقونة المعلومات
     private func activityTitle(
         _ title: String
     ) -> some View {
@@ -229,9 +224,9 @@ struct ArtDoView: View {
                     vertical: true
                 )
 
+            // زر عرض التعليمات
             Button {
 
-                // فتح نافذة التعليمات
                 showInstructions = true
 
             } label: {
@@ -253,7 +248,6 @@ struct ArtDoView: View {
 
     // MARK: - Ready Content
 
-    // المحتوى قبل الضغط على ابدأ
     private var readyContent: some View {
 
         VStack(spacing: Spacing.space24) {
@@ -282,7 +276,6 @@ struct ArtDoView: View {
 
     // MARK: - Activity Card
 
-    // تعرض الألوان أو الرموز حسب JSON
     private var activityCard: some View {
 
         VStack(spacing: Spacing.space16) {
@@ -376,7 +369,6 @@ struct ArtDoView: View {
 
     // MARK: - Phase Content
 
-    // عرض معلومات المرحلة الحالية
     private var phaseContent: some View {
 
         VStack(spacing: Spacing.space24) {
@@ -410,7 +402,6 @@ struct ArtDoView: View {
 
     // MARK: - Timer View
 
-    // نفس المؤقت المستخدم في Gaming Do
     @ViewBuilder
     private var currentTimerView: some View {
 
@@ -420,11 +411,7 @@ struct ArtDoView: View {
                 engine: timer,
                 color: .artTimerRing,
                 size: 145,
-
-                // حركة دائرة المؤقت بالعربي
                 isRTL: true,
-
-                // انتهاء الوقت داخل الدائرة فقط
                 showsFinishedCaption: false
             )
             .frame(maxWidth: .infinity)
@@ -454,7 +441,6 @@ struct ArtDoView: View {
 
                 if let activity = viewModel.activity {
 
-                    // مكون الفريق لعرض الخطوات
                     DoStepsCard(
                         howTo: activity.howTo,
                         stepRingColor: .artChipBackground
@@ -463,7 +449,6 @@ struct ArtDoView: View {
             }
 
             PrimaryButton(title: "فهمت") {
-
                 showInstructions = false
             }
         }
@@ -488,51 +473,24 @@ struct ArtDoView: View {
 
         VStack(spacing: Spacing.space12) {
 
-            // زر الإيقاف يظهر فقط عند السماح بذلك
-            if viewModel.stage == .running,
-               viewModel.canPauseCurrentPhase,
-               let timer = currentTimer,
-               !timer.isFinished {
+            // مساحة ثابتة لزر الإيقاف المؤقت / أكمل
+            // حتى لا تتغير أبعاد الشاشة عند بدء النشاط
+            ZStack {
 
-                Button {
+                // يظهر الزر فقط إذا كانت المرحلة
+                // الحالية تسمح بالإيقاف المؤقت
+                if viewModel.stage == .running,
+                   viewModel.canPauseCurrentPhase,
+                   let timer = currentTimer {
 
-                    if timer.isRunning {
-
-                        // إيقاف مؤقت
-                        timer.pause()
-
-                    } else {
-
-                        // استكمال
-                        timer.resume()
-                    }
-
-                } label: {
-
-                    Label(
-                        timer.isRunning
-                            ? "إيقاف مؤقت"
-                            : "أكمل",
-                        systemImage: timer.isRunning
-                            ? "pause.fill"
-                            : "play.fill"
-                    )
-                    .font(.titleCards)
-                    .foregroundStyle(Color.textPrimary)
-                    .frame(
-                        maxWidth: .infinity,
-                        minHeight: 44
+                    ArtTimerPauseButton(
+                        timer: timer
                     )
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(
-                    timer.isRunning
-                        ? "إيقاف مؤقت"
-                        : "استكمال المؤقت"
-                )
             }
+            .frame(height: 44)
 
-            // الزر الرئيسي
+            // الزر الرئيسي: ابدأ / التالي / انتهيت
             mainButton
         }
     }
@@ -549,7 +507,6 @@ struct ArtDoView: View {
                 title: "ابدأ",
                 isDisabled: currentTimer == nil
             ) {
-
                 startActivity()
             }
 
@@ -560,19 +517,13 @@ struct ArtDoView: View {
                 title: "انتهيت",
                 isDisabled: didFinish
             ) {
-
                 finishActivity()
             }
 
-        // الانتقال للمراحل التالية
+        // المراحل السابقة
         } else {
 
-            PrimaryButton(
-                title: viewModel.activity?.id == "art-do-1"
-                    ? "أنهيت"
-                    : "التالي"
-            ) {
-
+            PrimaryButton(title: "التالي") {
                 nextPhase()
             }
         }
@@ -590,7 +541,7 @@ struct ArtDoView: View {
         // بدء النشاط
         viewModel.startActivity()
 
-        // تشغيل المؤقت
+        // تشغيل مؤقت المرحلة الأولى
         timer.start()
     }
 
@@ -609,7 +560,7 @@ struct ArtDoView: View {
         // الانتقال للمرحلة التالية
         viewModel.nextPhase()
 
-        // تشغيل المؤقت الجديد
+        // تشغيل مؤقت المرحلة الجديدة
         currentTimer?.start()
     }
 
@@ -629,42 +580,111 @@ struct ArtDoView: View {
             return
         }
 
-        // منع الضغط المتكرر
+        // منع تسجيل الإنجاز مرتين
         didFinish = true
 
-        // إيقاف المؤقتات
+        // إيقاف جميع المؤقتات
         stopAllTimers()
 
         // تحديث حالة النشاط
         viewModel.finishActivity()
 
-        // تسجيل النشاط المكتمل
+        // تسجيل الإنجاز في التقدم الأسبوعي
         StorageService().recordCompletedActivity(
             interest: .art
         )
 
-        // العودة إلى Home
+        // تحديث حالة الإنجاز
         appRouter.popToRoot()
+
+        // إغلاق النشاط
+        dismiss()
+    }
+}
+
+// MARK: - Art Timer Pause Button
+
+// هذا المكوّن يراقب TimerEngine مباشرة.
+// عند إيقاف المؤقت، يتغير النص إلى "أكمل" فورًا.
+
+private struct ArtTimerPauseButton: View {
+
+    // مراقبة تحديثات المؤقت
+    @ObservedObject var timer: TimerEngine
+
+    // MARK: - Body
+
+    var body: some View {
+
+        // إخفاء الزر عند انتهاء الوقت
+        if !timer.isFinished {
+
+            Button {
+
+                togglePause()
+
+            } label: {
+
+                Label(
+                    timer.isRunning
+                        ? "إيقاف مؤقت"
+                        : "أكمل",
+                    systemImage: timer.isRunning
+                        ? "pause.fill"
+                        : "play.fill"
+                )
+                .font(.titleCards)
+                .foregroundStyle(Color.textPrimary)
+                .frame(
+                    maxWidth: .infinity,
+                    minHeight: 44
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(
+                timer.isRunning
+                    ? "إيقاف مؤقت"
+                    : "استكمال المؤقت"
+            )
+        }
+    }
+
+    // MARK: - Pause / Resume
+
+    private func togglePause() {
+
+        guard !timer.isFinished else {
+            return
+        }
+
+        if timer.isRunning {
+
+            // إيقاف المؤقت مؤقتًا
+            timer.pause()
+
+        } else {
+
+            // استكمال العد التنازلي
+            timer.resume()
+        }
     }
 }
 
 // MARK: - Art Do Timers
 
-// كلاس لإدارة مؤقتات جميع مراحل النشاط.
-// يستخدم ObservableObject مثل Gaming Do.
+// إدارة مؤقتات جميع مراحل النشاط
 
 @MainActor
 final class ArtDoTimers: ObservableObject {
 
-    // تخزين المؤقتات وإبلاغ SwiftUI عند تجهيزها
+    // قائمة المؤقتات الخاصة بالمراحل
     @Published private(set) var engines: [TimerEngine] = []
 
     // MARK: - Configure
 
-    // تجهيز مؤقت لكل مرحلة حسب مدتها من JSON
     func configure(phases: [ArtDoPhase]) {
 
-        // لا نكرر إنشاء المؤقتات
+        // منع تكرار إنشاء المؤقتات
         guard engines.isEmpty else {
             return
         }
@@ -679,7 +699,6 @@ final class ArtDoTimers: ObservableObject {
 
     // MARK: - Timer
 
-    // إرجاع المؤقت الخاص بالمرحلة المطلوبة
     func timer(at index: Int) -> TimerEngine? {
 
         guard engines.indices.contains(index) else {
@@ -691,7 +710,6 @@ final class ArtDoTimers: ObservableObject {
 
     // MARK: - Stop All
 
-    // إيقاف جميع المؤقتات عند مغادرة الشاشة
     func stopAll() {
 
         for engine in engines {
@@ -704,37 +722,10 @@ final class ArtDoTimers: ObservableObject {
 
 #Preview {
 
-    let router = AppRouter()
-
-    NavigationStack(
-        path: Binding(
-            get: { router.path },
-            set: { router.path = $0 }
+    ArtDoView()
+        .environment(AppRouter())
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
         )
-    ) {
-
-        VStack(spacing: 20) {
-
-            Text("الرئيسية")
-                .font(.title)
-
-            Button("افتح Art Do") {
-
-                router.push(.activity(.art))
-            }
-        }
-        .navigationDestination(for: AppRoute.self) { route in
-
-            switch route {
-
-            case .activity:
-                ArtDoView()
-
-            case .settings:
-                Text("الإعدادات")
-            }
-        }
-    }
-    .environment(router)
-    .environment(\.layoutDirection, .rightToLeft)
 }

@@ -1,121 +1,278 @@
+
+// gamingDoView.swift - واجهة تطبيق الألعاب الإلكترونية.
+//
+// Contains:
+// - Shared ActivityHeader with stable top position.
+// - Gaming activity title and instructions.
+// - Scrollable content for smaller screens.
+// - Countdown timer with Art Do direction.
+// - Fixed space for pause and resume controls.
+// - Start and finish actions.
+// - Stop timer when leaving the activity.
+//
+// Used by: InstructionsSheet (gaming, do).
+//
+// Learn: @StateObject, @State, @Environment,
+//        ScrollView, safeAreaInset,
+//        TimerEngine, CountdownTimerView, Button.
+
 import SwiftUI
 
+// MARK: - Gaming Do View
+
 struct gamingDoView: View {
-    
+
+    // MARK: - Properties
+
     @StateObject private var viewModel: GamingDoViewModel
+
     @StateObject private var timerEngine: TimerEngine
 
-    init() {
-        let viewModel = GamingDoViewModel()
+    // هل بدأ النشاط؟
+    @State private var hasStarted = false
 
-        _viewModel = StateObject(wrappedValue: viewModel)
+    // هل انتهى النشاط؟
+    @State private var isDone = false
+
+    // الرجوع للشاشة السابقة
+    @Environment(\.dismiss) private var dismiss
+
+    // MARK: - Initialization
+
+    init() {
+
+        let model = GamingDoViewModel()
+
+        _viewModel = StateObject(
+            wrappedValue: model
+        )
+
+        // تحويل الدقائق إلى ثوانٍ
         _timerEngine = StateObject(
             wrappedValue: TimerEngine(
-                duration: viewModel.durationMin * 60)
+                duration: model.durationMin * 60
+            )
         )
     }
-    
-    @State private var hasStarted = false
-    @State private var isPaused = false
-    @State private var isDone = false
-    
-    //Close the page
-    @Environment(\.dismiss) private var dismiss
-    
+
+    // MARK: - Body
+
     var body: some View {
-        
-        ZStack {
-            Color.pageBackground
-                .ignoresSafeArea()
-            
-            //takes up the remaining vertical space
-            Spacer(minLength: 0)
-            // The main page is a VStack
-            VStack(spacing: 0) {
-                
-                // MARK: - back button + title + chips
-                ActivityHeader(
-                    interestTitle: "الألعاب الإلكترونية",
-                    interestColor: .gamingChip,
-                    stepTitle: "طبّق",
-                    stepIcon: "gamecontroller",
-                    onBack: {
-                        
-                        dismiss()
-                    }
-                )
-                .padding(.horizontal, Spacing.pageMargin)
-                
-                // MARK: - Title of today's Do
-                Text(viewModel.title)
-                    .font(.title1Heading)
-                    .foregroundStyle(Color.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, Spacing.pageMargin)
-                    .padding(.top, Spacing.chipHeight)
-                    .padding(.bottom, Spacing.space8)
-                
-                // MARK: - SubTitle of today's Do
-                HStack(spacing: 8) {
-                    Image(systemName: "gauge.with.needle")
+
+        VStack(spacing: 0) {
+
+            // MARK: - Header
+
+            ActivityHeader(
+                interestTitle: "الألعاب الإلكترونية",
+                interestColor: .gamingChip,
+                stepTitle: "طبّق",
+                stepIcon: "gamecontroller",
+                onBack: {
+                    timerEngine.pause()
+                    dismiss()
+                }
+            )
+            .padding(.horizontal, Spacing.pageMargin)
+            .padding(.top, Spacing.space16)
+
+            // MARK: - Scrollable Content
+
+            ScrollView {
+
+                VStack(spacing: 0) {
+
+                    // MARK: - Activity Title
+
+                    Text(viewModel.title)
+                        .font(.title1Heading)
                         .foregroundStyle(Color.textPrimary)
-                        .opacity(0.75)
-                    
-                    Text("امامك \(viewModel.durationMin) دقائق")
+                        .frame(
+                            maxWidth: .infinity,
+                            alignment: .leading
+                        )
+                        .padding(
+                            .horizontal,
+                            Spacing.pageMargin
+                        )
+                        .padding(.top, Spacing.space24)
+                        .padding(.bottom, Spacing.space8)
+
+                    // MARK: - Duration
+
+                    HStack(spacing: 8) {
+
+                        Image(systemName: "gauge.with.needle")
+                            .foregroundStyle(Color.textPrimary)
+                            .opacity(0.75)
+
+                        Text(
+                            "أمامك \(viewModel.durationMin) دقائق"
+                        )
                         .font(.supTitle2)
                         .foregroundStyle(Color.textPrimary)
                         .opacity(0.75)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                }
-                .padding(.horizontal, Spacing.pageMargin)
-                .padding(.bottom, Spacing.space32)
-                
-                // MARK: - Steps to Do
-                DoStepsCard(
-                    howTo: viewModel.steps,
-                    stepRingColor: Color.mapSequers
-                )
-                .padding(.horizontal, Spacing.pageMargin)
-                .padding(.bottom, Spacing.space32)
-                
-                // MARK: - CountDownTimer
-                CountdownTimerView(
-                    engine: timerEngine,
-                    color: .mapTimerRing
-                )
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, Spacing.headerTitleOffset)
-                .padding(.top, Spacing.headerTitleOffset)
-                
-                //takes up the remaining vertical space so button goes farther bottom
-                Spacer(minLength: 0)
-                
-                // MARK: - START / PAUSE / CONTINUE
-                PrimaryButton(
-                    title: timerEngine.isFinished ? "انتهيت" :
-                        !hasStarted ? "ابدأ" :
-                        timerEngine.isRunning ? "إيقاف مؤقت" :
-                        "أكمل"
-                ) {
-                    if timerEngine.isFinished {
-                        isDone = true
-                        dismiss()
-                    } else if !hasStarted {
-                        hasStarted = true
-                        timerEngine.start()
-                    } else if timerEngine.isRunning {
-                        timerEngine.pause()
-                    } else {
-                        timerEngine.resume()
+
+                        Spacer()
                     }
+                    .padding(
+                        .horizontal,
+                        Spacing.pageMargin
+                    )
+                    .padding(.bottom, Spacing.space32)
+
+                    // MARK: - Instructions
+
+                    DoStepsCard(
+                        howTo: viewModel.steps,
+                        stepRingColor: .mapSequers
+                    )
+                    .padding(
+                        .horizontal,
+                        Spacing.pageMargin
+                    )
+                    .padding(.bottom, Spacing.space32)
+
+                    // MARK: - Countdown Timer
+
+                    CountdownTimerView(
+                        engine: timerEngine,
+                        color: .mapTimerRing,
+                        size: 145,
+                        isRTL: true,
+                        showsFinishedCaption: false
+                    )
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .center
+                    )
+                    .padding(.top, Spacing.space16)
+                    .padding(.bottom, Spacing.space24)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
+        .background(
+            Color.pageBackground.ignoresSafeArea()
+        )
+
+        // الأزرار في الأسفل خارج المحتوى المتحرك
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            bottomControls
+        }
+
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
+        )
+        .toolbar(.hidden, for: .navigationBar)
+
+        .onDisappear {
+            timerEngine.pause()
+        }
+    }
+
+    // MARK: - Bottom Controls
+
+    private var bottomControls: some View {
+
+        VStack(spacing: Spacing.space12) {
+
+            // نحجز مكان زر الإيقاف دائمًا
+            // حتى لا يتغير ارتفاع منطقة الأزرار
+            ZStack {
+
+                if hasStarted && !timerEngine.isFinished {
+
+                    Button {
+
+                        if timerEngine.isRunning {
+                            timerEngine.pause()
+                        } else {
+                            timerEngine.resume()
+                        }
+
+                    } label: {
+
+                        Label(
+                            timerEngine.isRunning
+                                ? "إيقاف مؤقت"
+                                : "أكمل",
+                            systemImage: timerEngine.isRunning
+                                ? "pause.fill"
+                                : "play.fill"
+                        )
+                        .font(.titleCards)
+                        .foregroundStyle(Color.textPrimary)
+                        .frame(
+                            maxWidth: .infinity,
+                            minHeight: 44
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .frame(height: 44)
+
+            // MARK: - Main Button
+
+            PrimaryButton(
+                title: hasStarted ? "انتهيت" : "ابدأ",
+                isDisabled: isDone
+            ) {
+
+                if !hasStarted {
+                    startActivity()
+                } else {
+                    finishActivity()
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .environment(\.layoutDirection, .rightToLeft)
+        .padding(
+            .horizontal,
+            Spacing.pageMargin
+        )
+        .padding(.top, Spacing.space12)
+        .padding(.bottom, Spacing.space16)
+        .frame(maxWidth: .infinity)
+        .background(Color.pageBackground)
+    }
+
+    // MARK: - Start Activity
+
+    private func startActivity() {
+
+        guard !hasStarted else {
+            return
+        }
+
+        hasStarted = true
+
+        timerEngine.start()
+    }
+
+    // MARK: - Finish Activity
+
+    private func finishActivity() {
+
+        guard hasStarted && !isDone else {
+            return
+        }
+
+        isDone = true
+
+        timerEngine.pause()
+
+        dismiss()
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     gamingDoView()
