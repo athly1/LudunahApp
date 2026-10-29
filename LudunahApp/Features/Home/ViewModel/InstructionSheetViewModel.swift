@@ -1,80 +1,130 @@
+
+// InstructionsSheetViewModel.swift - بيانات نافذة تعليمات التحدي.
+//
+// Contains:
+// - Load the selected activity.
+// - Display title, description and skills.
+// - Format duration using English digits.
+// - Display activity type and interest information.
+//
+// Used by: InstructionsSheet.
+//
+// Learn: ObservableObject, @Published,
+//        init, do-catch, String.
+
 import Foundation
 import Combine
 import SwiftUI
 
+// MARK: - Instructions Sheet ViewModel
+
 final class InstructionsSheetViewModel: ObservableObject {
-    
-    // MARK: - Activity information
-    
+
+    // MARK: - Activity Information
+
     @Published var title = ""
     @Published var description = ""
     @Published var skills: [String] = []
     @Published var duration = ""
     @Published var typeTitle = ""
-    
-    // MARK: - Interest information
+
+    // MARK: - Interest Information
+
     @Published var interestTitle = ""
     @Published var interestColor: Color = .clear
     @Published var imageName = ""
     @Published var infoIcon = "info.circle"
-    
-    // MARK: - Selected activity
+
+    // MARK: - Selected Activity
+
     let interest: Interest
+
     @Published var activity: Activity?
-        
-        init(interest: Interest, activity preselected: Activity? = nil) {
-            self.interest = interest
 
-            do {
-                let activities = try ContentService.loadActivities(for: interest)
+    // MARK: - Initialization
 
-                // Select one random activity.
-                // Use the activity chosen on Home, or pick a random one.
-                guard let activity = preselected ?? activities.randomElement() else {
-                    print("No activities found.")
-                    return
-                }
+    init(
+        interest: Interest,
+        activity preselected: Activity? = nil
+    ) {
 
-                // Save the selected activity for navigation.
-                self.activity = activity
+        self.interest = interest
 
-                // Keep your existing code below.
-                title = activity.title
-                description = activity.summary ?? ""
-                skills = activity.skills ?? []
-                duration = "\(activity.durationMin ?? 0) دقائق"
-            
-            // Convert activity type into Arabic.
-            switch activity.type {
+        do {
+
+            // تحميل الأنشطة من JSON
+            let activities = try ContentService.loadActivities(
+                for: interest
+            )
+
+            // استخدام نشاط Home المختار إن وجد
+            guard let selectedActivity =
+                preselected ?? activities.randomElement() else {
+
+                print("No activities found.")
+                return
+            }
+
+            // حفظ النشاط للتنقل
+            self.activity = selectedActivity
+
+            // MARK: - Activity Details
+
+            title = selectedActivity.title
+
+            description = selectedActivity.summary ?? ""
+
+            skills = selectedActivity.skills ?? []
+
+            // MARK: - Duration
+
+            if let minutes = selectedActivity.durationMin,
+               minutes > 0 {
+
+                duration = String(minutes) + " دقائق"
+
+            } else {
+
+                duration = "المدة غير محددة"
+            }
+
+            // MARK: - Activity Type
+
+            switch selectedActivity.type {
+
             case .learn:
                 typeTitle = "تعلّم"
+
             case .doActivity:
                 typeTitle = "تحدٍّ"
+
             case .create:
                 typeTitle = "ابتكر"
             }
-            
-            // Set the selected interest's information.
+
+            // MARK: - Interest Information
+
             switch interest {
+
             case .art:
                 interestTitle = "الفن"
                 interestColor = .artChipBackground
                 imageName = "paintpalette"
-                
+
             case .gaming:
                 interestTitle = "الألعاب الإلكترونية"
                 interestColor = .gamingChip
                 imageName = "gamecontroller"
-                
+
             case .sport:
                 interestTitle = "الرياضة"
                 interestColor = .sportChip
                 imageName = "figure.run"
             }
-            
+
         } catch {
+
             print("Failed to load activities: \(error)")
         }
-        
     }
 }
