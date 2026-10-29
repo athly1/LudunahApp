@@ -1,131 +1,187 @@
-// Used By Learn type of Activity (Sport + Gaming), Swipe Up Stack of Cards
+
+// CardsFlowView.swift - بطاقات التعلم القابلة للسحب.
+//
+// Contains:
+// - Shared learning information card.
+// - Swipe-up navigation between cards.
+// - Animated swipe hint.
+// - Unified spacing for Art, Gaming and Sport.
+//
+// Used by: ArtLearnView, GamingLearnView, SportLearnView.
+//
+// Learn: ScrollView, VStack, DragGesture,
+//        phaseAnimator, transitions.
+
 import SwiftUI
 
-
 // MARK: - One Card Build
+
 struct InfoCard: View {
-    
-    //Inputs that changes from card to card
-    let CardIcon: String // SF Symbol name
-    let iconBackground: Color // color of the soft box behind the icon
-    var iconColor: Color // icon color
-    let text: String // Content
+
+    // MARK: - Properties
+
+    // اسم أيقونة البطاقة
+    let CardIcon: String
+
+    // لون خلفية الأيقونة
+    let iconBackground: Color
+
+    // لون الأيقونة
+    var iconColor: Color
+
+    // النص داخل البطاقة
+    let text: String
+
+    // MARK: - Body
 
     var body: some View {
-        
+
         VStack(spacing: 12) {
-            
-            //Icon inside a rounded colored box
+
+            // الأيقونة داخل مستطيل بحواف دائرية
             Image(systemName: CardIcon)
                 .font(.system(size: 24, weight: .medium))
                 .foregroundStyle(iconColor)
                 .frame(width: 48, height: 37)
                 .background(iconBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .clipShape(
+                    RoundedRectangle(cornerRadius: 16)
+                )
 
-            //Body text
+            // محتوى البطاقة
             Text(text)
                 .font(.titleCards)
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
                 .lineSpacing(8)
-                //text take the whole horizontal area but vetical contain safe area 23
-                .fixedSize(horizontal: false, vertical: true)
-
+                .fixedSize(
+                    horizontal: false,
+                    vertical: true
+                )
         }
         .padding(.horizontal, 24)
         .padding(.top, 14)
         .padding(.bottom, 28)
         .frame(maxWidth: .infinity)
         .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 24))
-        .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 8)
+        .clipShape(
+            RoundedRectangle(cornerRadius: 24)
+        )
+        .shadow(
+            color: .black.opacity(0.12),
+            radius: 12,
+            x: 0,
+            y: 8
+        )
     }
 }
 
+// MARK: - Swipe Up Learning Cards
 
-// MARK: - Shows the cards one by one, swipe up for the next one
 struct CardsFlowView: View {
 
-   // Inputs
-   var iconColor: Color // Icon color
-   var iconActivityBackground: Color // Color behind the icon
+    // MARK: - Properties
 
-   let cards: [ActivityCard] // All cards in order
+    // لون الأيقونة
+    var iconColor: Color
 
-   // The parent view owns the index and passes it here.
-   // CardsFlowView displays the requested card but does not
-   // decide which card is currently selected.
-   let index: Int
+    // لون خلفية الأيقونة
+    var iconActivityBackground: Color
 
-   // Called when the user swipes up.
-   // The parent decides how to update the index.
-   var onNext: () -> Void
+    // بطاقات النشاط بالترتيب
+    let cards: [ActivityCard]
 
-   var body: some View {
+    // رقم البطاقة الحالية
+    let index: Int
 
-       // Only this ScrollView making it scrollable
-       ScrollView {
-           VStack(spacing: 200) {
+    // دالة الانتقال إلى البطاقة التالية
+    var onNext: () -> Void
 
-               // Check that the index points to a real card.
-               // This also prevents a crash if the array is empty.
-               if cards.indices.contains(index) {
+    // MARK: - Body
 
-                   // The current card
-                   let card = cards[index]
+    var body: some View {
 
-                   // One Card
-                   InfoCard(
-                       CardIcon: card.icon,
-                       iconBackground: iconActivityBackground,
-                       iconColor: iconColor,
-                       text: card.text
-                   )
-                   .id(index) // A new index means a new card
-                   .transition(.push(from: .bottom)) // THE transition
-                   // New card comes from the bottom
-                   .frame(maxWidth: .infinity)
+        ScrollView {
 
-                   // If NOT the last card, show the swipe hint
-                   if index < cards.count - 1 {
-                       Image(systemName: "hand.draw")
-                           .font(.system(size: 42))
-                           .foregroundStyle(Color.textPrimary)
-                           .rotationEffect(.degrees(15)) // Tilt the hand
-                           // Move up then down, forever
-                           //animate bettwen 2 phases
-                           .phaseAnimator([false, true]) { content, isUp in
-                               //Moves it 55 upward then to original position
-                               content.offset(y: isUp ? -55 : 0)
-                           } animation: { _ in
-                               .easeInOut(duration: 0.8)
-                           }
-                   }
-               }
-           }
-           .padding(.horizontal, 16)
-           .padding(.vertical, 24)
-           .frame(maxWidth: .infinity)
-           //make the intended rectangular card area interactive.
-           .contentShape(Rectangle())
-           
-           
-           // Makes the card area respond to a swipe
-           .gesture(
-               DragGesture().onEnded { drag in
+            // المسافة موحدة بين جميع أنشطة Learn
+            VStack(spacing: 145) {
 
-                   // An upward swipe must exceed 80 points.
-                   // Ask the parent to advance to the next card.
-                   if drag.translation.height < -80 &&
-                       index < cards.count - 1 {
-                       onNext()
-                   }
-               }
-           )
-           .environment(\.layoutDirection, .rightToLeft)
-           // Keep the Arabic layout
-       }
-       .scrollIndicators(.hidden) // Hide the scroll bar
-   }
+                // التأكد من وجود البطاقة الحالية
+                if cards.indices.contains(index) {
+
+                    let card = cards[index]
+
+                    // MARK: - Information Card
+
+                    InfoCard(
+                        CardIcon: card.icon,
+                        iconBackground: iconActivityBackground,
+                        iconColor: iconColor,
+                        text: card.text
+                    )
+                    .id(index)
+                    .transition(.push(from: .bottom))
+                    .frame(maxWidth: .infinity)
+
+                    // MARK: - Swipe Hint
+
+                    // إظهار أيقونة السحب باستثناء آخر بطاقة
+                    if index < cards.count - 1 {
+
+                        Image(systemName: "hand.draw")
+                            .font(.system(size: 42))
+                            .foregroundStyle(Color.textPrimary)
+                            .rotationEffect(.degrees(15))
+
+                            // تحريك اليد للأعلى والأسفل
+                            .phaseAnimator([false, true]) {
+                                content, isUp in
+
+                                content.offset(
+                                    y: isUp ? -30 : 0
+                                )
+
+                            } animation: { _ in
+
+                                .easeInOut(duration: 0.8)
+                            }
+                    }
+                }
+            }
+
+            // MARK: - Layout
+
+            .padding(.horizontal, 16)
+            .padding(.vertical, 24)
+            .frame(maxWidth: .infinity)
+
+            // جعل مساحة البطاقات تستجيب للسحب
+            .contentShape(Rectangle())
+
+            // MARK: - Swipe Gesture
+
+            .gesture(
+
+                DragGesture().onEnded { drag in
+
+                    // الانتقال عند السحب للأعلى
+                    // لمسافة تتجاوز 80 نقطة
+                    if drag.translation.height < -80 &&
+                        index < cards.count - 1 {
+
+                        onNext()
+                    }
+                }
+            )
+
+            // دعم اللغة العربية
+            .environment(
+                \.layoutDirection,
+                .rightToLeft
+            )
+        }
+
+        // إخفاء مؤشر التمرير
+        .scrollIndicators(.hidden)
+    }
 }
