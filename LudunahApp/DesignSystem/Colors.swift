@@ -51,4 +51,18 @@ extension Color {
     static let gamingBadges = Color("Gaming/Badges")                // #A598E3
     static let gamingTint = Color("Gaming/Tint")                    // #E0F4F7
     static let gamingChip = Color("Gaming/Chip")                    // #DDD8F3
+    
+    // Energy levels
+    static let energyLow = Color.artPalette1
+    static let energyMedium = Color.artPalette3
+    static let energyHigh = Color.sportFieldBall
+    
+    // Challenge card backgrounds
+    static let challengeArtBadge = Color(hex: "#F7EBE1")
+    static let challengeGamingBadge = Color(hex: "#ECE8F8")
+    static let challengeSportBadge = Color(hex: "#E2F0DE")
+
+    // Challenge completion
+    static let challengeRadioInactive = Color(hex: "#C4D1D9")
+
 }

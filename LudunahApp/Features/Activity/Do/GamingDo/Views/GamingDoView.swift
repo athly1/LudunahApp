@@ -10,7 +10,8 @@ struct gamingDoView: View {
 
         _viewModel = StateObject(wrappedValue: viewModel)
         _timerEngine = StateObject(
-            wrappedValue: TimerEngine(duration: viewModel.durationMin * 60)
+            wrappedValue: TimerEngine(
+                duration: viewModel.durationMin * 60)
         )
     }
     
@@ -112,11 +113,10 @@ struct gamingDoView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .environment(\.layoutDirection, .rightToLeft)
     }
 }
 
 #Preview {
     gamingDoView()
-        .environment(\.locale, Locale(identifier: "ar"))
-        .environment(\.layoutDirection, .rightToLeft)
 }

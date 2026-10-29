@@ -40,6 +40,14 @@ extension Font {
     
     /// حجم 12 - Regular (Alexandria)
     static let dailyMinutesStyle = Font.custom("Alexandria", size: 12).weight(.regular)
+    
+    // Challenge card typography
+    static let challengeCardTitle =
+        Font.custom("Alexandria", size: 14).weight(.medium)
+
+    static let challengeCardSubtitle =
+        Font.custom("Alexandria", size: 12).weight(.regular)
+
 }
 
 // MARK: - Helper for Hex Colors

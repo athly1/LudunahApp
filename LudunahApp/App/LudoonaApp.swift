@@ -1,99 +1,92 @@
-
-// LudoonaApp.swift - نقطة تشغيل تطبيق لُدُونه.
-//
-// Contains:
-// - The @main entry point.
-// - Shared AppState and AppRouter.
-// - OnboardingView or temporary Home.
-// - NavigationStack and environment.
-// - Arabic right-to-left layout.
-//
-// Used by: iOS system.
-// Learn: @main, App, @State, WindowGroup.
-
 import SwiftUI
 
-// نقطة بداية التطبيق
 @main
 struct LudoonaApp: App {
 
-    // حالة التطبيق
     @State private var appState = AppState()
-
-    // مدير التنقل
     @State private var appRouter = AppRouter()
 
-    // النافذة الرئيسية
     var body: some Scene {
-
         WindowGroup {
+            RootView()
+                .environment(appState)
+                .environment(appRouter)
+                .environment(\.layoutDirection, .rightToLeft)
+                .background(Color.pageBackground.ignoresSafeArea())
+        }
+    }
+}
 
-            Group {
+private struct RootView: View {
 
-                // إذا أكمل المستخدم البداية
-                if appState.isOnboardingCompleted {
+    @Environment(AppState.self) private var appState
+    @Environment(AppRouter.self) private var appRouter
 
-                    // نظام التنقل
-                    NavigationStack(path: $appRouter.path) {
+    @State private var showSplash = true
 
-                        // Home مؤقتة
-                        VStack(spacing: Spacing.space24) {
+    // تشخيص مؤقت
+    private let debugStubHome = false
 
-                            // عنوان الصفحة
-                            Text("أهلًا بك في لُدُونه")
-                                .font(.title1Heading)
-                                .foregroundStyle(Color.textPrimary)
+    var body: some View {
+        @Bindable var router = appRouter
 
-                            // وصف الصفحة
-                            Text("اختر التحدي اللي يناسبك")
-                                .font(.titleCards)
-                                .foregroundStyle(Color.appSecondary)
+        // نقرأ الحالة هنا دائمًا (خارج if/else) حتى يسجّل SwiftUI المراقبة من أول رسم
+        let isOnboardingCompleted = appState.isOnboardingCompleted
+        let _ = print("RootView body: showSplash=\(showSplash), completed=\(isOnboardingCompleted)")
 
-                            // نشاط الفن
-                            Button("تحدي الفن") {
-                                appRouter.push(.activity(.art))
-                            }
+        Group {
+            if showSplash {
+                SplashView()
+                    .task {
+                        print("RootView: timer started")
 
-                            // الإعدادات
-                            Button("الإعدادات") {
-                                appRouter.push(.settings)
-                            }
-
-                            // إعادة صفحات البداية
-                            Button("إعادة البداية") {
-
-                                // العودة للمسار الأساسي
-                                appRouter.popToRoot()
-
-                                // مسح حالة البداية والاهتمامات
-                                appState.reset()
-                            }
+                        do {
+                            try await Task.sleep(for: .seconds(2))
+                        } catch {
+                            return
                         }
 
-                        // ربط الوجهات بالشاشات
-                        .navigationDestination(for: AppRoute.self) { route in
-                            appRouter.destination(for: route)
+                        guard !Task.isCancelled else {
+                            return
+                        }
+
+                        print("RootView: timer finished")
+
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            showSplash = false
                         }
                     }
 
-                } else {
-
-                    // صفحات البداية الحقيقية
-                    OnboardingView()
+            } else if isOnboardingCompleted {
+                NavigationStack(path: $router.path) {
+                    // تشخيص: غيّر false إلى true لعرض شاشة بسيطة بدل HomeView
+                    Group {
+                        if debugStubHome {
+                            Text("STUB HOME")
+                                .onAppear { print("STUB HOME appeared") }
+                        } else {
+                            let _ = print("RootView: creating HomeView")
+                            HomeView()
+                        }
+                    }
+                        .navigationDestination(for: AppRoute.self) { route in
+                            router.destination(for: route)
+                        }
                 }
+                .onAppear {
+                    print("RootView: HomeView appeared")
+                }
+
+            } else {
+                OnboardingView()
+                    .onAppear {
+                        print("RootView: New OnboardingView appeared")
+                    }
             }
-
-            // توفير حالة التطبيق
-            .environment(appState)
-
-            // توفير مدير التنقل
-            .environment(appRouter)
-
-            // الاتجاه العربي
-            .environment(\.layoutDirection, .rightToLeft)
-
-            // خلفية التطبيق
-            .background(Color.pageBackground.ignoresSafeArea())
+        }
+        .animation(.easeInOut(duration: 0.3), value: isOnboardingCompleted)
+        .onChange(of: isOnboardingCompleted) { oldValue, newValue in
+            print("Onboarding state changed: \(oldValue) -> \(newValue)")
         }
     }
 }
