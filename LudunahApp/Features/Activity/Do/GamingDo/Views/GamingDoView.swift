@@ -113,11 +113,10 @@ struct gamingDoView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .environment(\.layoutDirection, .rightToLeft)
     }
 }
 
 #Preview {
     gamingDoView()
-        .environment(\.locale, Locale(identifier: "ar"))
-        .environment(\.layoutDirection, .rightToLeft)
 }
