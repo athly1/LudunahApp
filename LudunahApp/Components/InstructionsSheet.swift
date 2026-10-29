@@ -16,7 +16,17 @@ struct InstructionsSheet: View {
                     gamingCreateView()
                 }
 
-            case .art, .sport:
+            case .art:
+                switch activity.type {
+                case .learn:
+                    ArtLearnView()
+                case .doActivity:
+                    ArtDoView()
+                case .create:
+                    ArtCreateView()
+                }
+
+            case .sport:
                 EmptyView()
             }
         } else {
@@ -59,9 +69,9 @@ struct InstructionsSheet: View {
         )
     }
 
-    // Gaming has real screens. Art and Sport still use the router screen.
+    // Gaming and Art have real screens. Sport still uses the router screen.
     private func startActivity() {
-        if viewModel.interest == .gaming {
+        if viewModel.interest == .gaming || viewModel.interest == .art {
             showActivity = true
         } else {
             onClose()
@@ -167,6 +177,13 @@ struct InstructionsSheet: View {
                             .fill(Color.textPrimary.opacity(0.25))
                             .frame(width: 40, height: 5)
                             .padding(.top, 10)
+                    }
+                    // When an Art screen finishes (popToRoot), close everything.
+                    .onChange(of: appRouter.finishedActivityCount) { _, _ in
+                        if showActivity {
+                            appRouter.markCompleted(viewModel.interest)
+                            showActivity = false
+                        }
                     }
                     .gesture(
                         DragGesture().onEnded { value in

@@ -36,8 +36,12 @@ final class AppRouter {
         path.removeLast()
     }
 
+    // يزيد كل ما انتهى المستخدم من نشاط (يستخدمه InstructionsSheet لإغلاق الشاشة)
+    private(set) var finishedActivityCount = 0
+
     func popToRoot() {
         path = NavigationPath()
+        finishedActivityCount += 1
     }
 
     // تسجيل الإنجاز عند الانتهاء فقط
