@@ -1,69 +1,167 @@
 
-// ArtDoModel.swift - بيانات نشاط التكوين البصري الصامت.
+// ArtDoModel.swift - بيانات أنشطة تطبيق الفن.
 //
 // Contains:
-// - Sunset color palette.
-// - Five-minute activity duration.
-// - Ten-second reflection duration.
-// - Activity instructions.
+// - Art Do activities.
+// - Activity descriptions.
+// - Colors or SF Symbols.
+// - Timed phases.
+// - Optional pause permission for each phase.
+// - Loads activities from Art.json.
 //
 // Used by: ArtDoViewModel.
-// Learn: struct, arrays, stored properties.
+//
+// Learn: struct, Decodable, JSONDecoder, Bundle.
 
 import Foundation
 
+// MARK: - Art Do Phase
+
+// يمثل مرحلة واحدة داخل النشاط
+struct ArtDoPhase: Decodable {
+
+    // مدة المرحلة بالثواني
+    let durationSec: Int
+
+    // تعليمات المرحلة
+    let text: String
+
+    // هل يُسمح بإيقاف المؤقت مؤقتًا؟
+    let allowPause: Bool
+}
+
 // MARK: - Art Do Model
 
-struct ArtDoModel {
+struct ArtDoModel: Identifiable {
+
+    // معرف النشاط
+    let id: String
 
     // عنوان النشاط
     let title: String
 
-    // موضوع لوحة اليوم
+    // وصف النشاط
+    let description: String
+
+    // موضوع النشاط
     let theme: String
 
-    // الألوان المطلوبة
+    // نوع البطاقة: colors أو symbols
+    let displayType: String
+
+    // ألوان النشاط الأول
     let colors: [String]
 
-    // مدة جمع العناصر وترتيبها
-    let activityDuration: Int
+    // رموز النشاط الثاني
+    let symbols: [String]
 
-    // مدة التأمل بعد الضغط على أنهيت
-    let reflectionDuration: Int
+    // مدة التطبيق الأساسية بالدقائق
+    let durationMin: Int
 
-    // تعليمات النشاط
+    // خطوات النشاط
     let howTo: [String]
 
-    // تعليمات شاشة التأمل
-    let reflectionText: String
+    // مراحل النشاط
+    let phases: [ArtDoPhase]
 
-    // MARK: - Sunset Activity
+    // المصادر
+    let sources: [String]
+}
 
-    static let sunset = ArtDoModel(
+// MARK: - JSON Container
 
-        title: "التكوين البصري الصامت",
+// يمثل قائمة الأنشطة داخل Art.json
+private struct ArtDoContainer: Decodable {
 
-        theme: "غروب الشمس",
+    let activities: [ArtDoEntry]
+}
 
-        colors: [
-            "#D9A38F",
-            "#E0915F",
-            "#D7A04E"
-        ],
+// MARK: - JSON Entry
 
-        // خمس دقائق
-        activityDuration: 300,
+// قراءة الحقول المطلوبة من JSON
+private struct ArtDoEntry: Decodable {
 
-        // عشر ثوانٍ
-        reflectionDuration: 10,
+    let id: String
+    let type: String
+    let title: String
 
-        howTo: [
-            "تحرك في مساحتك واجمع 3 عناصر حقيقية تحمل هذه الألوان أو درجات قريبة منها.",
-            "رتبها أمامك لتشكل لوحة صامتة مستوحاة من بيئتك.",
-            "بعد الانتهاء، ابتعد خطوة للخلف وتأمل عملك."
-        ],
+    let description: String?
+    let theme: String?
+    let displayType: String?
 
-        reflectionText:
-            "ابتعد خطوة للخلف، وتأمل التناغم اللوني في لوحتك."
-    )
+    let colors: [String]?
+    let symbols: [String]?
+
+    let durationMin: Int?
+    let howTo: [String]?
+    let phases: [ArtDoPhase]?
+    let sources: [String]?
+
+    // MARK: - Convert to Model
+
+    var doModel: ArtDoModel? {
+
+        // اختيار أنشطة Do التي تحتوي على مراحل صحيحة
+        guard type == "do",
+              let phases,
+              !phases.isEmpty,
+              phases.allSatisfy({
+                  $0.durationSec > 0
+              }) else {
+            return nil
+        }
+
+        let totalSeconds = phases.reduce(0) {
+            $0 + $1.durationSec
+        }
+
+        return ArtDoModel(
+            id: id,
+            title: title,
+            description: description ?? "",
+            theme: theme ?? "",
+            displayType: displayType ?? "colors",
+            colors: colors ?? [],
+            symbols: symbols ?? [],
+            durationMin: durationMin
+                ?? Int(ceil(Double(totalSeconds) / 60)),
+            howTo: howTo ?? [],
+            phases: phases,
+            sources: sources ?? []
+        )
+    }
+}
+
+// MARK: - Art Do Loader
+
+enum ArtDoLoader {
+
+    static func loadActivities() throws -> [ArtDoModel] {
+
+        // العثور على Art.json داخل التطبيق
+        guard let url = Bundle.main.url(
+            forResource: "Art",
+            withExtension: "json"
+        ) else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+
+        // قراءة الملف
+        let data = try Data(contentsOf: url)
+
+        // تحويل snake_case إلى camelCase
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        // فك الترميز
+        let container = try decoder.decode(
+            ArtDoContainer.self,
+            from: data
+        )
+
+        // إرجاع أنشطة Do فقط
+        return container.activities.compactMap {
+            $0.doModel
+        }
+    }
 }

@@ -1,20 +1,20 @@
 
-//
-// ArtCreateView.swift - واجهة نشاط ابتكر في الفن السعودي.
+// ArtCreateView.swift - واجهة أنشطة ابتكر في الفن السعودي.
 //
 // Contains:
-// - Shared ActivityHeader with back button.
-// - Interactive 5x5 pixel grid.
-// - Six-color palette and undo button.
-// - Reflection question and answer field.
+// - Random Art Create activity from Art.json.
+// - Original 5x5 pixel grid design.
+// - Six-color palette with undo button.
+// - Three color mixing rounds.
+// - Favorite color and creative naming.
+// - Reflection question.
 // - Instructions bottom sheet.
-// - Save activity and return to Home.
+// - Fixed finish button.
 //
 // Used by: ActivityFlowView (art, create).
 //
-// Learn: @State, @Environment, @FocusState,
-//        LazyVGrid, ForEach, Button, sheet, dismiss.
-//
+// Learn: @State, @FocusState, LazyVGrid,
+//        @ViewBuilder, ForEach, Binding, sheet.
 
 import SwiftUI
 
@@ -24,25 +24,25 @@ struct ArtCreateView: View {
 
     // MARK: - Properties
 
-    // مسؤول عن الرسم والألوان ومنطق النشاط
+    // إدارة النشاطين من JSON
     @State private var viewModel = ArtCreateViewModel()
 
-    // الرجوع للشاشة السابقة
-    @Environment(\.dismiss) private var dismiss
-
-    // مدير التنقل المشترك في التطبيق
+    // مدير التنقل
     @Environment(AppRouter.self) private var appRouter
 
-    // إظهار وإخفاء نافذة التعليمات
+    // الرجوع
+    @Environment(\.dismiss) private var dismiss
+
+    // نافذة التعليمات
     @State private var showInstructions = false
 
-    // التحكم في لوحة المفاتيح
+    // لوحة المفاتيح
     @FocusState private var isAnswerFocused: Bool
 
-    // منع الضغط المتكرر على زر الإنهاء
+    // منع تسجيل الإنجاز مرتين
     @State private var isFinishing = false
 
-    // إعداد أعمدة شبكة الرسم الخمسة
+    // شبكة خمسة أعمدة
     private let gridColumns = Array(
         repeating: GridItem(.flexible(), spacing: 3),
         count: 5
@@ -56,7 +56,8 @@ struct ArtCreateView: View {
 
             VStack(spacing: Spacing.space24) {
 
-                // الهيدر المشترك الخاص بالفريق
+                // MARK: - Shared Header
+
                 ActivityHeader(
                     interestTitle: "الفن السعودي",
                     interestColor: .artChipBackground,
@@ -67,44 +68,64 @@ struct ArtCreateView: View {
                     }
                 )
 
-                // عنوان النشاط وزر المعلومات
-                activityTitle
+                if let activity = viewModel.activity {
 
-                // شبكة التلوين
-                pixelGrid
+                    // عنوان النشاط والمعلومات
+                    activityTitle(activity.title)
 
-                // لوحة الألوان والتراجع
-                colorPalette
+                    // تحديد النشاط من JSON
+                    if activity.id == "art-create-1" {
 
-                // سؤال معنى الرمز
-                reflectionSection
+                        // تصميم الشبكة القديم
+                        gridActivity(activity)
+
+                    } else if activity.id == "art-create-2" {
+
+                        // مختبر الألوان الجديد
+                        mixingActivity(activity)
+                    }
+
+                } else {
+
+                    Text(
+                        viewModel.errorMessage
+                            ?? "لا يوجد نشاط متاح."
+                    )
+                    .font(.titleCards)
+                    .foregroundStyle(Color.textPrimary)
+                }
             }
             .padding(.horizontal, Spacing.pageMargin)
             .padding(.top, Spacing.space16)
             .padding(.bottom, Spacing.space24)
         }
 
-        // تثبيت زر أنهيت في أسفل الشاشة
+        // MARK: - Fixed Bottom Button
+
         .safeAreaInset(edge: .bottom) {
 
-            finishButton
-                .padding(.horizontal, Spacing.pageMargin)
-                .padding(.vertical, Spacing.space8)
-                .background(Color.pageBackground)
+            if viewModel.activity != nil {
+
+                finishButton
+                    .padding(.horizontal, Spacing.pageMargin)
+                    .padding(.vertical, Spacing.space8)
+                    .background(Color.pageBackground)
+            }
         }
 
-        // خلفية Design System
+        // MARK: - Design System
+
         .background(
             Color.pageBackground.ignoresSafeArea()
         )
-
-        // إخفاء شريط التنقل الافتراضي
         .toolbar(.hidden, for: .navigationBar)
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
+        )
 
-        // اتجاه التطبيق العربي
-        .environment(\.layoutDirection, .rightToLeft)
+        // MARK: - Instructions Sheet
 
-        // نافذة تعليمات النشاط
         .sheet(isPresented: $showInstructions) {
 
             instructionsContent
@@ -115,16 +136,16 @@ struct ArtCreateView: View {
 
     // MARK: - Activity Title
 
-    private var activityTitle: some View {
+    private func activityTitle(
+        _ title: String
+    ) -> some View {
 
         HStack(spacing: Spacing.space8) {
 
-            // عنوان التحدي
-            Text("صمّم رمز يحكي يومك")
+            Text(title)
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
 
-            // زر فتح التعليمات
             Button {
 
                 showInstructions = true
@@ -135,24 +156,53 @@ struct ArtCreateView: View {
                     .font(.system(size: 16))
                     .foregroundStyle(Color.textPrimary)
             }
+            .buttonStyle(.plain)
             .accessibilityLabel("طريقة أداء النشاط")
 
             Spacer()
+        }
+        .frame(
+            maxWidth: .infinity,
+            alignment: .leading
+        )
+    }
+
+    // MARK: - Grid Activity
+
+    // النشاط الأول: صمم رمز يحكي يومك
+    // نستخدم نفس ترتيب واجهة الشبكة القديمة.
+
+    private func gridActivity(
+        _ activity: ArtCreateModel
+    ) -> some View {
+
+        VStack(spacing: Spacing.space24) {
+
+            // شبكة الرسم أولًا
+            pixelGrid(activity)
+
+            // الألوان وزر التراجع في صف واحد
+            colorPalette(activity)
+
+            // سؤال معنى الرمز
+            reflectionSection(activity)
         }
     }
 
     // MARK: - Pixel Grid
 
-    private var pixelGrid: some View {
+    private func pixelGrid(
+        _ activity: ArtCreateModel
+    ) -> some View {
 
         LazyVGrid(
             columns: gridColumns,
             spacing: 3
         ) {
 
-            // عرض مربعات التصميم الـ 25
+            // عرض المربعات الخمسة والعشرين
             ForEach(
-                viewModel.pattern.cellColors.indices,
+                viewModel.grid.indices,
                 id: \.self
             ) { index in
 
@@ -161,27 +211,26 @@ struct ArtCreateView: View {
                     // إغلاق لوحة المفاتيح
                     isAnswerFocused = false
 
-                    // تلوين المربع المحدد
+                    // تلوين المربع
                     viewModel.paintCell(at: index)
 
                 } label: {
 
                     Rectangle()
-
-                        // قراءة لون المربع من Model
                         .fill(
-                            Color(
-                                hex: viewModel.pattern.cellColors[index]
+                            cellColor(
+                                at: index,
+                                colors: activity.colors
                             )
                         )
 
-                        // جعل الخلية مربعة
+                        // المحافظة على شكل المربع
                         .aspectRatio(
                             1,
                             contentMode: .fit
                         )
 
-                        // حدود المربع
+                        // الحدود مثل التصميم القديم
                         .overlay {
 
                             Rectangle()
@@ -195,16 +244,14 @@ struct ArtCreateView: View {
                 .accessibilityLabel("المربع \(index + 1)")
             }
         }
-
         .padding(Spacing.space16)
 
-        // خلفية الشبكة
+        // خلفية الشبكة القديمة
         .background(
             Color.glassBackground,
             in: RoundedRectangle(cornerRadius: 20)
         )
 
-        // ظل الشبكة
         .shadow(
             color: Color.black.opacity(0.08),
             radius: 10,
@@ -212,49 +259,72 @@ struct ArtCreateView: View {
         )
     }
 
+    // MARK: - Cell Color
+
+    // قراءة لون المربع من ViewModel
+    private func cellColor(
+        at index: Int,
+        colors: [String]
+    ) -> Color {
+
+        guard viewModel.grid.indices.contains(index),
+              let colorIndex = viewModel.grid[index],
+              colors.indices.contains(colorIndex) else {
+
+            return .white
+        }
+
+        return Color(hex: colors[colorIndex])
+    }
+
     // MARK: - Color Palette
 
-    private var colorPalette: some View {
+    // نفس تصميم صف الألوان والتراجع القديم
+    private func colorPalette(
+        _ activity: ArtCreateModel
+    ) -> some View {
 
         HStack(spacing: Spacing.space4) {
 
             // الألوان الستة
             ForEach(
-                viewModel.availableColors,
+                activity.colors.indices,
                 id: \.self
-            ) { color in
+            ) { index in
 
                 Button {
 
-                    // اختيار لون الرسم
-                    viewModel.selectColor(color)
+                    // اختيار اللون الحالي
+                    viewModel.selectedColorIndex = index
 
                 } label: {
 
                     Circle()
-                        .fill(Color(hex: color))
-
-                        // إبراز اللون المختار
+                        .fill(
+                            Color(hex: activity.colors[index])
+                        )
                         .overlay {
 
                             Circle()
                                 .stroke(
-                                    viewModel.selectedColor == color
+                                    viewModel.selectedColorIndex == index
                                         ? Color.textPrimary
                                         : Color.white,
                                     lineWidth: 2
                                 )
                         }
-
                         .frame(width: 34, height: 34)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("اختيار اللون \(color)")
+                .accessibilityLabel(
+                    "اختيار اللون \(index + 1)"
+                )
             }
 
             Spacer(minLength: 0)
 
-            // زر التراجع
+            // MARK: - Undo Button
+
             Button {
 
                 viewModel.undo()
@@ -264,17 +334,13 @@ struct ArtCreateView: View {
                 Text("تراجع")
                     .font(.dailyMinutesStyle)
                     .foregroundStyle(Color.textPrimary)
-
-                    // منع النص من النزول لسطرين
                     .lineLimit(1)
                     .fixedSize(
                         horizontal: true,
                         vertical: false
                     )
-
                     .padding(.horizontal, Spacing.space12)
                     .frame(height: 38)
-
                     .overlay {
 
                         RoundedRectangle(cornerRadius: 12)
@@ -285,8 +351,6 @@ struct ArtCreateView: View {
                     }
             }
             .buttonStyle(.plain)
-
-            // تعطيل التراجع عندما لا يوجد تغيير سابق
             .disabled(!viewModel.canUndo)
             .opacity(viewModel.canUndo ? 1 : 0.5)
         }
@@ -294,180 +358,404 @@ struct ArtCreateView: View {
 
     // MARK: - Reflection Section
 
-    private var reflectionSection: some View {
+    // سؤال النشاط الأول
+    private func reflectionSection(
+        _ activity: ArtCreateModel
+    ) -> some View {
 
         VStack(spacing: Spacing.space16) {
 
-            // سؤال معنى التصميم
-            Text("ما المعنى خلف هذا الرمز؟")
+            Text(activity.question)
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
                 .multilineTextAlignment(.center)
 
-            // حقل كتابة إجابة المستخدم
             TextField(
                 "سجّل جوابك",
-                text: $viewModel.answer
+                text: $viewModel.reflection
             )
             .font(.titleCards)
             .foregroundStyle(Color.textPrimary)
             .multilineTextAlignment(.trailing)
-
             .padding(Spacing.space16)
-
             .background(
                 Color.glassBackground,
                 in: Capsule()
             )
-
             .focused($isAnswerFocused)
             .submitLabel(.done)
         }
     }
 
+    // MARK: - Mixing Activity
+
+    // النشاط الثاني: مختبر الألوان
+    @ViewBuilder
+    private func mixingActivity(
+        _ activity: ArtCreateModel
+    ) -> some View {
+
+        if viewModel.isMixingComplete {
+
+            // بعد انتهاء الجولات
+            favoriteColorContent(activity)
+
+        } else if let round = viewModel.currentRound {
+
+            VStack(spacing: Spacing.space24) {
+
+                // MARK: - Round Progress
+
+                Text(
+                    "الجولة \(viewModel.currentRoundNumber) من \(viewModel.totalRounds)"
+                )
+                .font(.supTitle2)
+                .foregroundStyle(Color.textPrimary)
+
+                ProgressView(
+                    value: Double(viewModel.roundIndex),
+                    total: Double(
+                        max(viewModel.totalRounds, 1)
+                    )
+                )
+                .tint(Color.actionPrimary)
+
+                // MARK: - Mixing Card
+
+                VStack(spacing: Spacing.space16) {
+
+                    Text("وش تتوقع ينتج عن مزج اللونين؟")
+                        .font(.titleCards)
+                        .foregroundStyle(Color.textPrimary)
+                        .multilineTextAlignment(.center)
+
+                    // اللونان الأساسيان
+                    HStack(spacing: Spacing.space24) {
+
+                        ForEach(
+                            round.colors,
+                            id: \.self
+                        ) { color in
+
+                            Circle()
+                                .fill(Color(hex: color))
+                                .frame(
+                                    width: 85,
+                                    height: 85
+                                )
+                        }
+                    }
+
+                    Image(systemName: "arrow.down")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Color.textPrimary)
+
+                    // MARK: - Result
+
+                    if viewModel.isRevealed {
+
+                        Circle()
+                            .fill(
+                                Color(hex: round.resultColor)
+                            )
+                            .frame(
+                                width: 100,
+                                height: 100
+                            )
+
+                        Text("النتيجة: \(round.answer)")
+                            .font(.titleCards)
+                            .foregroundStyle(Color.textPrimary)
+
+                        if viewModel.selectedAnswer == round.answer {
+
+                            Text("توقعك صحيح!")
+                                .font(.supTitle2)
+                                .foregroundStyle(Color.textPrimary)
+
+                        } else {
+
+                            Text(
+                                "توقعك كان: \(viewModel.selectedAnswer ?? "")"
+                            )
+                            .font(.supTitle2)
+                            .foregroundStyle(Color.textPrimary)
+                        }
+
+                    } else {
+
+                        Circle()
+                            .fill(Color.pageBackground)
+                            .frame(
+                                width: 100,
+                                height: 100
+                            )
+                            .overlay {
+
+                                Image(systemName: "questionmark")
+                                    .font(.system(size: 34))
+                                    .foregroundStyle(Color.textPrimary)
+                            }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(Spacing.space24)
+                .background(
+                    Color.glassBackground,
+                    in: RoundedRectangle(cornerRadius: 20)
+                )
+
+                // MARK: - Answer Options
+
+                VStack(spacing: Spacing.space12) {
+
+                    ForEach(
+                        round.options,
+                        id: \.self
+                    ) { option in
+
+                        Button {
+
+                            viewModel.selectAnswer(option)
+
+                        } label: {
+
+                            HStack {
+
+                                Text(option)
+                                    .font(.titleCards)
+
+                                Spacer()
+
+                                if viewModel.selectedAnswer == option {
+
+                                    Image(
+                                        systemName: "checkmark.circle.fill"
+                                    )
+                                }
+                            }
+                            .foregroundStyle(Color.textPrimary)
+                            .padding(Spacing.space16)
+                            .frame(maxWidth: .infinity)
+                            .background(
+                                viewModel.selectedAnswer == option
+                                    ? Color.artChipBackground
+                                    : Color.glassBackground,
+                                in: RoundedRectangle(
+                                    cornerRadius: 14
+                                )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(viewModel.isRevealed)
+                    }
+                }
+
+                // MARK: - Round Controls
+
+                if viewModel.isRevealed {
+
+                    PrimaryButton(
+                        title: viewModel.isLastRound
+                            ? "اختيار اللون المفضل"
+                            : "الجولة التالية"
+                    ) {
+
+                        viewModel.nextRound()
+                    }
+
+                } else {
+
+                    PrimaryButton(
+                        title: "اكشف النتيجة",
+                        isDisabled: viewModel.selectedAnswer == nil
+                    ) {
+
+                        viewModel.revealResult()
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Favorite Color
+
+    // اختيار لون من نتائج الجولات الثلاث
+    private func favoriteColorContent(
+        _ activity: ArtCreateModel
+    ) -> some View {
+
+        VStack(spacing: Spacing.space24) {
+
+            Text("اختر لونك المفضل من النتائج")
+                .font(.titleCards)
+                .foregroundStyle(Color.textPrimary)
+
+            HStack(spacing: Spacing.space16) {
+
+                ForEach(
+                    activity.rounds.indices,
+                    id: \.self
+                ) { index in
+
+                    Button {
+
+                        viewModel.favoriteRoundIndex = index
+
+                    } label: {
+
+                        VStack(spacing: Spacing.space8) {
+
+                            Circle()
+                                .fill(
+                                    Color(
+                                        hex: activity.rounds[index].resultColor
+                                    )
+                                )
+                                .frame(
+                                    width: 65,
+                                    height: 65
+                                )
+                                .padding(5)
+                                .overlay {
+
+                                    Circle()
+                                        .stroke(
+                                            viewModel.favoriteRoundIndex == index
+                                                ? Color.actionPrimary
+                                                : .clear,
+                                            lineWidth: 2
+                                        )
+                                }
+
+                            Text(activity.rounds[index].answer)
+                                .font(.caption)
+                                .foregroundStyle(Color.textPrimary)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .frame(maxWidth: .infinity)
+
+            // الاسم الإبداعي
+            VStack(spacing: Spacing.space16) {
+
+                Text(activity.question)
+                    .font(.title1Heading)
+                    .foregroundStyle(Color.textPrimary)
+                    .multilineTextAlignment(.center)
+
+                TextField(
+                    "مثال: غروب الخيال",
+                    text: $viewModel.inventedColorName
+                )
+                .font(.titleCards)
+                .foregroundStyle(Color.textPrimary)
+                .multilineTextAlignment(.trailing)
+                .padding(Spacing.space16)
+                .background(
+                    Color.glassBackground,
+                    in: Capsule()
+                )
+                .focused($isAnswerFocused)
+                .submitLabel(.done)
+            }
+        }
+        .padding(Spacing.space16)
+        .background(
+            Color.glassBackground,
+            in: RoundedRectangle(cornerRadius: 20)
+        )
+    }
+
     // MARK: - Finish Button
 
+    // يظهر بأسفل الشاشة لكلا النشاطين
     private var finishButton: some View {
 
         PrimaryButton(
             title: "أنهيت",
-
-            // الزر يتفعل بعد الرسم وكتابة الإجابة
             isDisabled: !viewModel.canFinish || isFinishing
         ) {
 
-            // منع تسجيل الإنجاز أكثر من مرة
-            guard !isFinishing else {
-                return
-            }
-
-            isFinishing = true
-
-            // إغلاق لوحة المفاتيح
-            isAnswerFocused = false
-
-            // حفظ تصميم المستخدم
-            let saved = viewModel.save()
-
-            // إذا فشل الحفظ، نسمح بالمحاولة مجددًا
-            guard saved else {
-
-                print("Failed to save Art Create")
-
-                isFinishing = false
-                return
-            }
-
-            // تسجيل إنجاز نشاط الفن
-            StorageService().recordCompletedActivity(
-                interest: .art
-            )
-
-            // الرجوع إلى الشاشة الرئيسية
-            appRouter.popToRoot()
+            finishActivity()
         }
     }
 
-    // MARK: - Instructions Content
+    // MARK: - Instructions
 
     private var instructionsContent: some View {
 
         VStack(spacing: Spacing.space24) {
 
-            // عنوان نافذة التعليمات
             Text("طريقة أداء النشاط")
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
 
-            // وصف النشاط
-            Text("تمرين لربط الجانب البصري بالمعنى الشعوري")
-                .font(.titleCards)
-                .foregroundStyle(Color.appSecondary)
-                .multilineTextAlignment(.center)
+            if let activity = viewModel.activity {
 
-            // خطوات أداء النشاط
-            VStack(
-                alignment: .leading,
-                spacing: Spacing.space16
-            ) {
+                Text(activity.description)
+                    .font(.titleCards)
+                    .foregroundStyle(Color.appSecondary)
+                    .multilineTextAlignment(.center)
 
-                instructionRow(
-                    number: 1,
-                    text: "اختر فكرة أو معلومة تعلمتها اليوم، وتخيّل نمطًا هندسيًا مستوحى من معناها وألوانها."
-                )
+                ScrollView {
 
-                instructionRow(
-                    number: 2,
-                    text: "اختر الألوان المناسبة، واستخدم المربعات لتصميم رمز يعبّر عن الفكرة."
-                )
-
-                instructionRow(
-                    number: 3,
-                    text: "بعد الانتهاء، تأمل الرمز واكتب المعنى خلفه. غدًا حاول تذكّر الفكرة من الرمز."
-                )
+                    // عرض تعليمات النشاط من JSON
+                    DoStepsCard(
+                        howTo: activity.howTo,
+                        stepRingColor: .artChipBackground
+                    )
+                }
             }
 
             Spacer(minLength: 0)
 
-            // زر إغلاق نافذة التعليمات
             PrimaryButton(title: "فهمت") {
 
                 showInstructions = false
             }
         }
-
         .padding(Spacing.pageMargin)
-
         .background(
             Color.pageBackground.ignoresSafeArea()
         )
-
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
+        )
     }
 
-    // MARK: - Instruction Row
+    // MARK: - Finish Activity
 
-    private func instructionRow(
-        number: Int,
-        text: String
-    ) -> some View {
+    private func finishActivity() {
 
-        HStack(
-            alignment: .top,
-            spacing: Spacing.space12
-        ) {
-
-            // رقم الخطوة
-            Text("\(number)")
-                .font(.titleCards)
-                .foregroundStyle(Color.textPrimary)
-
-                .frame(width: 30, height: 30)
-
-                .background(
-                    Color.actionPrimary,
-                    in: Circle()
-                )
-
-            // وصف الخطوة
-            Text(text)
-                .font(.titleCards)
-                .foregroundStyle(Color.textPrimary)
-
-                .fixedSize(
-                    horizontal: false,
-                    vertical: true
-                )
+        guard !isFinishing,
+              viewModel.canFinish else {
+            return
         }
-    }
 
-} // نهاية struct ArtCreateView
+        isFinishing = true
+
+        // إغلاق لوحة المفاتيح
+        isAnswerFocused = false
+
+        // تسجيل إنجاز نشاط الفن
+        StorageService().recordCompletedActivity(
+            interest: .art
+        )
+
+        // العودة إلى الشاشة الرئيسية
+        appRouter.popToRoot()
+    }
+}
+
 
 // MARK: - Preview
 
 #Preview {
 
-    // مدير تنقل تجريبي
     let router = AppRouter()
 
     NavigationStack(
@@ -477,18 +765,16 @@ struct ArtCreateView: View {
         )
     ) {
 
-        // شاشة رئيسية مؤقتة لاختبار التنقل
         VStack(spacing: 20) {
 
             Text("الرئيسية")
                 .font(.title)
 
-            Button("افتح نشاط الفن") {
+            Button("افتح Art Create") {
 
                 router.push(.activity(.art))
             }
         }
-
         .navigationDestination(for: AppRoute.self) { route in
 
             switch route {
@@ -501,10 +787,6 @@ struct ArtCreateView: View {
             }
         }
     }
-
-    // تمرير مدير التنقل إلى الواجهة
     .environment(router)
-
-    // تفعيل الاتجاه العربي
     .environment(\.layoutDirection, .rightToLeft)
 }

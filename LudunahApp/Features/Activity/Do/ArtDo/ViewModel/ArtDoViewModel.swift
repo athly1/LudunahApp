@@ -1,23 +1,30 @@
 
-// ArtDoViewModel.swift - إدارة مراحل نشاط الفن Do.
+// ArtDoViewModel.swift - منطق أنشطة تطبيق الفن.
 //
 // Contains:
-// - Activity data.
-// - Ready, collecting, and reflecting stages.
-// - Methods for moving between stages.
+// - Random activity selection.
+// - Current phase management.
+// - Start, next and finish actions.
 //
 // Used by: ArtDoView.
-// Learn: @Observable, enum, functions.
+//
+// Learn: @Observable, randomElement,
+//        computed properties and functions.
 
 import Foundation
 import Observation
 
-// MARK: - Activity Stages
+// MARK: - Art Do Stage
 
 enum ArtDoStage {
+
+    // قبل البدء
     case ready
-    case collecting
-    case reflecting
+
+    // أثناء التنفيذ
+    case running
+
+    // النشاط مكتمل
     case completed
 }
 
@@ -27,42 +34,121 @@ enum ArtDoStage {
 @Observable
 final class ArtDoViewModel {
 
-    // بيانات نشاط غروب الشمس
-    let activity = ArtDoModel.sunset
+    // MARK: - Properties
 
-    // المرحلة الحالية
+    // النشاط المختار عشوائيًا
+    private(set) var activity: ArtDoModel?
+
+    // حالة النشاط
     private(set) var stage: ArtDoStage = .ready
 
-    // MARK: - Start
+    // رقم المرحلة الحالية يبدأ من صفر
+    private(set) var phaseIndex = 0
 
-    // بدء جمع العناصر وترتيبها
+    // رسالة الخطأ
+    private(set) var errorMessage: String?
+
+    // MARK: - Initialization
+
+    init() {
+        loadActivity()
+    }
+
+    // MARK: - Load Activity
+
+    private func loadActivity() {
+
+        do {
+
+            // قراءة أنشطة Art Do من Art.json
+            let activities = try ArtDoLoader.loadActivities()
+
+            // اختيار نشاط عشوائي مثل Art Learn
+            guard let selectedActivity =
+                activities.randomElement() else {
+
+                errorMessage = "لا توجد أنشطة تطبيق متاحة."
+                return
+            }
+
+            // تخزين النشاط المختار
+            activity = selectedActivity
+
+        } catch {
+
+            errorMessage = "تعذر تحميل أنشطة الفن."
+            print("Art Do loading error: \(error)")
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    // عدد مراحل النشاط
+    var totalPhases: Int {
+        activity?.phases.count ?? 0
+    }
+
+    // المرحلة الحالية
+    var currentPhase: ArtDoPhase? {
+
+        guard let activity,
+              activity.phases.indices.contains(phaseIndex) else {
+            return nil
+        }
+
+        return activity.phases[phaseIndex]
+    }
+
+    // رقم المرحلة الظاهر للمستخدم
+    var currentPhaseNumber: Int {
+        phaseIndex + 1
+    }
+
+    // هل المرحلة الأخيرة؟
+    var isLastPhase: Bool {
+
+        guard totalPhases > 0 else {
+            return false
+        }
+
+        return phaseIndex == totalPhases - 1
+    }
+
+    // هل يسمح النشاط بإيقاف المؤقت في هذه المرحلة؟
+    var canPauseCurrentPhase: Bool {
+        currentPhase?.allowPause ?? false
+    }
+
+    // MARK: - Start Activity
+
     func startActivity() {
 
-        guard stage == .ready else {
+        guard stage == .ready,
+              currentPhase != nil else {
             return
         }
 
-        stage = .collecting
+        stage = .running
     }
 
-    // MARK: - Reflection
+    // MARK: - Next Phase
 
-    // الانتقال إلى مرحلة التأمل
-    func startReflection() {
+    func nextPhase() {
 
-        guard stage == .collecting else {
+        guard stage == .running,
+              !isLastPhase else {
             return
         }
 
-        stage = .reflecting
+        phaseIndex += 1
     }
 
-    // MARK: - Finish
+    // MARK: - Finish Activity
 
-    // اكتمال النشاط
     func finishActivity() {
 
-        guard stage == .reflecting else {
+        guard stage == .running,
+              isLastPhase else {
             return
         }
 

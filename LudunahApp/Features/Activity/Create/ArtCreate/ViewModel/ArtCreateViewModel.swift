@@ -1,158 +1,210 @@
 
-// ArtCreateViewModel.swift - منطق نشاط ابتكر في الفن السعودي.
+// ArtCreateViewModel.swift - منطق أنشطة Art Create.
 //
 // Contains:
-// - An @Observable class with user grid and selected color.
-// - Available colors from activity content.
-// - Methods to select color, paint cell, undo, clear, and save.
-// - User's answer describing their symbol.
+// - Random activity selection.
+// - Grid painting and undo.
+// - Color mixing predictions.
+// - Result reveal and round navigation.
+// - Creative reflection.
 //
 // Used by: ArtCreateView.
-// Learn: @Observable, arrays, Set, guard, functions,
-//       JSONEncoder, UserDefaults, undo history.
+//
+// Learn: @Observable, arrays, functions, computed properties.
 
 import Foundation
 import Observation
 
-// MARK: - Art Create ViewModel
-
-// يدير التفاعل مع شبكة الرسم في نشاط ابتكر
+@MainActor
 @Observable
 final class ArtCreateViewModel {
 
-    // MARK: - Properties
+    // MARK: - Activity
 
-    // التصميم الحالي للمستخدم (شبكة 5 × 5)
-    private(set) var pattern = ArtCreateModel()
+    private(set) var activity: ArtCreateModel?
+    private(set) var errorMessage: String?
 
-    // الألوان المتاحة من بيانات النشاط
-    let availableColors: [String] = [
-        "#E8D5C4",
-        "#8B3A2F",
-        "#3A2A2A",
-        "#D9A38F",
-        "#2F5D4A",
-        "#D7A04E"
-    ]
+    // MARK: - Grid Activity
 
-    // اللون المحدد حاليًا
-    private(set) var selectedColor: String = "#8B3A2F"
+    // 25 مربعًا، nil يعني مربع غير ملوّن
+    private(set) var grid: [Int?] = Array(
+        repeating: nil,
+        count: 25
+    )
 
-    // الإجابة عن معنى الرمز الذي صممه المستخدم
-    var answer: String = ""
+    // حفظ الحالات السابقة لزر التراجع
+    private var gridHistory: [[Int?]] = []
 
-    // حفظ الحالات السابقة لدعم التراجع
-    private var undoHistory: [[String]] = []
+    // اللون المختار
+    var selectedColorIndex = 0
 
-    // مفتاح حفظ التصميم في الجهاز
-    private let storageKey = "artCreateDraft"
+    // إجابة المستخدم عن معنى الرمز
+    var reflection = ""
 
-    // MARK: - Color Selection
-
-    // تغيير اللون المستخدم في الرسم
-    func selectColor(_ color: String) {
-
-        // التأكد أن اللون ضمن الألوان المسموحة
-        guard availableColors.contains(color) else {
-            return
-        }
-
-        // تحديث اللون المحدد
-        selectedColor = color
+    var canUndo: Bool {
+        !gridHistory.isEmpty
     }
 
-    // MARK: - Paint Cell
+    var hasDrawing: Bool {
+        grid.contains { $0 != nil }
+    }
 
-    // تلوين مربع معين داخل الشبكة
+    // MARK: - Color Lab
+
+    private(set) var roundIndex = 0
+
+    // توقع المستخدم في الجولة الحالية
+    private(set) var selectedAnswer: String?
+
+    // هل كشفنا النتيجة؟
+    private(set) var isRevealed = false
+
+    // اللون المختار من النتائج
+    var favoriteRoundIndex: Int?
+
+    // الاسم الإبداعي للون
+    var inventedColorName = ""
+
+    private(set) var isMixingComplete = false
+
+    // MARK: - Initialization
+
+    init() {
+        loadActivity()
+    }
+
+    private func loadActivity() {
+
+        do {
+            let activities = try ArtCreateLoader.loadActivities()
+
+            guard let selected = activities.randomElement() else {
+                errorMessage = "لا توجد أنشطة إنشاء متاحة."
+                return
+            }
+
+            activity = selected
+
+        } catch {
+            errorMessage = "تعذر تحميل أنشطة الإنشاء."
+            print("Art Create loading error: \(error)")
+        }
+    }
+
+    // MARK: - Grid Functions
+
     func paintCell(at index: Int) {
 
-        // التأكد أن رقم المربع صحيح
-        guard pattern.cellColors.indices.contains(index) else {
+        guard grid.indices.contains(index),
+              let activity,
+              activity.colors.indices.contains(
+                selectedColorIndex
+              ) else {
             return
         }
 
-        // منع تسجيل خطوة إذا كان المربع بنفس اللون
-        guard pattern.cellColors[index] != selectedColor else {
+        // لا نحفظ خطوة إذا لم يتغير اللون
+        guard grid[index] != selectedColorIndex else {
             return
         }
 
-        // حفظ حالة الشبكة قبل التغيير
-        undoHistory.append(pattern.cellColors)
+        // حفظ الشبكة قبل التعديل
+        gridHistory.append(grid)
 
-        // تغيير لون المربع المحدد
-        pattern.cellColors[index] = selectedColor
+        // تلوين المربع
+        grid[index] = selectedColorIndex
     }
 
-    // MARK: - Undo
-
-    // هل توجد خطوة يمكن التراجع عنها؟
-    var canUndo: Bool {
-        !undoHistory.isEmpty
-    }
-
-    // التراجع عن آخر تغيير
     func undo() {
 
-        // التأكد أن فيه حالة سابقة
-        guard let previousColors = undoHistory.popLast() else {
+        guard let previousGrid = gridHistory.popLast() else {
             return
         }
 
-        // استرجاع ألوان الشبكة السابقة
-        pattern.cellColors = previousColors
+        grid = previousGrid
     }
 
-    // MARK: - Clear
+    // MARK: - Mixing Properties
 
-    // مسح جميع الألوان وإعادة المربعات للون الأبيض
-    func clear() {
+    var currentRound: ArtColorRound? {
 
-        // التأكد أن فيه ألوانًا تستحق المسح
-        guard pattern.cellColors.contains(where: { $0 != "#FFFFFF" }) else {
+        guard let activity,
+              activity.rounds.indices.contains(roundIndex) else {
+            return nil
+        }
+
+        return activity.rounds[roundIndex]
+    }
+
+    var totalRounds: Int {
+        activity?.rounds.count ?? 0
+    }
+
+    var currentRoundNumber: Int {
+        roundIndex + 1
+    }
+
+    var isLastRound: Bool {
+        totalRounds > 0 &&
+        roundIndex == totalRounds - 1
+    }
+
+    // MARK: - Mixing Functions
+
+    func selectAnswer(_ answer: String) {
+
+        guard !isRevealed,
+              let round = currentRound,
+              round.options.contains(answer) else {
             return
         }
 
-        // حفظ الشبكة السابقة لإمكانية التراجع
-        undoHistory.append(pattern.cellColors)
-
-        // إعادة جميع المربعات للون الافتراضي
-        pattern.cellColors = Array(
-            repeating: "#FFFFFF",
-            count: pattern.rows * pattern.columns
-        )
+        selectedAnswer = answer
     }
 
-    // MARK: - Validation
+    func revealResult() {
 
-    // هل المستخدم لوّن مربعًا واحدًا على الأقل؟
-    var hasDrawing: Bool {
-        pattern.cellColors.contains { $0 != "#FFFFFF" }
+        guard selectedAnswer != nil,
+              currentRound != nil else {
+            return
+        }
+
+        isRevealed = true
     }
 
-    // هل الإجابة النصية غير فارغة؟
-    var hasAnswer: Bool {
-        !answer.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    func nextRound() {
+
+        guard isRevealed else {
+            return
+        }
+
+        if isLastRound {
+            isMixingComplete = true
+            return
+        }
+
+        roundIndex += 1
+        selectedAnswer = nil
+        isRevealed = false
     }
 
-    // هل يمكن إنهاء النشاط؟
+    // MARK: - Completion
+
     var canFinish: Bool {
-        hasDrawing && hasAnswer
-    }
 
-    // MARK: - Save
-
-    // حفظ مسودة تصميم المستخدم محليًا
-    func save() -> Bool {
-
-        // تحويل التصميم إلى JSON Data
-        guard let data = try? JSONEncoder().encode(pattern) else {
+        guard let activity else {
             return false
         }
 
-        // حفظ مسودة التصميم باستخدام المفتاح المحدد
-        UserDefaults.standard.set(data, forKey: storageKey)
+        if activity.id == "art-create-1" {
+            return hasDrawing
+        }
 
-        // إرجاع نجاح طلب الحفظ
-        return true
+        if activity.id == "art-create-2" {
+            return isMixingComplete &&
+                favoriteRoundIndex != nil
+        }
+
+        return false
     }
 }
