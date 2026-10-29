@@ -16,9 +16,32 @@ struct InstructionsSheet: View {
                     gamingCreateView()
                 }
 
-            case .art, .sport:
-                EmptyView()
+            
+            case .art:
+                switch activity.type {
+
+                case .learn:
+                    ArtLearnView(activityID: activity.id)
+
+                case .doActivity:
+                    ArtDoView(activityID: activity.id)
+
+                case .create:
+                    ArtCreateView(activityID: activity.id)
+                }
+
+
+            case .sport:
+                switch activity.type {
+                case .learn:
+                    SportLearnView()
+                case .doActivity:
+                    SportDoView()
+                case .create:
+                    SportCreateView()
+                }
             }
+            
         } else {
             EmptyView()
         }
@@ -59,14 +82,15 @@ struct InstructionsSheet: View {
         )
     }
 
-    // Gaming has real screens. Art and Sport still use the router screen.
+    // Gaming, Art and Sport all have real screens now.
     private func startActivity() {
-        if viewModel.interest == .gaming {
-            showActivity = true
-        } else {
-            onClose()
-            appRouter.push(.activity(viewModel.interest))
+
+        if let activity = viewModel.activity {
+            print("HOME ACTIVITY ID:", activity.id)
+            print("HOME ACTIVITY TITLE:", activity.title)
         }
+
+        showActivity = true
     }
     
     var body: some View {
@@ -167,6 +191,13 @@ struct InstructionsSheet: View {
                             .fill(Color.textPrimary.opacity(0.25))
                             .frame(width: 40, height: 5)
                             .padding(.top, 10)
+                    }
+                    // When an Art screen finishes (popToRoot), close everything.
+                    .onChange(of: appRouter.finishedActivityCount) { _, _ in
+                        if showActivity {
+                            appRouter.markCompleted(viewModel.interest)
+                            showActivity = false
+                        }
                     }
                     .gesture(
                         DragGesture().onEnded { value in

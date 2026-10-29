@@ -21,7 +21,15 @@ struct ArtLearnView: View {
     // MARK: - Properties
 
     // ViewModel مثل Gaming Learn
-    @StateObject private var viewModel = ArtLearnViewModel()
+    @State private var viewModel: ArtLearnViewModel
+
+    init(activityID: String? = nil) {
+        _viewModel = State(
+            initialValue: ArtLearnViewModel(
+                activityID: activityID
+            )
+        )
+    }
 
     // الرجوع للشاشة السابقة
     @Environment(\.dismiss) private var dismiss

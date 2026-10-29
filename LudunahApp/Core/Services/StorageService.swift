@@ -24,6 +24,7 @@ final class StorageService {
         static let onboardingCompleted = "onboardingCompleted"
         static let selectedInterests = "selectedInterests"
         static let activityProgress = "activityProgress"
+        static let sportCreatePlans = "sportCreatePlans"
     }
 
     // MARK: - Onboarding
@@ -67,6 +68,33 @@ final class StorageService {
         )) ?? []
     }
 
+    // MARK: - Sport Create Plans
+
+    // حفظ خطة رياضة جديدة
+    func saveSportCreatePlan(_ plan: SportCreateModel) {
+        var plans = loadSportCreatePlans()
+        plans.append(plan)
+
+        guard let data = try? JSONEncoder().encode(plans) else {
+            return
+        }
+
+        defaults.set(data, forKey: Keys.sportCreatePlans)
+    }
+
+    // قراءة الخطط المحفوظة
+    func loadSportCreatePlans() -> [SportCreateModel] {
+        guard let data = defaults.data(forKey: Keys.sportCreatePlans) else {
+            return []
+        }
+
+        return (try? JSONDecoder().decode(
+            [SportCreateModel].self,
+            from: data
+        )) ?? []
+    }
+    
+    
     // MARK: - Activity Progress
 
     // تسجيل نشاط مكتمل
@@ -160,5 +188,6 @@ final class StorageService {
         defaults.removeObject(forKey: Keys.onboardingCompleted)
         defaults.removeObject(forKey: Keys.selectedInterests)
         defaults.removeObject(forKey: Keys.activityProgress)
+        defaults.removeObject(forKey: Keys.sportCreatePlans)
     }
 }
