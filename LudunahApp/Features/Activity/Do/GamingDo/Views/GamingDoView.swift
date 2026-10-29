@@ -1,121 +1,235 @@
+
+// gamingDoView.swift - واجهة تطبيق الألعاب الإلكترونية.
+//
+// Contains:
+// - Shared ActivityHeader.
+// - Gaming activity title and instructions.
+// - Countdown timer with Art Do direction.
+// - Separate pause and resume controls.
+// - Start and finish actions.
+// - Stop timer when leaving the activity.
+//
+// Used by: InstructionsSheet (gaming, do).
+//
+// Learn: @StateObject, @State, @Environment,
+//        TimerEngine, CountdownTimerView, Button.
+
 import SwiftUI
 
+// MARK: - Gaming Do View
+
 struct gamingDoView: View {
-    
+
+    // MARK: - Properties
+
     @StateObject private var viewModel: GamingDoViewModel
     @StateObject private var timerEngine: TimerEngine
 
-    init() {
-        let viewModel = GamingDoViewModel()
+    // هل بدأ النشاط؟
+    @State private var hasStarted = false
 
-        _viewModel = StateObject(wrappedValue: viewModel)
+    // هل انتهى النشاط؟
+    @State private var isDone = false
+
+    // الرجوع للشاشة السابقة
+    @Environment(\.dismiss) private var dismiss
+
+    // MARK: - Initialization
+
+    init() {
+
+        let model = GamingDoViewModel()
+
+        _viewModel = StateObject(
+            wrappedValue: model
+        )
+
+        // تحويل الدقائق إلى ثوانٍ
         _timerEngine = StateObject(
             wrappedValue: TimerEngine(
-                duration: viewModel.durationMin * 60)
+                duration: model.durationMin * 60
+            )
         )
     }
-    
-    @State private var hasStarted = false
-    @State private var isPaused = false
-    @State private var isDone = false
-    
-    //Close the page
-    @Environment(\.dismiss) private var dismiss
-    
+
+    // MARK: - Body
+
     var body: some View {
-        
+
         ZStack {
+
             Color.pageBackground
                 .ignoresSafeArea()
-            
-            //takes up the remaining vertical space
-            Spacer(minLength: 0)
-            // The main page is a VStack
+
             VStack(spacing: 0) {
-                
-                // MARK: - back button + title + chips
+
+                // MARK: - Header
+
                 ActivityHeader(
                     interestTitle: "الألعاب الإلكترونية",
                     interestColor: .gamingChip,
                     stepTitle: "طبّق",
                     stepIcon: "gamecontroller",
                     onBack: {
-                        
+                        timerEngine.pause()
                         dismiss()
                     }
                 )
                 .padding(.horizontal, Spacing.pageMargin)
-                
-                // MARK: - Title of today's Do
+
+                // MARK: - Activity Title
+
                 Text(viewModel.title)
                     .font(.title1Heading)
                     .foregroundStyle(Color.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
                     .padding(.horizontal, Spacing.pageMargin)
                     .padding(.top, Spacing.chipHeight)
                     .padding(.bottom, Spacing.space8)
-                
-                // MARK: - SubTitle of today's Do
+
+                // MARK: - Duration
+
                 HStack(spacing: 8) {
+
                     Image(systemName: "gauge.with.needle")
                         .foregroundStyle(Color.textPrimary)
                         .opacity(0.75)
-                    
-                    Text("امامك \(viewModel.durationMin) دقائق")
+
+                    Text("أمامك \(viewModel.durationMin) دقائق")
                         .font(.supTitle2)
                         .foregroundStyle(Color.textPrimary)
                         .opacity(0.75)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    
+
+                    Spacer()
                 }
                 .padding(.horizontal, Spacing.pageMargin)
                 .padding(.bottom, Spacing.space32)
-                
-                // MARK: - Steps to Do
+
+                // MARK: - Instructions
+
                 DoStepsCard(
                     howTo: viewModel.steps,
-                    stepRingColor: Color.mapSequers
+                    stepRingColor: .mapSequers
                 )
                 .padding(.horizontal, Spacing.pageMargin)
                 .padding(.bottom, Spacing.space32)
-                
-                // MARK: - CountDownTimer
+
+                // MARK: - Countdown Timer
+
                 CountdownTimerView(
                     engine: timerEngine,
-                    color: .mapTimerRing
+                    color: .mapTimerRing,
+                    size: 145,
+                    isRTL: true,
+                    showsFinishedCaption: false
                 )
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, Spacing.headerTitleOffset)
+                .frame(
+                    maxWidth: .infinity,
+                    alignment: .center
+                )
                 .padding(.top, Spacing.headerTitleOffset)
-                
-                //takes up the remaining vertical space so button goes farther bottom
+                .padding(.bottom, Spacing.headerTitleOffset)
+
                 Spacer(minLength: 0)
-                
-                // MARK: - START / PAUSE / CONTINUE
-                PrimaryButton(
-                    title: timerEngine.isFinished ? "انتهيت" :
-                        !hasStarted ? "ابدأ" :
-                        timerEngine.isRunning ? "إيقاف مؤقت" :
-                        "أكمل"
-                ) {
-                    if timerEngine.isFinished {
-                        isDone = true
-                        dismiss()
-                    } else if !hasStarted {
-                        hasStarted = true
-                        timerEngine.start()
-                    } else if timerEngine.isRunning {
-                        timerEngine.pause()
-                    } else {
-                        timerEngine.resume()
+
+                // MARK: - Bottom Controls
+
+                VStack(spacing: Spacing.space12) {
+
+                    // زر إيقاف مؤقت / أكمل
+                    if hasStarted && !timerEngine.isFinished {
+
+                        Button {
+
+                            if timerEngine.isRunning {
+                                timerEngine.pause()
+                            } else {
+                                timerEngine.resume()
+                            }
+
+                        } label: {
+
+                            Label(
+                                timerEngine.isRunning
+                                    ? "إيقاف مؤقت"
+                                    : "أكمل",
+                                systemImage: timerEngine.isRunning
+                                    ? "pause.fill"
+                                    : "play.fill"
+                            )
+                            .font(.titleCards)
+                            .foregroundStyle(Color.textPrimary)
+                            .frame(
+                                maxWidth: .infinity,
+                                minHeight: 44
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // الزر الرئيسي
+                    PrimaryButton(
+                        title: hasStarted ? "انتهيت" : "ابدأ",
+                        isDisabled: isDone
+                    ) {
+
+                        if !hasStarted {
+
+                            startActivity()
+
+                        } else {
+
+                            finishActivity()
+                        }
                     }
                 }
+                .padding(.horizontal, Spacing.pageMargin)
+                .padding(.bottom, Spacing.space16)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .environment(\.layoutDirection, .rightToLeft)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
+        )
+        .onDisappear {
+            timerEngine.pause()
+        }
+    }
+
+    // MARK: - Start Activity
+
+    private func startActivity() {
+
+        guard !hasStarted else {
+            return
+        }
+
+        hasStarted = true
+        timerEngine.start()
+    }
+
+    // MARK: - Finish Activity
+
+    private func finishActivity() {
+
+        guard hasStarted && !isDone else {
+            return
+        }
+
+        isDone = true
+        timerEngine.pause()
+        dismiss()
     }
 }
+
+// MARK: - Preview
 
 #Preview {
     gamingDoView()
