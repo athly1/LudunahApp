@@ -83,13 +83,13 @@ struct InstructionsSheet: View {
                                 .frame(width: 52, height: 52)
 
                             VStack(alignment: .leading,
-                                   spacing: Spacing.space4) {
+                                   spacing: Spacing.space12) {
 
                                 Text(viewModel.title)
                                     .font(.popupTitle)
                                     .foregroundColor(.textPrimary)
 
-                                HStack(spacing: Spacing.space4) {
+                                HStack(spacing: Spacing.space8) {
                                     Text(viewModel.duration)
                                         .font(.titleCards)
                                         .foregroundColor(.textPrimary)
@@ -234,7 +234,7 @@ struct SetOfShips: View {
 
     var body: some View {
 
-        HStack(spacing: Spacing.space4) {
+        HStack(spacing: Spacing.space8) {
 
             ForEach(skills, id: \.self) { skill in
 

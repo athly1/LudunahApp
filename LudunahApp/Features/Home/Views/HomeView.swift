@@ -17,9 +17,12 @@ struct HomeView: View {
     @State private var swapErrorMessage = ""
 
     var body: some View {
+        
         ScrollView {
-            VStack(alignment: .leading, spacing: Spacing.space24) {
+            Spacer(minLength: -32)
 
+            VStack(alignment: .leading, spacing: Spacing.space24) {
+            
                 // الإعدادات - أعلى اليمين
                 HStack {
                     Button {
@@ -28,7 +31,7 @@ struct HomeView: View {
                         Image(systemName: "gearshape")
                             .font(.system(size: 20))
                             .foregroundStyle(Color.textPrimary)
-                            .frame(width: 35, height: 44)
+                            .frame(width: 25, height: 32)
                             .contentShape(Circle())
                     }
                     .buttonStyle(.glass)

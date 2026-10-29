@@ -17,7 +17,7 @@ struct DailyChallengeCard: View {
         HStack(spacing: Spacing.space16) {
 
             // البطاقة نفسها
-            HStack(spacing: Spacing.space12) {
+            HStack(spacing: Spacing.space16) {
 
                 Image(iconName)
                     .resizable()
@@ -103,13 +103,13 @@ struct DailyChallengeCard: View {
             // زر التبديل خارج البطاقة
             Button(action: onSwap) {
                 Image(systemName: "arrow.left.arrow.right")
-                    .font(.system(size: 13, weight: .medium))
+                    .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(Color.appSecondary)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 20, height: 28)
                     .contentShape(Circle())
             }
             .buttonStyle(.glass)
-            .frame(width: 34, height: 34)
+            .frame(width: 30, height: 30)
             .accessibilityLabel("تبديل التحدي")
         }
         .environment(\.layoutDirection, .rightToLeft)
