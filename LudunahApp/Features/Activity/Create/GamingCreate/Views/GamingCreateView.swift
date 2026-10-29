@@ -77,6 +77,8 @@ struct gamingCreateView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .environment(\.layoutDirection, .rightToLeft)
+
     }
 }
 
@@ -165,7 +167,6 @@ struct TestCreateNavigation: View {
 #Preview {
 
     TestCreateNavigation()
-        .environment(\.locale, Locale(identifier: "ar"))
-        .environment(\.layoutDirection, .rightToLeft)
+        
 }
 
