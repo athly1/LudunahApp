@@ -81,6 +81,9 @@ struct SportDoView: View {
             imageName = "football"
         case "sport-do-2":
             imageName = "dribbling"
+        case "sport-do-3", "sport-do-4":
+            // مؤقتًا: صورة كرة القدم حتى تُضاف صور خاصة لهذين التمرينين
+            imageName = "football"
         default:
             imageName = "football"
         }
