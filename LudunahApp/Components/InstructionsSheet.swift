@@ -38,7 +38,10 @@ struct InstructionsSheet: View {
                 case .doActivity:
                     SportDoView(activityID: activity.id)
                 case .create:
-                    SportCreateView()
+                    // خطة تدريب: كرة القدم أو البادل حسب النشاط
+                    SportCreateView(
+                        sport: activity.id == "sport-create-2" ? .padel : .football
+                    )
                 }
             }
             
