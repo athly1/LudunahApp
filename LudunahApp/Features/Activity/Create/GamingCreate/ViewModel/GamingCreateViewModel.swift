@@ -8,7 +8,8 @@ final class GamingCreateViewModel: ObservableObject {
     @Published var steps: [String] = []
     @Published var question = ""
 
-    init() {
+    // activityID: النشاط المختار من الهوم. إذا لم يُرسل نختار عشوائيًا.
+    init(activityID: String? = nil) {
 
         do {
 
@@ -22,7 +23,9 @@ final class GamingCreateViewModel: ObservableObject {
 
             // Select a random activity.
 
-            guard let activity = createActivities.randomElement() else {
+            guard let activity =
+                createActivities.first(where: { $0.id == activityID })
+                ?? createActivities.randomElement() else {
                 print("No Create activities found.")
                 return
             }

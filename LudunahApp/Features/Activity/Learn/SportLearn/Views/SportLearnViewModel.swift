@@ -12,10 +12,15 @@ final class SportLearnViewModel: ObservableObject {
     @Published private(set) var title = ""
     @Published private(set) var cards: [ActivityCard] = []
 
-    init() {
+    // activityID: النشاط المختار من الهوم. إذا لم يُرسل نأخذ أول نشاط تعلّم.
+    init(activityID: String? = nil) {
+        let learnActivities =
+            ((try? ContentService.loadActivities(for: .sport)) ?? [])
+                .filter { $0.type == .learn }
+
         let firstLearnActivity =
-            (try? ContentService.loadActivities(for: .sport))?
-                .first { $0.type == .learn }
+            learnActivities.first(where: { $0.id == activityID })
+            ?? learnActivities.first
 
         title = firstLearnActivity?.title ?? ""
         cards = firstLearnActivity?.cards ?? []

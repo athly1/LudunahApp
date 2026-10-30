@@ -8,7 +8,8 @@ final class GamingDoViewModel: ObservableObject {
     @Published var durationMin = 0
     @Published var steps: [String] = []
 
-    init() {
+    // activityID: النشاط المختار من الهوم. إذا لم يُرسل نختار عشوائيًا.
+    init(activityID: String? = nil) {
         do {
             // Load gaming activities.
             let activities = try ContentService.loadActivities(for: .gaming)
@@ -19,7 +20,9 @@ final class GamingDoViewModel: ObservableObject {
             }
 
             // Select a random activity.
-            guard let activity = doActivities.randomElement() else {
+            guard let activity =
+                doActivities.first(where: { $0.id == activityID })
+                ?? doActivities.randomElement() else {
                 print("No Do activities found.")
                 return
             }

@@ -10,7 +10,8 @@ final class GamingLearnViewModel: ObservableObject {
     @Published var cards: [ActivityCard] = []
     @Published var title = ""
  
-    init() {
+    // activityID: النشاط المختار من الهوم. إذا لم يُرسل نختار عشوائيًا.
+    init(activityID: String? = nil) {
         do {
             // 1. Load all gaming activities from JSON.
             let activities = try ContentService.loadActivities(for: .gaming)
@@ -21,7 +22,9 @@ final class GamingLearnViewModel: ObservableObject {
             }
 
             // 3. Randomly select one learning activity, Guard as it may return nil
-            guard let randomActivity = learnActivities.randomElement() else {
+            guard let randomActivity =
+                learnActivities.first(where: { $0.id == activityID })
+                ?? learnActivities.randomElement() else {
                 print("No learning activities found.")
                 return
             }

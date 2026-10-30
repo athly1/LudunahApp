@@ -1,7 +1,14 @@
 import SwiftUI
 
 struct SportDoView: View {
-    @StateObject private var viewModel = SportDoViewModel()
+    @StateObject private var viewModel: SportDoViewModel
+
+    // activityID: النشاط المختار من الهوم
+    init(activityID: String? = nil) {
+        _viewModel = StateObject(
+            wrappedValue: SportDoViewModel(activityID: activityID)
+        )
+    }
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

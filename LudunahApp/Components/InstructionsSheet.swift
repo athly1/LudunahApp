@@ -9,11 +9,11 @@ struct InstructionsSheet: View {
             case .gaming:
                 switch activity.type {
                 case .learn:
-                    gameLearnView()
+                    gameLearnView(activityID: activity.id)
                 case .doActivity:
-                    gamingDoView()
+                    gamingDoView(activityID: activity.id)
                 case .create:
-                    gamingCreateView()
+                    gamingCreateView(activityID: activity.id)
                 }
 
             
@@ -34,9 +34,9 @@ struct InstructionsSheet: View {
             case .sport:
                 switch activity.type {
                 case .learn:
-                    SportLearnView()
+                    SportLearnView(activityID: activity.id)
                 case .doActivity:
-                    SportDoView()
+                    SportDoView(activityID: activity.id)
                 case .create:
                     SportCreateView()
                 }

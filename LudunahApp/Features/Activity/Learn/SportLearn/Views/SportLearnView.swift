@@ -1,7 +1,14 @@
 import SwiftUI
 
 struct SportLearnView: View {
-    @StateObject private var viewModel = SportLearnViewModel()
+    @StateObject private var viewModel: SportLearnViewModel
+
+    // activityID: النشاط المختار من الهوم
+    init(activityID: String? = nil) {
+        _viewModel = StateObject(
+            wrappedValue: SportLearnViewModel(activityID: activityID)
+        )
+    }
     @Environment(\.dismiss) private var dismiss
 
     private var displayCards: [ActivityCard] {

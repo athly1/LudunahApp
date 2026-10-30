@@ -39,9 +39,10 @@ struct gamingDoView: View {
 
     // MARK: - Initialization
 
-    init() {
+    // activityID: النشاط المختار من الهوم
+    init(activityID: String? = nil) {
 
-        let model = GamingDoViewModel()
+        let model = GamingDoViewModel(activityID: activityID)
 
         _viewModel = StateObject(
             wrappedValue: model

@@ -5,7 +5,14 @@ struct gameLearnView: View {
     //linking ViewModel, with it $ is used when using a projected value where binding happens in 2 way, where its binded with a published property
     
     //Note Use Use the $ when the var is @Binding when where the child view needs to change a value owned by its parent.
-    @StateObject private var viewModel = GamingLearnViewModel()
+    @StateObject private var viewModel: GamingLearnViewModel
+
+    // activityID: النشاط المختار من الهوم
+    init(activityID: String? = nil) {
+        _viewModel = StateObject(
+            wrappedValue: GamingLearnViewModel(activityID: activityID)
+        )
+    }
     
     //Exit button
     @Environment(\.dismiss) private var dismiss
@@ -35,7 +42,7 @@ struct gameLearnView: View {
                             else {
                                 dismiss()
                             }
-                        }                    
+                        }
                 )
                 .padding(.horizontal, Spacing.pageMargin)
 

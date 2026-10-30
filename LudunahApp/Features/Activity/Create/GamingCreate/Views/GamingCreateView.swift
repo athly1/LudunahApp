@@ -2,7 +2,14 @@ import SwiftUI
 
 struct gamingCreateView: View {
 
-    @StateObject private var viewModel = GamingCreateViewModel()
+    @StateObject private var viewModel: GamingCreateViewModel
+
+    // activityID: النشاط المختار من الهوم
+    init(activityID: String? = nil) {
+        _viewModel = StateObject(
+            wrappedValue: GamingCreateViewModel(activityID: activityID)
+        )
+    }
 
     //Close the page
     @Environment(\.dismiss) private var dismiss
