@@ -1,3 +1,4 @@
+
 {
   "interest": "sports",
   "interest_name": "الرياضة",
@@ -12,6 +13,7 @@
         "تتبّع الحركة",
         "التركيز"
       ],
+      "duration_min": 4,
       "cards": [
         {
           "icon": "questionmark.circle",
@@ -44,6 +46,7 @@
         "التمييز بين التفاصيل",
         "الانتباه"
       ],
+      "duration_min": 4,
       "cards": [
         {
           "icon": "questionmark.circle",
@@ -155,6 +158,7 @@
         "التنسيق الحركي",
         "التخطيط"
       ],
+      "duration_min": 10,
       "canvas": "real_life",
       "materials": [
         "مخدة أو وسادة",
@@ -185,6 +189,7 @@
         "التوجيه",
         "تنظيم الجهد"
       ],
+      "duration_min": 20,
       "canvas": "real_life",
       "materials": [
         "حديقة أو شارع آمن في حيّك"

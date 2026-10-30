@@ -10,6 +10,7 @@
 // - Dynamic activity phases.
 // - Shared CountdownTimerView.
 // - Reactive pause and resume button.
+// - Fixed space for pause and resume controls.
 // - Manual completion and progress recording.
 //
 // Used by: InstructionsSheet (art, do).
@@ -145,6 +146,7 @@ struct ArtDoView: View {
                     .padding(Spacing.pageMargin)
                 }
             }
+            .scrollIndicators(.hidden)
 
             // MARK: - Bottom Controls
 
@@ -195,6 +197,7 @@ struct ArtDoView: View {
                 timers.configure(phases: activity.phases)
             }
         }
+
         .onDisappear {
 
             // إيقاف المؤقتات عند مغادرة الشاشة
@@ -470,18 +473,24 @@ struct ArtDoView: View {
 
         VStack(spacing: Spacing.space12) {
 
-            // زر الإيقاف المؤقت يظهر فقط
-            // عندما تسمح المرحلة بالإيقاف
-            if viewModel.stage == .running,
-               viewModel.canPauseCurrentPhase,
-               let timer = currentTimer {
+            // مساحة ثابتة لزر الإيقاف المؤقت / أكمل
+            // حتى لا تتغير أبعاد الشاشة عند بدء النشاط
+            ZStack {
 
-                ArtTimerPauseButton(
-                    timer: timer
-                )
+                // يظهر الزر فقط إذا كانت المرحلة
+                // الحالية تسمح بالإيقاف المؤقت
+                if viewModel.stage == .running,
+                   viewModel.canPauseCurrentPhase,
+                   let timer = currentTimer {
+
+                    ArtTimerPauseButton(
+                        timer: timer
+                    )
+                }
             }
+            .frame(height: 44)
 
-            // الزر الرئيسي
+            // الزر الرئيسي: ابدأ / التالي / انتهيت
             mainButton
         }
     }
@@ -664,6 +673,7 @@ private struct ArtTimerPauseButton: View {
 // MARK: - Art Do Timers
 
 // إدارة مؤقتات جميع مراحل النشاط
+
 @MainActor
 final class ArtDoTimers: ObservableObject {
 
