@@ -18,6 +18,8 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
+            Spacer(minLength: -32)
+            
             VStack(alignment: .leading, spacing: Spacing.space24) {
 
                 // الإعدادات - أعلى اليمين

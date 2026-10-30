@@ -6,11 +6,15 @@
 // - Progress bar.
 // - Activity image from Assets.
 // - Swipe-up learning cards.
+// - Previous and next card navigation.
+// - Record completed Art Learn activity.
 // - Finish button on the last card.
 //
-// Used by: ActivityFlowView (art, learn).
-// Learn: @StateObject, @Environment,
-//       Image, CardsFlowView, ProgressView.
+// Used by: InstructionsSheet (art, learn).
+//
+// Learn: @StateObject, @State, @Environment,
+//        Image, CardsFlowView, ProgressView,
+//        StorageService, AppRouter.
 
 import SwiftUI
 
@@ -20,11 +24,29 @@ struct ArtLearnView: View {
 
     // MARK: - Properties
 
-    // ViewModel مثل Gaming Learn
-    @StateObject private var viewModel = ArtLearnViewModel()
+    // ViewModel الخاص ببطاقات التعلم
+    @StateObject private var viewModel: ArtLearnViewModel
+
+    // منع تسجيل الإنجاز أكثر من مرة
+    @State private var didFinish = false
+
+    // MARK: - Initialization
+
+    init(activityID: String? = nil) {
+        _viewModel = StateObject(
+            wrappedValue: ArtLearnViewModel(
+                activityID: activityID
+            )
+        )
+    }
+
+    // MARK: - Environment
 
     // الرجوع للشاشة السابقة
     @Environment(\.dismiss) private var dismiss
+
+    // التنقل وتحديث حالة الإنجاز
+    @Environment(AppRouter.self) private var appRouter
 
     // MARK: - Body
 
@@ -41,16 +63,14 @@ struct ArtLearnView: View {
                 stepIcon: "lightbulb.max",
                 onBack: {
 
-                    // الرجوع للبطاقة السابقة
+                    // الرجوع إلى البطاقة السابقة
                     if viewModel.index > 0 {
 
-                        withAnimation {
-                            viewModel.previousCard()
-                        }
+                        viewModel.previousCard()
 
                     } else {
 
-                        // الرجوع للشاشة السابقة
+                        // الخروج إذا كنا في أول بطاقة
                         dismiss()
                     }
                 }
@@ -81,10 +101,6 @@ struct ArtLearnView: View {
                 .padding(.top, Spacing.space16)
                 .padding(.bottom, Spacing.space12)
 
-            
-            
-            
-            
             // MARK: - Activity Image
 
             if let imageName = viewModel.imageName {
@@ -94,28 +110,25 @@ struct ArtLearnView: View {
                     Image(imageName)
                         .resizable()
                         .scaledToFill()
-
-                        // نفس أبعاد الصورة في النشاطين
                         .frame(
                             width: geometry.size.width,
                             height: 160
                         )
 
-                        // تكبير محتوى الفسيفساء لإزالة الفراغات
+                        // تكبير صورة الفسيفساء فقط
                         .scaleEffect(
                             imageName == "art_mosaic" ? 1.15 : 1.0
                         )
 
-                        // قص الصورة داخل إطار موحد
                         .frame(
                             width: geometry.size.width,
                             height: 160
                         )
+
                         .clipShape(
                             RoundedRectangle(cornerRadius: 16)
                         )
 
-                        // نفس إعدادات الظل
                         .shadow(
                             color: .black.opacity(0.12),
                             radius: 12,
@@ -128,12 +141,10 @@ struct ArtLearnView: View {
                 .padding(.bottom, Spacing.space12)
             }
 
-
             // MARK: - Learning Cards
 
             if !viewModel.cards.isEmpty {
 
-                // نفس المكون المستخدم في Gaming Learn
                 CardsFlowView(
                     iconColor: .textPrimary,
                     iconActivityBackground: .artChipBackground,
@@ -141,17 +152,15 @@ struct ArtLearnView: View {
                     index: viewModel.index,
                     onNext: {
 
-                        // الانتقال عند السحب للأعلى
-                        withAnimation {
-                            viewModel.nextCard()
-                        }
+                        // بدون withAnimation للحفاظ على السرعة
+                        viewModel.nextCard()
                     }
                 )
                 .frame(maxHeight: .infinity)
 
             } else if let error = viewModel.errorMessage {
 
-                // رسالة إذا فشل تحميل المحتوى
+                // رسالة في حال فشل تحميل النشاط
                 Text(error)
                     .font(.titleCards)
                     .foregroundStyle(Color.textPrimary)
@@ -163,15 +172,13 @@ struct ArtLearnView: View {
 
             // MARK: - Finish Button
 
-            // يظهر عند الوصول إلى آخر بطاقة
+            // يظهر فقط عند الوصول إلى آخر بطاقة
             if viewModel.isLastCard {
 
                 PrimaryButton(title: "أنهيت") {
 
-                    // الرجوع للشاشة السابقة
-                    dismiss()
+                    finishActivity()
                 }
-
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, Spacing.pageMargin)
                 .padding(.top, Spacing.space8)
@@ -179,18 +186,18 @@ struct ArtLearnView: View {
             }
         }
 
-        // تمديد الشاشة للمساحة المتاحة
+        // MARK: - Layout
+
         .frame(
             maxWidth: .infinity,
             maxHeight: .infinity
         )
 
-        // خلفية Design System
         .background(
             Color.pageBackground.ignoresSafeArea()
         )
 
-        // استخدام ActivityHeader بدل Navigation Bar
+        // إخفاء شريط التنقل الافتراضي
         .toolbar(.hidden, for: .navigationBar)
 
         // دعم اللغة العربية
@@ -198,6 +205,32 @@ struct ArtLearnView: View {
             \.layoutDirection,
             .rightToLeft
         )
+    }
+
+    // MARK: - Finish Activity
+
+    private func finishActivity() {
+
+        // منع تكرار تسجيل الإنجاز
+        guard !didFinish else {
+            return
+        }
+
+        // التأكد من الوصول إلى آخر بطاقة
+        guard viewModel.isLastCard else {
+            return
+        }
+
+        didFinish = true
+
+        // حفظ إنجاز النشاط في UserDefaults
+        StorageService().recordCompletedActivity(
+            interest: .art
+        )
+
+        // إبلاغ AppRouter باكتمال النشاط
+        // والعودة إلى الرئيسية
+        appRouter.popToRoot()
     }
 }
 
@@ -212,5 +245,9 @@ struct ArtLearnView: View {
             ArtLearnView()
         }
     }
-    .environment(\.layoutDirection, .rightToLeft)
+    .environment(
+        \.layoutDirection,
+        .rightToLeft
+    )
+    .environment(AppRouter())
 }

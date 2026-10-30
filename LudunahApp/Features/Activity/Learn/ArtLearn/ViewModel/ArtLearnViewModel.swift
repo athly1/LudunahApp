@@ -2,15 +2,16 @@
 // ArtLearnViewModel.swift - منطق بطاقات تعلّم الفن.
 //
 // Contains:
-// - Load an Art Learn activity.
-// - Store the activity image name.
-// - Manage current card index.
-// - Calculate progress.
-// - Move between cards.
+// - Load an Art Learn activity by ID.
+// - Random activity selection for Preview.
+// - Store activity title, image and insight.
+// - Manage card index and progress.
+// - Navigate between learning cards.
 //
 // Used by: ArtLearnView.
+//
 // Learn: ObservableObject, @Published,
-//       randomElement, computed properties.
+//        init, randomElement, do-catch.
 
 import Foundation
 import Combine
@@ -19,82 +20,97 @@ import Combine
 
 final class ArtLearnViewModel: ObservableObject {
 
+    // MARK: - Properties
+
     // رقم البطاقة الحالية
     @Published var index = 0
 
-    // البطاقات الخاصة بالنشاط
+    // بطاقات النشاط
     @Published var cards: [ActivityCard] = []
 
     // عنوان النشاط
     @Published var title = ""
 
-    // اسم صورة النشاط
+    // صورة النشاط
     @Published var imageName: String?
 
-    // ملخص النشاط
+    // خلاصة التعلم
     @Published var insight: String?
 
-    // رسالة خطأ إذا فشل التحميل
+    // رسالة الخطأ
     @Published var errorMessage: String?
 
     // MARK: - Initialization
 
-    init() {
-        loadActivity()
+    init(activityID: String? = nil) {
+        loadActivity(activityID: activityID)
     }
 
     // MARK: - Load Activity
 
-    private func loadActivity() {
+    private func loadActivity(activityID: String?) {
 
         do {
-
-            // قراءة جميع أنشطة Art Learn
+            // تحميل أنشطة Learn من Art.json
             let activities = try ArtLearnLoader.loadActivities()
 
-            // اختيار نشاط تعلم عشوائي
-            guard let activity = activities.randomElement() else {
+            // طباعة المعرّف المطلوب
+            print(
+                "REQUESTED ART LEARN ID:",
+                activityID ?? "nil"
+            )
 
-                errorMessage = "لا توجد أنشطة تعلم متاحة."
+            // طباعة الأنشطة المتاحة
+            for item in activities {
+                print("AVAILABLE:", item.id, item.title)
+            }
+
+            // تحديد النشاط المطلوب
+            let selectedActivity: ArtLearnModel?
+
+            if let activityID {
+
+                // فتح النشاط المحدد من الرئيسية
+                selectedActivity = activities.first {
+                    $0.id == activityID
+                }
+
+            } else {
+
+                // اختيار عشوائي للمعاينة
+                selectedActivity = activities.randomElement()
+            }
+
+            guard let activity = selectedActivity else {
+                errorMessage = "تعذر العثور على نشاط التعلم المطلوب."
                 return
             }
-            
-            
-           // guard let activity = activities.first(where: {
-              //  $0.id == "art-learn-1"
-           // }) else {
-             //   errorMessage = "لم يتم العثور على نشاط الفسيفساء."
-             //   return
-          //  }
 
-            
-            
-
-            // تخزين بيانات النشاط المختار
+            // تخزين بيانات النشاط
             title = activity.title
             cards = activity.cards
             imageName = activity.image
             insight = activity.insight
 
-            // بدء العرض من أول بطاقة
+            // البدء من أول بطاقة
             index = 0
+
+            // إزالة رسالة الخطأ
+            errorMessage = nil
 
         } catch {
 
-            print("Failed to load Art Learn: \(error)")
-
-            errorMessage = "تعذر تحميل نشاط تعلّم الفن."
+            print("Art Learn loading error: \(error)")
+            errorMessage = "تعذر تحميل أنشطة التعلم."
         }
     }
 
     // MARK: - Card Progress
 
-    // العدد الكلي للبطاقات
     var totalCards: Int {
         cards.count
     }
 
-    // التقدم الحالي
     var currentProgress: Double {
 
         guard totalCards > 0 else {
@@ -104,16 +120,12 @@ final class ArtLearnViewModel: ObservableObject {
         return Double(index + 1)
     }
 
-    // هل هذه آخر بطاقة؟
     var isLastCard: Bool {
-
-        !cards.isEmpty &&
-        index == cards.count - 1
+        !cards.isEmpty && index == cards.count - 1
     }
 
     // MARK: - Next Card
 
-    // الانتقال إلى البطاقة التالية
     func nextCard() {
 
         guard index < cards.count - 1 else {
@@ -125,7 +137,6 @@ final class ArtLearnViewModel: ObservableObject {
 
     // MARK: - Previous Card
 
-    // الرجوع إلى البطاقة السابقة
     func previousCard() {
 
         guard index > 0 else {
