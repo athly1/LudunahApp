@@ -16,15 +16,20 @@ struct InstructionsSheet: View {
                     gamingCreateView()
                 }
 
+            
             case .art:
                 switch activity.type {
+
                 case .learn:
-                    ArtLearnView()
+                    ArtLearnView(activityID: activity.id)
+
                 case .doActivity:
-                    ArtDoView()
+                    ArtDoView(activityID: activity.id)
+
                 case .create:
-                    ArtCreateView()
+                    ArtCreateView(activityID: activity.id)
                 }
+
 
             case .sport:
                 switch activity.type {
@@ -79,6 +84,7 @@ struct InstructionsSheet: View {
 
     // Gaming, Art and Sport all have real screens now.
     private func startActivity() {
+
         showActivity = true
     }
     
