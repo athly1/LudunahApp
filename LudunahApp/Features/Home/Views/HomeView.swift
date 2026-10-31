@@ -425,12 +425,13 @@ struct HomeView: View {
                 showSwapError = true
                 return
             }
-            alternateActivities[id] = selected }
-            catch {
-            swapErrorMessage =
-                "تعذّر تحميل الأنشطة. تحققي من ملفات JSON."
-            showSwapError = true
-        }
+            alternateActivities[id] = selected
+
+            } catch {
+                swapErrorMessage =
+                    "تعذّر تحميل الأنشطة. تحققي من ملفات JSON."
+                showSwapError = true
+            }
     }
 }
 
