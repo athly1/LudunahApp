@@ -1,62 +1,37 @@
-
 import SwiftUI
 import Observation
 
-// MARK: - Routes
+// MARK: - App Routes
 
-/// Navigation destinations supported by the application.
+/// Defines the destinations available in the navigation stack.
 enum AppRoute: Hashable {
     case settings
 }
 
 // MARK: - App Router
 
-/// Manages navigation and provides the Home screen with
-/// today's completed interests from persistent storage.
+/// Manages navigation between application screens.
 ///
-/// Activity screens are presented through InstructionsSheet,
-/// not through navigation routes.
+/// Activity selection and progress are managed by HomeViewModel.
+/// Activity completion data is persisted by StorageService.
 @Observable
 final class AppRouter {
 
-    // MARK: - Navigation
+    // MARK: - Navigation State
 
     var path = NavigationPath()
 
-    // MARK: - Dependencies
-
-    private let storage = StorageService()
-
-    // MARK: - Completion State
-
-    /// A cached set of interests completed today.
-    private(set) var completedInterests: Set<Interest> = []
-
-    // MARK: - Initialization
-
-    init() {
-        refreshCompletedInterests()
-    }
-
     // MARK: - Navigation Actions
 
-    /// Opens a destination using the shared navigation stack.
+    /// Opens a screen in the navigation stack.
     func push(_ route: AppRoute) {
         path.append(route)
     }
 
-    /// Returns to the previous destination, when available.
+    /// Returns to the previous screen if possible.
     func pop() {
         guard !path.isEmpty else { return }
         path.removeLast()
-    }
-
-    // MARK: - Activity Completion
-
-    /// Reloads completed interests from StorageService.
-    /// HomeView calls this after activity completion.
-    func refreshCompletedInterests() {
-        completedInterests = storage.completedInterests()
     }
 
     // MARK: - Destinations

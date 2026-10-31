@@ -1,7 +1,13 @@
 
 import SwiftUI
 
-/// The main screen of Ludunah.
+// MARK: - Home View
+
+/// Displays the user's challenges, energy check-in,
+/// and weekly activity progress.
+///
+/// HomeView manages presentation and user interactions.
+/// HomeViewModel provides challenges and progress data.
 struct HomeView: View {
 
     // MARK: - Environment
@@ -12,13 +18,15 @@ struct HomeView: View {
 
     // MARK: - State
 
+    /// Owns the Home screen's challenges and progress.
     @State private var viewModel = HomeViewModel()
+
+    /// The challenge currently displayed in the instructions sheet.
     @State private var selectedChallenge: ChallengeSheetItem?
 
+    /// Controls the challenge replacement error alert.
     @State private var showSwapError = false
     @State private var swapErrorMessage = ""
-
-    @State private var weeklyCounts: [Int] = []
 
     // MARK: - Body
 
@@ -76,7 +84,7 @@ struct HomeView: View {
                         title: activity.title,
                         category: "الفن السعودي",
                         minutes: activity.durationMin ?? 5,
-                        isCompleted: appRouter.completedInterests
+                        isCompleted: viewModel.completedInterests
                             .contains(.art),
                         iconName: "artLudunah",
                         iconBackground: Color.challengeArtBadge,
@@ -101,7 +109,7 @@ struct HomeView: View {
                         title: activity.title,
                         category: "الرياضات الإلكترونية",
                         minutes: activity.durationMin ?? 5,
-                        isCompleted: appRouter.completedInterests
+                        isCompleted: viewModel.completedInterests
                             .contains(.gaming),
                         iconName: "GameLudunah",
                         iconBackground: Color.challengeGamingBadge,
@@ -126,7 +134,7 @@ struct HomeView: View {
                         title: activity.title,
                         category: "كرة القدم",
                         minutes: activity.durationMin ?? 8,
-                        isCompleted: appRouter.completedInterests
+                        isCompleted: viewModel.completedInterests
                             .contains(.sport),
                         iconName: "SportLudunah",
                         iconBackground: Color.challengeSportBadge,
@@ -157,7 +165,7 @@ struct HomeView: View {
                         )
 
                     WeeklyProgressChart(
-                        counts: weeklyCounts
+                        counts: viewModel.weeklyCounts
                     )
                 }
                 .padding(.top, Spacing.space16)
@@ -179,16 +187,15 @@ struct HomeView: View {
             viewModel.loadChallenges(
                 for: appState.selectedInterests
             )
-            refreshWeeklyProgress()
-            appRouter.refreshCompletedInterests()
+
+            viewModel.refreshProgress()
         }
 
         // MARK: - App Becomes Active
 
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                refreshWeeklyProgress()
-                appRouter.refreshCompletedInterests()
+                viewModel.refreshProgress()
             }
         }
 
@@ -212,12 +219,14 @@ struct HomeView: View {
             if let item = selectedChallenge {
                 ZStack(alignment: .bottom) {
 
+                    // Dimmed background.
                     Color.black.opacity(0.35)
                         .ignoresSafeArea()
                         .onTapGesture {
                             closeInstructions()
                         }
 
+                    // Instructions for the selected challenge.
                     InstructionsSheet(
                         interest: item.interest,
                         InterestImage: item.image,
@@ -256,26 +265,21 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - Weekly Progress
-
-    private func refreshWeeklyProgress() {
-        weeklyCounts = StorageService()
-            .weeklyCompletedCounts()
-    }
-
     // MARK: - Close Instructions
 
+    /// Closes the instructions sheet and refreshes
+    /// daily and weekly progress.
     private func closeInstructions() {
         withAnimation(.easeInOut(duration: 0.3)) {
             selectedChallenge = nil
         }
 
-        refreshWeeklyProgress()
-        appRouter.refreshCompletedInterests()
+        viewModel.refreshProgress()
     }
 
     // MARK: - Open Instructions
 
+    /// Presents instructions for the currently selected activity.
     private func showInstructions(
         interest: Interest,
         image: String
@@ -295,6 +299,8 @@ struct HomeView: View {
 
     // MARK: - Swap Challenge
 
+    /// Requests another challenge matching the energy level.
+    /// Shows an alert when no alternative is available.
     private func swapChallenge(for interest: Interest) {
         let didSwap = viewModel.swapChallenge(for: interest)
 
@@ -309,7 +315,9 @@ struct HomeView: View {
 
 // MARK: - Challenge Sheet Item
 
+/// Identifies the activity displayed in the instructions sheet.
 struct ChallengeSheetItem: Identifiable {
+
     let id = UUID()
     let interest: Interest
     let image: String
