@@ -83,8 +83,9 @@ struct InstructionsSheet: View {
         )
     }
 
-    // Gaming, Art and Sport all have real screens now.
+    /// لا نفتح شاشة التحدي إلا إذا كانت بيانات النشاط متوفرة.
     private func startActivity() {
+        guard viewModel.activity != nil else { return }
 
         showActivity = true
     }
