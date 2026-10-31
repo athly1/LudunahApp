@@ -1,75 +1,113 @@
 
 import SwiftUI
 
+// MARK: - Onboarding View
+
+// الشاشة الرئيسية لصفحات البداية.
+// نستخدم ViewModel واحدًا لإدارة التنقل والاحتفاظ بالاهتمامات.
 struct OnboardingView: View {
 
-    // MARK: - Navigation State
+    // MARK: - State
 
-    // 0 = الشاشة الأولى، 1 = المميزات، 2 = الاهتمامات
-    @State private var step = 0
+    // يحتفظ بحالة الصفحات والاهتمامات أثناء التنقل.
+    @State private var viewModel = OnboardingViewModel()
+
+    // MARK: - Body
 
     var body: some View {
-
         GeometryReader { proxy in
+            ZStack {
 
-        ZStack {
+                // نعرض الصفحة الحالية حسب قيمة ViewModel.
+                switch viewModel.currentPage {
 
-            switch step {
+                case 1:
+                    // MARK: - Second Onboarding Screen
 
-            case 1:
+                    // صفحة مميزات التطبيق.
+                    OnboardingBenefitsView(
+                        onNext: { goTo(2) },
+                        onSelectPage: goTo
+                    )
+                    .transition(
+                        .slideToRight(width: proxy.size.width)
+                    )
 
-                // Second Onboarding Screen
+                case 2:
+                    // MARK: - Third Onboarding Screen
 
-                OnboardingBenefitsView(
-                    onNext: { goTo(2) },
-                    onSelectPage: goTo
-                )
-                .transition(.slideToRight(width: proxy.size.width))
+                    // تمرير نفس ViewModel إلى صفحة الاهتمامات.
+                    // هذا يحافظ على الاختيارات عند الرجوع بين الصفحات.
+                    OnboardingInterestsView(
+                        viewModel: viewModel,
+                        onSelectPage: goTo
+                    )
+                    .transition(
+                        .slideToRight(width: proxy.size.width)
+                    )
 
-            case 2:
+                default:
+                    // MARK: - First Onboarding Screen
 
-                // Third Onboarding Screen
+                    GeometryReader { geometry in
+                        VStack(spacing: 0) {
 
-                OnboardingInterestsView(onSelectPage: goTo)
-                    .transition(.slideToRight(width: proxy.size.width))
+                            // MARK: - Page Indicator
 
-            default:
+                            HStack {
+                                PageIndicator(
+                                    currentPage: 0,
+                                    onSelect: goTo
+                                )
 
-                // First Onboarding Screen
-
-                GeometryReader { geometry in
-
-                    VStack(spacing: 0) {
-
-                        // MARK: - Page Indicator
-
-                        // في RTL أول عنصر يكون على اليمين، لذلك النقاط قبل الـ Spacer
-                        HStack {
-
-                            PageIndicator(currentPage: 0, onSelect: goTo)
-
-                            Spacer()
-                        }
-                        .padding(.top, 12)
-                        .padding(.horizontal, 24)
-
-                        Spacer()
-                            .frame(height: geometry.size.height * 0.05)
-
-                        // MARK: - Illustration
-
-                        InterestIllustration()
-                            .frame(
-                                height: geometry.size.height * 0.38
-                            )
+                                Spacer()
+                            }
+                            .padding(.top, 12)
                             .padding(.horizontal, 24)
 
-                        // MARK: - Text Content
+                            Spacer()
+                                .frame(
+                                    height: geometry.size.height * 0.05
+                                )
 
-                        VStack(alignment: .leading, spacing: 12) {
+                            // MARK: - Illustration
 
-                            Text("دماغك ينمو كل يوم!")
-                                .font(.system(size: 32, weight: .bold))
+                            // الرسومات التعريفية بالاهتمامات.
+                            InterestIllustration()
+                                .frame(
+                                    height: geometry.size.height * 0.38
+                                )
+                                .padding(.horizontal, 24)
+
+                            // MARK: - Text Content
+
+                            VStack(
+                                alignment: .leading,
+                                spacing: 12
+                            ) {
+                                Text("دماغك ينمو كل يوم!")
+                                    .font(
+                                        .system(size: 32, weight: .bold)
+                                    )
+                                    .foregroundStyle(
+                                        Color(
+                                            red: 0.42,
+                                            green: 0.30,
+                                            blue: 0.17
+                                        )
+                                    )
+                                    .frame(
+                                        maxWidth: .infinity,
+                                        alignment: .leading
+                                    )
+                                    .multilineTextAlignment(.leading)
+
+                                Text(
+                                    "المرونة العصبية تعني أن دماغك يبني روابط جديدة مع كل شيء تتعلمه وتتدرب عليه، هذا التطبيق يساعدك على توجيه هذا التغيير."
+                                )
+                                .font(
+                                    .system(size: 20, weight: .medium)
+                                )
                                 .foregroundStyle(
                                     Color(
                                         red: 0.42,
@@ -77,52 +115,36 @@ struct OnboardingView: View {
                                         blue: 0.17
                                     )
                                 )
+                                .lineSpacing(3)
                                 .frame(
                                     maxWidth: .infinity,
                                     alignment: .leading
                                 )
                                 .multilineTextAlignment(.leading)
-
-                            Text(
-                                "المرونة العصبية تعني أن دماغك يبني روابط جديدة مع كل شيء تتعلمه وتتدرب عليه، هذا التطبيق يساعدك على توجيه هذا التغيير."
-                            )
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundStyle(
-                                Color(
-                                    red: 0.42,
-                                    green: 0.30,
-                                    blue: 0.17
+                                .fixedSize(
+                                    horizontal: false,
+                                    vertical: true
                                 )
+                            }
+                            .frame(maxWidth: .infinity)
+                            .environment(
+                                \.layoutDirection,
+                                .rightToLeft
                             )
-                            .lineSpacing(3)
-                            .frame(
-                                maxWidth: .infinity,
-                                alignment: .leading
-                            )
-                            .multilineTextAlignment(.leading)
-                            .fixedSize(
-                                horizontal: false,
-                                vertical: true
-                            )
-                        }
-                        .frame(maxWidth: .infinity)
-                        .environment(\.layoutDirection, .rightToLeft)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 28)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 28)
 
-                        Spacer(minLength: 24)
+                            Spacer(minLength: 24)
 
-                  
-                        // MARK: - Next Button
+                            // MARK: - Next Button
 
-                        PrimaryButton(title: "التالي") {
-                            withAnimation(.easeInOut(duration: 0.3)) {
+                            // الانتقال إلى صفحة المميزات.
+                            PrimaryButton(title: "التالي") {
                                 goTo(1)
                             }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 24)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal, 24)
+                            .padding(.bottom, 24)
                         }
                         .frame(
                             maxWidth: .infinity,
@@ -135,27 +157,36 @@ struct OnboardingView: View {
                                 blue: 0.92
                             )
                         )
-                        }
-                        .transition(.slideToRight(width: proxy.size.width))
+                    }
+                    .transition(
+                        .slideToRight(width: proxy.size.width)
+                    )
+                }
             }
-        }
         }
         .environment(\.layoutDirection, .rightToLeft)
     }
 
-    // الانتقال لصفحة معيّنة (من الأزرار أو من نقاط الصفحات)
+    // MARK: - Navigation
+
+    // الانتقال بين صفحات البداية باستخدام ViewModel.
+    // نمنع الصفحات غير الموجودة ونحافظ على حركة الانتقال.
     private func goTo(_ page: Int) {
-        guard page != step else { return }
+        guard (0...2).contains(page),
+              page != viewModel.currentPage else {
+            return
+        }
+
         withAnimation(.easeInOut(duration: 0.3)) {
-            step = page
+            viewModel.goToPage(page)
         }
     }
 }
 
 // MARK: - Slide Transition
 
-// يحرك الشاشة أفقيًا بعدد نقاط ثابت.
-// offset لا ينعكس مع RTL، لذلك اتجاه الحركة ثابت دائمًا.
+// حركة الانتقال الأفقية بين صفحات البداية.
+// الإزاحة لا تنعكس تلقائيًا مع اتجاه RTL.
 private struct HorizontalSlide: ViewModifier {
 
     let x: CGFloat
@@ -167,8 +198,8 @@ private struct HorizontalSlide: ViewModifier {
 
 private extension AnyTransition {
 
-    // الشاشة الجديدة تدخل من اليسار والقديمة تخرج لليمين
-    // (كل شيء يتحرك باتجاه اليمين).
+    // الشاشة الجديدة تدخل من اليسار،
+    // والشاشة القديمة تخرج باتجاه اليمين.
     static func slideToRight(width: CGFloat) -> AnyTransition {
         .asymmetric(
             insertion: .modifier(
@@ -186,10 +217,11 @@ private extension AnyTransition {
 
 // MARK: - Interest Illustration
 
+// الرسومات الثلاث الموجودة في الشاشة الأولى.
+// نحافظ على تصميمها السابق بدون تغيير.
 private struct InterestIllustration: View {
 
     var body: some View {
-
         GeometryReader { geometry in
 
             let cardWidth = (geometry.size.width - 64) / 3
@@ -198,18 +230,32 @@ private struct InterestIllustration: View {
             HStack(spacing: 12) {
 
                 ArtCard()
-                    .frame(width: cardWidth, height: cardHeight)
+                    .frame(
+                        width: cardWidth,
+                        height: cardHeight
+                    )
 
                 PuzzleCard()
-                    .frame(width: cardWidth, height: cardHeight)
+                    .frame(
+                        width: cardWidth,
+                        height: cardHeight
+                    )
 
                 MountainCard()
-                    .frame(width: cardWidth, height: cardHeight)
+                    .frame(
+                        width: cardWidth,
+                        height: cardHeight
+                    )
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(
+                maxWidth: .infinity,
+                maxHeight: .infinity
+            )
             .padding(.horizontal, 20)
             .background(Color.white.opacity(0.75))
-            .clipShape(RoundedRectangle(cornerRadius: 48))
+            .clipShape(
+                RoundedRectangle(cornerRadius: 48)
+            )
             .shadow(
                 color: .black.opacity(0.08),
                 radius: 18,
@@ -221,10 +267,10 @@ private struct InterestIllustration: View {
 
 // MARK: - Art Card
 
+// رسم مستوحى من التكوينات الهندسية للفن.
 private struct ArtCard: View {
 
     var body: some View {
-
         GeometryReader { geometry in
 
             ZStack {
@@ -247,7 +293,9 @@ private struct ArtCard: View {
                         )
                     )
                     .frame(width: 4)
-                    .offset(x: geometry.size.width * 0.28)
+                    .offset(
+                        x: geometry.size.width * 0.28
+                    )
 
                 VStack(spacing: 13) {
 
@@ -276,7 +324,9 @@ private struct ArtCard: View {
                         .frame(height: 3)
                 }
                 .padding(.horizontal, 12)
-                .offset(y: geometry.size.height * 0.12)
+                .offset(
+                    y: geometry.size.height * 0.12
+                )
             }
             .shadow(
                 color: .black.opacity(0.16),
@@ -289,10 +339,11 @@ private struct ArtCard: View {
 
 // MARK: - Puzzle Card
 
+// بطاقة الألعاب الإلكترونية.
+// نرسم المربعات في مواقع محددة.
 private struct PuzzleCard: View {
 
     var body: some View {
-
         GeometryReader { geometry in
 
             ZStack {
@@ -315,7 +366,6 @@ private struct PuzzleCard: View {
                 ]
 
                 ForEach(positions.indices, id: \.self) { index in
-
                     RoundedRectangle(cornerRadius: 5)
                         .fill(positions[index].2)
                         .frame(width: 16, height: 16)
@@ -338,10 +388,10 @@ private struct PuzzleCard: View {
 
 // MARK: - Mountain Card
 
+// بطاقة الرياضة التي تحتوي على رسم ثلاثة جبال.
 private struct MountainCard: View {
 
     var body: some View {
-
         GeometryReader { geometry in
 
             ZStack {
@@ -403,10 +453,10 @@ private struct MountainCard: View {
 
 // MARK: - Mountain Shape
 
+// رسم الجبل باستخدام مسار مثلث.
 private struct Mountain: Shape {
 
     func path(in rect: CGRect) -> Path {
-
         Path { path in
 
             path.move(
@@ -441,4 +491,3 @@ private struct Mountain: Shape {
     OnboardingView()
         .environment(AppState())
 }
-

@@ -3,7 +3,12 @@ import SwiftUI
 
 // MARK: - Main View
 
+// شاشة اختيار اهتمامات المستخدم أثناء Onboarding.
+// تستقبل ViewModel نفسه المستخدم في OnboardingView
+// حتى لا تضيع الاختيارات عند التنقل بين الصفحات.
 struct OnboardingInterestsView: View {
+
+    // MARK: - Colors
 
     private let backgroundColor = Color(
         red: 0.96, green: 0.95, blue: 0.92
@@ -13,19 +18,29 @@ struct OnboardingInterestsView: View {
         red: 0.42, green: 0.30, blue: 0.17
     )
 
+    // MARK: - Environment
+
+    // حالة التطبيق المسؤولة عن حفظ الاهتمامات وإكمال البداية.
     @Environment(AppState.self) private var appState
 
-    // ينفذ عند الضغط على نقطة صفحة
+    // MARK: - ViewModel
+
+    // نفس الكائن القادم من OnboardingView.
+    // لا ننشئ ViewModel جديدًا داخل هذه الشاشة.
+    let viewModel: OnboardingViewModel
+
+    // MARK: - Navigation
+
+    // الانتقال إلى صفحة أخرى عند الضغط على نقاط الصفحات.
     var onSelectPage: (Int) -> Void = { _ in }
 
+    // MARK: - Local UI State
+
+    // رقم البطاقة الظاهرة في المقدمة.
+    // هذه حالة خاصة بالتصميم وليست بالاهتمامات المختارة.
     @State private var currentCard = 0
 
-    // الاهتمامات المختارة بترتيب الاختيار
-    @State private var selectedInterests: [Interest] = []
-
-    private let maxSelection = 3
-
-    // MARK: Interests Data
+    // MARK: - Interests Data
 
     private let interests: [OnboardingInterest] = [
 
@@ -58,29 +73,28 @@ struct OnboardingInterestsView: View {
             ),
             type: .sports
         )
-        
     ]
 
-    // MARK: Body
+    // MARK: - Body
 
     var body: some View {
-
         GeometryReader { geometry in
-
             VStack(spacing: 0) {
 
-                // MARK: Page Indicator
+                // MARK: - Page Indicator
 
-                // في RTL أول عنصر يكون على اليمين، لذلك النقاط قبل الـ Spacer
                 HStack {
-                    PageIndicator(currentPage: 2, onSelect: onSelectPage)
+                    PageIndicator(
+                        currentPage: 2,
+                        onSelect: onSelectPage
+                    )
 
                     Spacer()
                 }
                 .padding(.horizontal, 30)
                 .padding(.top, 12)
 
-                // MARK: Title
+                // MARK: - Title
 
                 VStack(alignment: .trailing, spacing: 8) {
 
@@ -113,14 +127,10 @@ struct OnboardingInterestsView: View {
                 Spacer()
                     .frame(height: 30)
 
-                // MARK: Cards Stack
+                // MARK: - Cards Stack
 
                 ZStack {
-
-                    ForEach(
-                        interests.indices,
-                        id: \.self
-                    ) { index in
+                    ForEach(interests.indices, id: \.self) { index in
 
                         let relativeIndex =
                             (index - currentCard + interests.count)
@@ -129,17 +139,14 @@ struct OnboardingInterestsView: View {
                         InterestCardView(
                             interest: interests[index],
                             brown: brown,
-                            isSelected: selectedInterests.contains(
+                            isSelected: viewModel.selectedInterests.contains(
                                 interests[index].interest
                             )
                         )
-                        // الضغط على البطاقة يختارها أو يلغي اختيارها
+                        // اختيار البطاقة أو إلغاء اختيارها.
                         .onTapGesture {
-                            print("Card tapped: \(interests[index].title)")
                             toggle(interests[index].interest)
-                            print("Selected count: \(selectedInterests.count)")
                         }
-                        // نفس مقاس بطاقة الفن لكل البطاقات
                         .frame(
                             width: geometry.size.width * 0.88,
                             height: geometry.size.height * 0.43
@@ -164,24 +171,21 @@ struct OnboardingInterestsView: View {
                         )
                     }
                 }
-                // نصغّر البطاقات لما يظهر صندوق "اختياراتي"
-                // حتى يبقى زر "ابدأ" ظاهر داخل الشاشة
+                // تصغير البطاقات عند ظهور صندوق الاختيارات.
                 .scaleEffect(cardsScale)
                 .frame(maxWidth: .infinity)
-                .frame(height: geometry.size.height * 0.45 * cardsScale)
+                .frame(
+                    height: geometry.size.height * 0.45 * cardsScale
+                )
 
-
-                // MARK: Change Card Button
+                // MARK: - Change Card Button
 
                 Button {
-
                     withAnimation(.easeInOut(duration: 0.35)) {
                         currentCard =
                             (currentCard + 1) % interests.count
                     }
-
                 } label: {
-
                     Image(systemName: "arrow.left.arrow.right")
                         .font(
                             .system(size: 19, weight: .semibold)
@@ -206,39 +210,39 @@ struct OnboardingInterestsView: View {
                 .accessibilityLabel("البطاقة التالية")
                 .padding(.top, -8)
 
-                // MARK: Selected Interests
+                // MARK: - Selected Interests
 
-                // يظهر فقط بعد اختيار اهتمام واحد على الأقل
-                if !selectedInterests.isEmpty {
+                // يظهر صندوق اختياراتي بعد تحديد اهتمام واحد على الأقل.
+                if !viewModel.selectedInterests.isEmpty {
                     SelectedInterestsView(
                         items: selectedItems,
-                        maxCount: maxSelection
+                        maxCount: viewModel.maxSelection
                     ) { interest in
                         withAnimation(.easeInOut(duration: 0.25)) {
-                            selectedInterests.removeAll { $0 == interest }
+                            // الحذف يتم عبر ViewModel،
+                            // وليس عن طريق حالة محلية في الشاشة.
+                            viewModel.removeInterest(interest)
                         }
                     }
                     .padding(.horizontal, 28)
                     .padding(.top, 20)
-                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    .transition(
+                        .opacity.combined(with: .scale(scale: 0.95))
+                    )
                 }
 
                 Spacer(minLength: 20)
 
-                // MARK: Start Button
+                // MARK: - Start Button
 
+                // لا يمكن إكمال البداية قبل اختيار اهتمام واحد.
                 PrimaryButton(
                     title: "ابدأ",
-                    isDisabled: selectedInterests.isEmpty
+                    isDisabled: !viewModel.canFinish
                 ) {
-                    print("START BUTTON: tapped")
-                    print("Selected interests: \(selectedInterests.count)")
-
-                    appState.updateInterests(Set(selectedInterests))
-                    print("START BUTTON: interests updated")
-
-                    appState.completeOnboarding()
-                    print("START BUTTON: onboarding completed")
+                    // ViewModel يحفظ الاهتمامات في AppState
+                    // ثم يحدد أن المستخدم أكمل Onboarding.
+                    viewModel.finish(using: appState)
                 }
                 .padding(.horizontal, 28)
                 .padding(.bottom, 25)
@@ -252,38 +256,41 @@ struct OnboardingInterestsView: View {
         .environment(\.layoutDirection, .rightToLeft)
     }
 
-    // MARK: Selection
+    // MARK: - Selection
 
-    // حجم البطاقات: كامل بدون اختيارات، وأصغر عند ظهور الصندوق
+    // تصغير البطاقات عند اختيار اهتمام واحد أو أكثر.
     private var cardsScale: CGFloat {
-        selectedInterests.isEmpty ? 1.0 : 0.72
+        viewModel.selectedInterests.isEmpty ? 1.0 : 0.72
     }
 
-    // الاختيارات مع أسمائها كما تظهر على البطاقات
+    // تحويل الاهتمامات المختارة إلى بيانات صندوق "اختياراتي".
+    // نستخدم ترتيب المصفوفة المحفوظ داخل ViewModel.
     private var selectedItems: [SelectedInterestsView.Item] {
-        selectedInterests.compactMap { interest in
-            guard let card = interests.first(where: { $0.interest == interest }) else {
+        viewModel.selectedInterests.compactMap { interest in
+            guard let card = interests.first(
+                where: { $0.interest == interest }
+            ) else {
                 return nil
             }
-            return .init(interest: interest, title: card.title)
+
+            return .init(
+                interest: interest,
+                title: card.title
+            )
         }
     }
 
-    // إضافة الاهتمام أو حذفه (بحد أقصى 3)
+    // اختيار الاهتمام أو إلغاء اختياره.
     private func toggle(_ interest: Interest) {
         withAnimation(.easeInOut(duration: 0.25)) {
-            if let index = selectedInterests.firstIndex(of: interest) {
-                selectedInterests.remove(at: index)
-            } else if selectedInterests.count < maxSelection {
-                selectedInterests.append(interest)
-            }
+            viewModel.toggleInterest(interest)
         }
     }
 }
 
-
 // MARK: - Interest Model
 
+// البيانات المستخدمة لعرض بطاقات الاهتمامات.
 private struct OnboardingInterest: Identifiable {
 
     enum InterestType {
@@ -299,7 +306,7 @@ private struct OnboardingInterest: Identifiable {
     let backgroundColor: Color
     let type: InterestType
 
-    // الاهتمام المقابل في موديل التطبيق
+    // تحويل نوع البطاقة إلى Interest المستخدم في التطبيق.
     var interest: Interest {
         switch type {
         case .saudiArt:
@@ -312,9 +319,10 @@ private struct OnboardingInterest: Identifiable {
     }
 }
 
-
 // MARK: - Interest Card View
 
+// تصميم بطاقة الاهتمام.
+// بقي كما هو، مع إظهار إطار بني عند تحديد البطاقة.
 private struct InterestCardView: View {
 
     let interest: OnboardingInterest
@@ -322,10 +330,9 @@ private struct InterestCardView: View {
     var isSelected: Bool = false
 
     var body: some View {
-
         VStack(spacing: 0) {
 
-            // Illustration
+            // MARK: - Illustration
 
             InterestIllustration(
                 type: interest.type,
@@ -338,11 +345,10 @@ private struct InterestCardView: View {
 
             Spacer(minLength: 20)
 
-            // Text
+            // MARK: - Text
 
             VStack(alignment: .trailing, spacing: 10) {
 
-                // سطر واحد حتى يبقى ارتفاع كل البطاقات متساوي
                 Text(interest.title)
                     .font(.system(size: 30, weight: .bold))
                     .lineLimit(1)
@@ -378,16 +384,16 @@ private struct InterestCardView: View {
             }
             .padding(.horizontal, 25)
 
-            // Bottom spacing
-
             Spacer(minLength: 38)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity
+        )
         .background(interest.backgroundColor)
         .clipShape(
             RoundedRectangle(cornerRadius: 34)
         )
-        // إطار بني عند الاختيار
         .overlay {
             RoundedRectangle(cornerRadius: 34)
                 .stroke(
@@ -404,20 +410,17 @@ private struct InterestCardView: View {
     }
 }
 
-
 // MARK: - Illustration Selector
 
+// يحدد الرسم المناسب لنوع الاهتمام.
 private struct InterestIllustration: View {
 
     let type: OnboardingInterest.InterestType
     let brown: Color
 
     var body: some View {
-
         Group {
-
             switch type {
-
             case .saudiArt:
                 SaduIllustration()
 
@@ -432,9 +435,9 @@ private struct InterestIllustration: View {
     }
 }
 
-
 // MARK: - Saudi Art Illustration
 
+// رسم هندسي مستوحى من السدو السعودي.
 private struct SaduIllustration: View {
 
     private let colors: [Color] = [
@@ -448,22 +451,22 @@ private struct SaduIllustration: View {
     ]
 
     var body: some View {
-
         VStack(spacing: 6) {
 
             Rectangle()
-                .fill(Color(red: 0.52, green: 0.22, blue: 0.18))
+                .fill(
+                    Color(red: 0.52, green: 0.22, blue: 0.18)
+                )
                 .frame(height: 5)
 
             Rectangle()
-                .fill(Color(red: 0.30, green: 0.23, blue: 0.18))
+                .fill(
+                    Color(red: 0.30, green: 0.23, blue: 0.18)
+                )
                 .frame(height: 2)
 
             HStack(spacing: -4) {
-
                 ForEach(0..<colors.count, id: \.self) { index in
-
-                    // عرض مرن حتى لا تكبر بطاقة الفن عن باقي البطاقات
                     Triangle()
                         .fill(colors[index])
                         .frame(maxWidth: 48)
@@ -474,19 +477,23 @@ private struct SaduIllustration: View {
             .padding(.vertical, 10)
 
             Rectangle()
-                .fill(Color(red: 0.30, green: 0.23, blue: 0.18))
+                .fill(
+                    Color(red: 0.30, green: 0.23, blue: 0.18)
+                )
                 .frame(height: 2)
 
             Rectangle()
-                .fill(Color(red: 0.52, green: 0.22, blue: 0.18))
+                .fill(
+                    Color(red: 0.52, green: 0.22, blue: 0.18)
+                )
                 .frame(height: 9)
         }
     }
 }
 
-
 // MARK: - Gaming Illustration
 
+// رسم خريطة مبسطة يرمز للألعاب والتخطيط.
 private struct GamingIllustration: View {
 
     private let purple = Color(
@@ -494,49 +501,60 @@ private struct GamingIllustration: View {
     )
 
     var body: some View {
-
         GeometryReader { geometry in
-
             ZStack {
 
                 RoundedRectangle(cornerRadius: 14)
                     .fill(
                         Color(
-                            red: 0.94, green: 0.92, blue: 0.97
+                            red: 0.94,
+                            green: 0.92,
+                            blue: 0.97
                         )
                     )
 
                 Path { path in
+                    path.move(
+                        to: CGPoint(
+                            x: geometry.size.width * 0.12,
+                            y: geometry.size.height * 0.70
+                        )
+                    )
 
-                    path.move(to: CGPoint(
-                        x: geometry.size.width * 0.12,
-                        y: geometry.size.height * 0.70
-                    ))
+                    path.addLine(
+                        to: CGPoint(
+                            x: geometry.size.width * 0.32,
+                            y: geometry.size.height * 0.70
+                        )
+                    )
 
-                    path.addLine(to: CGPoint(
-                        x: geometry.size.width * 0.32,
-                        y: geometry.size.height * 0.70
-                    ))
+                    path.addLine(
+                        to: CGPoint(
+                            x: geometry.size.width * 0.32,
+                            y: geometry.size.height * 0.30
+                        )
+                    )
 
-                    path.addLine(to: CGPoint(
-                        x: geometry.size.width * 0.32,
-                        y: geometry.size.height * 0.30
-                    ))
+                    path.addLine(
+                        to: CGPoint(
+                            x: geometry.size.width * 0.66,
+                            y: geometry.size.height * 0.30
+                        )
+                    )
 
-                    path.addLine(to: CGPoint(
-                        x: geometry.size.width * 0.66,
-                        y: geometry.size.height * 0.30
-                    ))
+                    path.addLine(
+                        to: CGPoint(
+                            x: geometry.size.width * 0.66,
+                            y: geometry.size.height * 0.62
+                        )
+                    )
 
-                    path.addLine(to: CGPoint(
-                        x: geometry.size.width * 0.66,
-                        y: geometry.size.height * 0.62
-                    ))
-
-                    path.addLine(to: CGPoint(
-                        x: geometry.size.width * 0.88,
-                        y: geometry.size.height * 0.62
-                    ))
+                    path.addLine(
+                        to: CGPoint(
+                            x: geometry.size.width * 0.88,
+                            y: geometry.size.height * 0.62
+                        )
+                    )
                 }
                 .stroke(
                     purple,
@@ -548,7 +566,13 @@ private struct GamingIllustration: View {
                 )
 
                 Circle()
-                    .fill(Color(red: 0.52, green: 0.22, blue: 0.18))
+                    .fill(
+                        Color(
+                            red: 0.52,
+                            green: 0.22,
+                            blue: 0.18
+                        )
+                    )
                     .frame(width: 14, height: 14)
                     .position(
                         x: geometry.size.width * 0.12,
@@ -556,7 +580,13 @@ private struct GamingIllustration: View {
                     )
 
                 Circle()
-                    .fill(Color(red: 0.43, green: 0.56, blue: 0.49))
+                    .fill(
+                        Color(
+                            red: 0.43,
+                            green: 0.56,
+                            blue: 0.49
+                        )
+                    )
                     .frame(width: 18, height: 18)
                     .overlay {
                         Circle()
@@ -584,9 +614,9 @@ private struct GamingIllustration: View {
     }
 }
 
-
 // MARK: - Sports Illustration
 
+// رسم يرمز للحركة والتوازن في الأنشطة الرياضية.
 private struct SportsIllustration: View {
 
     private let green = Color(
@@ -598,24 +628,25 @@ private struct SportsIllustration: View {
     )
 
     var body: some View {
-
         GeometryReader { geometry in
-
             ZStack {
 
                 RoundedRectangle(cornerRadius: 14)
                     .fill(
                         Color(
-                            red: 0.92, green: 0.95, blue: 0.90
+                            red: 0.92,
+                            green: 0.95,
+                            blue: 0.90
                         )
                     )
 
                 Path { path in
-
-                    path.move(to: CGPoint(
-                        x: geometry.size.width * 0.14,
-                        y: geometry.size.height * 0.76
-                    ))
+                    path.move(
+                        to: CGPoint(
+                            x: geometry.size.width * 0.14,
+                            y: geometry.size.height * 0.76
+                        )
+                    )
 
                     path.addQuadCurve(
                         to: CGPoint(
@@ -678,13 +709,12 @@ private struct SportsIllustration: View {
     }
 }
 
-
 // MARK: - Triangle Shape
 
+// شكل مثلث يستخدم في رسم زخرفة السدو.
 private struct Triangle: Shape {
 
     func path(in rect: CGRect) -> Path {
-
         var path = Path()
 
         path.move(
@@ -705,10 +735,11 @@ private struct Triangle: Shape {
     }
 }
 
-
 // MARK: - Preview
 
 #Preview {
-    OnboardingInterestsView()
-        .environment(AppState())
+    OnboardingInterestsView(
+        viewModel: OnboardingViewModel()
+    )
+    .environment(AppState())
 }

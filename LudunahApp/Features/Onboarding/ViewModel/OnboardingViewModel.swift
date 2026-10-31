@@ -10,96 +10,82 @@
 // Used by: OnboardingView.
 // Learn: @Observable, Set, guard, computed properties.
 
+
 import Foundation
 import Observation
 
-// منطق صفحات البداية
+// MARK: - Onboarding ViewModel
+
+// يدير التنقل والاهتمامات خلال صفحات البداية.
+// يحتفظ بالاختيارات حتى عند الرجوع بين الصفحات.
 @Observable
 final class OnboardingViewModel {
 
-    // رقم الصفحة الحالية
-    private(set) var currentPage: Int = 0
+    // MARK: - State
 
-    // الاهتمامات المختارة
-    private(set) var selectedInterests: Set<Interest> = []
+    // الصفحة الحالية: 0 الترحيب، 1 المميزات، 2 الاهتمامات.
+    private(set) var currentPage = 0
 
-    // آخر صفحة هي صفحة الاهتمامات
-    private let lastPage: Int = 2
+    // مصفوفة تحفظ الاهتمامات بترتيب اختيار المستخدم.
+    private(set) var selectedInterests: [Interest] = []
+
+    // عدد الصفحات وآخر صفحة.
+    private let lastPage = 2
+
+    // الحد الأعلى للاهتمامات.
+    let maxSelection = 3
 
     // MARK: - Navigation
 
-    // الانتقال للصفحة التالية
-    func nextPage() {
-
-        guard currentPage < lastPage else {
-            return
-        }
-
-        currentPage += 1
-    }
-
-    // الرجوع للصفحة السابقة
-    func previousPage() {
-
-        guard currentPage > 0 else {
-            return
-        }
-
-        currentPage -= 1
-    }
-
-    // الانتقال لصفحة محددة عند السحب
+    // الانتقال إلى صفحة محددة مع التحقق من رقمها.
     func goToPage(_ page: Int) {
-
-        // التأكد أن الصفحة ضمن الصفحات المتاحة
-        guard (0...lastPage).contains(page) else {
-            return
-        }
-
+        guard (0...lastPage).contains(page) else { return }
         currentPage = page
+    }
+
+    // الانتقال إلى الصفحة التالية.
+    func nextPage() {
+        goToPage(currentPage + 1)
+    }
+
+    // الرجوع إلى الصفحة السابقة.
+    func previousPage() {
+        goToPage(currentPage - 1)
     }
 
     // MARK: - Interests
 
-    // تحديد اهتمام أو إلغاء تحديده
+    // اختيار الاهتمام أو إلغاء اختياره.
     func toggleInterest(_ interest: Interest) {
-
-        // هل الاهتمام محدد من قبل؟
-        if selectedInterests.contains(interest) {
-
-            // إلغاء الاختيار
-            selectedInterests.remove(interest)
-
+        if let index = selectedInterests.firstIndex(of: interest) {
+            selectedInterests.remove(at: index)
         } else {
-
-            // إضافة الاهتمام
-            selectedInterests.insert(interest)
+            // منع اختيار أكثر من ثلاثة اهتمامات.
+            guard selectedInterests.count < maxSelection else { return }
+            selectedInterests.append(interest)
         }
+    }
+
+    // حذف اهتمام من قائمة الاختيارات.
+    func removeInterest(_ interest: Interest) {
+        selectedInterests.removeAll { $0 == interest }
     }
 
     // MARK: - Validation
 
-    // هل يمكن إنهاء صفحات البداية؟
+    // لا يسمح بإنهاء البداية إلا من الصفحة الأخيرة
+    // وبعد اختيار اهتمام واحد على الأقل.
     var canFinish: Bool {
-
-        // آخر صفحة واهتمام واحد على الأقل
         currentPage == lastPage && !selectedInterests.isEmpty
     }
 
     // MARK: - Finish
 
-    // إنهاء البداية وحفظ الاهتمامات
+    // حفظ الاهتمامات وإكمال صفحات البداية.
     func finish(using appState: AppState) {
+        guard canFinish else { return }
 
-        // منع الإنهاء إذا الشروط غير متحققة
-        guard canFinish else {
-            return
-        }
-
-        // تحديث الاهتمامات وحفظها
-        appState.updateInterests(selectedInterests)
-
-        // إكمال البداية
+        appState.updateInterests(Set(selectedInterests))
         appState.completeOnboarding()
     }
 }
