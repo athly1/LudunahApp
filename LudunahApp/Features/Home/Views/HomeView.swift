@@ -14,49 +14,46 @@
 // Learn: @Environment, @State, Button,
 //        conditional views, overlay, onChange.
 
+
 import SwiftUI
 
+/// The main screen of Ludunah.
 struct HomeView: View {
 
     // MARK: - Environment
 
     @Environment(AppRouter.self) private var appRouter
-
-    // قراءة الاهتمامات المختارة من الإعدادات
     @Environment(AppState.self) private var appState
+    @Environment(\.scenePhase) private var scenePhase
 
     // MARK: - State
 
     @State private var energyValue = 50
-
-    // النشاط البديل لكل بطاقة
     @State private var alternateActivities: [Int: Activity] = [:]
-
-    // التحدي الذي تم الضغط عليه
     @State private var selectedChallenge: ChallengeSheetItem?
 
-    // رسائل الخطأ
     @State private var showSwapError = false
     @State private var swapErrorMessage = ""
+
+    @State private var weeklyCounts: [Int] = []
 
     // MARK: - Body
 
     var body: some View {
-
         ScrollView {
-
             Spacer(minLength: -32)
 
-            VStack(alignment: .leading, spacing: Spacing.space24) {
+            VStack(
+                alignment: .leading,
+                spacing: Spacing.space24
+            ) {
 
                 // MARK: - Settings Button
 
                 HStack {
-
                     Button {
                         appRouter.push(.settings)
                     } label: {
-
                         Image(systemName: "gearshape")
                             .font(.system(size: 20))
                             .foregroundStyle(Color.textPrimary)
@@ -87,7 +84,6 @@ struct HomeView: View {
 
                 // MARK: - Art Challenge
 
-                // عرض الفن فقط إذا اختاره المستخدم
                 if appState.selectedInterests.contains(.art) {
 
                     DailyChallengeCard(
@@ -96,9 +92,11 @@ struct HomeView: View {
 
                         category: "الفن السعودي",
 
-                        minutes: alternateActivities[1]?.durationMin ?? 5,
+                        minutes: alternateActivities[1]?.durationMin
+                            ?? 5,
 
-                        isCompleted: appRouter.completedInterests.contains(.art),
+                        isCompleted: appRouter.completedInterests
+                            .contains(.art),
 
                         iconName: "artLudunah",
 
@@ -125,7 +123,6 @@ struct HomeView: View {
 
                 // MARK: - Gaming Challenge
 
-                // عرض الألعاب فقط إذا اختارها المستخدم
                 if appState.selectedInterests.contains(.gaming) {
 
                     DailyChallengeCard(
@@ -134,9 +131,11 @@ struct HomeView: View {
 
                         category: "الرياضات الإلكترونية",
 
-                        minutes: alternateActivities[2]?.durationMin ?? 5,
+                        minutes: alternateActivities[2]?.durationMin
+                            ?? 5,
 
-                        isCompleted: appRouter.completedInterests.contains(.gaming),
+                        isCompleted: appRouter.completedInterests
+                            .contains(.gaming),
 
                         iconName: "GameLudunah",
 
@@ -163,7 +162,6 @@ struct HomeView: View {
 
                 // MARK: - Sport Challenge
 
-                // عرض الرياضة فقط إذا اختارها المستخدم
                 if appState.selectedInterests.contains(.sport) {
 
                     DailyChallengeCard(
@@ -172,9 +170,11 @@ struct HomeView: View {
 
                         category: "كرة القدم",
 
-                        minutes: alternateActivities[3]?.durationMin ?? 8,
+                        minutes: alternateActivities[3]?.durationMin
+                            ?? 8,
 
-                        isCompleted: appRouter.completedInterests.contains(.sport),
+                        isCompleted: appRouter.completedInterests
+                            .contains(.sport),
 
                         iconName: "SportLudunah",
 
@@ -199,15 +199,49 @@ struct HomeView: View {
                     )
                 }
 
+                // MARK: - Weekly Progress
+
+                VStack(
+                    alignment: .leading,
+                    spacing: Spacing.space16
+                ) {
+                    Text("التقدم الأسبوعي")
+                        .font(.title1Heading)
+                        .foregroundStyle(Color.textPrimary)
+                        .frame(
+                            maxWidth: .infinity,
+                            alignment: .leading
+                        )
+
+                    WeeklyProgressChart(
+                        counts: weeklyCounts
+                    )
+                }
+                .padding(.top, Spacing.space16)
+
             }
             .padding(Spacing.pageMargin)
         }
 
         // MARK: - Design System
 
-        .background(Color.pageBackground.ignoresSafeArea())
+        .background(
+            Color.pageBackground.ignoresSafeArea()
+        )
         .environment(\.layoutDirection, .rightToLeft)
         .toolbar(.hidden, for: .navigationBar)
+
+        // MARK: - Progress Loading
+
+        .task {
+            refreshWeeklyProgress()
+        }
+
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                refreshWeeklyProgress()
+            }
+        }
 
         // MARK: - Energy Changes
 
@@ -215,10 +249,7 @@ struct HomeView: View {
             of: EnergyLevel.from(value: energyValue)
         ) { _, _ in
 
-            // تبديل تحديات الاهتمامات المختارة فقط
-
             if appState.selectedInterests.contains(.art) {
-
                 swapChallenge(
                     id: 1,
                     interest: .art,
@@ -227,7 +258,6 @@ struct HomeView: View {
             }
 
             if appState.selectedInterests.contains(.gaming) {
-
                 swapChallenge(
                     id: 2,
                     interest: .gaming,
@@ -236,7 +266,6 @@ struct HomeView: View {
             }
 
             if appState.selectedInterests.contains(.sport) {
-
                 swapChallenge(
                     id: 3,
                     interest: .sport,
@@ -248,12 +277,9 @@ struct HomeView: View {
         // MARK: - Instructions Sheet
 
         .overlay {
-
             if let item = selectedChallenge {
-
                 ZStack(alignment: .bottom) {
 
-                    // خلفية معتمة
                     Color.black.opacity(0.35)
                         .ignoresSafeArea()
                         .onTapGesture {
@@ -270,8 +296,8 @@ struct HomeView: View {
                     )
                     .id(item.id)
                     .frame(maxWidth: .infinity)
-                    .containerRelativeFrame(.vertical) { height, _ in
-                        height * 0.65
+                    .containerRelativeFrame(.vertical) {
+                        height, _ in height * 0.65
                     }
                     .background(
                         Color.pageBackground,
@@ -298,13 +324,21 @@ struct HomeView: View {
         }
     }
 
+    // MARK: - Weekly Progress
+
+    private func refreshWeeklyProgress() {
+        weeklyCounts = StorageService()
+            .weeklyCompletedCounts()
+    }
+
     // MARK: - Close Instructions
 
     private func closeInstructions() {
-
         withAnimation(.easeInOut(duration: 0.3)) {
             selectedChallenge = nil
         }
+
+        refreshWeeklyProgress()
     }
 
     // MARK: - Open Instructions
@@ -315,9 +349,7 @@ struct HomeView: View {
         image: String,
         defaultTitle: String
     ) {
-
         withAnimation(.easeInOut(duration: 0.3)) {
-
             selectedChallenge = ChallengeSheetItem(
                 interest: interest,
                 image: image,
@@ -338,24 +370,30 @@ struct HomeView: View {
         defaultTitle: String
     ) -> Activity? {
 
-        // 1. النشاط البديل بعد التبديل
+        // Use the swapped activity, if one exists.
         if let swapped = alternateActivities[id] {
             return swapped
         }
 
-        let all = (try? ContentService.loadActivities(for: interest)) ?? []
+        let all = (
+            try? ContentService.loadActivities(
+                for: interest
+            )
+        ) ?? []
 
-        // 2. النشاط الافتراضي حسب العنوان
-        if let match = all.first(where: { $0.title == defaultTitle }) {
+        // Otherwise, find the default challenge.
+        if let match = all.first(
+            where: { $0.title == defaultTitle }
+        ) {
             return match
         }
 
-        // 3. أول نشاط يناسب مستوى الطاقة
+        // Fall back to the current energy level.
         let step = EnergyLevel
             .from(value: energyValue)
             .activityStep
 
-        return all.first(where: { $0.type == step })
+        return all.first { $0.type == step }
     }
 
     // MARK: - Swap Challenge
@@ -365,13 +403,11 @@ struct HomeView: View {
         interest: Interest,
         originalTitle: String
     ) {
-
         let requiredStep = EnergyLevel
             .from(value: energyValue)
             .activityStep
 
         do {
-
             let activities = try ContentService
                 .loadActivities(for: interest)
                 .filter { $0.type == requiredStep }
@@ -384,7 +420,6 @@ struct HomeView: View {
             }
 
             guard let selected = alternatives.randomElement() else {
-
                 swapErrorMessage =
                     "لا يوجد تحدٍ بديل مناسب لمستوى طاقتك في هذه الفئة."
 
@@ -394,11 +429,11 @@ struct HomeView: View {
 
             alternateActivities[id] = selected
 
-            // إزالة الإنجاز عند تغيير التحدي
+            // Current completion behavior is preserved.
+            // We will fix this in the daily completion step.
             appRouter.resetCompletion(interest)
 
         } catch {
-
             swapErrorMessage =
                 "تعذّر تحميل الأنشطة. تحققي من ملفات JSON."
 
@@ -420,9 +455,7 @@ struct ChallengeSheetItem: Identifiable {
 // MARK: - Preview
 
 #Preview {
-
     HomeView()
         .environment(AppRouter())
         .environment(AppState())
 }
-
