@@ -6,9 +6,8 @@
 // - Custom title and action.
 // - Disabled state.
 // - Design System styling.
-//
-// Used by: OnboardingView, TaskSheet,
-// ActivityFlowView, InstructionsSheet.
+// Shared button used across onboarding, activity,
+// home, and instruction screens.
 // Learn: Button, closure, disabled.
 
 import SwiftUI

@@ -1,6 +1,5 @@
-
-// ArtCreateView.swift - واجهة أنشطة ابتكر في الفن السعودي.
-//
+// ArtCreateView.swift - Create activity for the Art interest.
+// Presented through the current activity flow.
 // Contains:
 // - Random Art Create activity from Art.json.
 // - Original 5x5 pixel grid design.
@@ -10,9 +9,6 @@
 // - Reflection question.
 // - Instructions bottom sheet.
 // - Fixed finish button.
-//
-// Used by: ActivityFlowView (art, create).
-//
 // Learn: @State, @FocusState, LazyVGrid,
 //        @ViewBuilder, ForEach, Binding, sheet.
 
