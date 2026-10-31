@@ -1,11 +1,23 @@
+
 import SwiftUI
 
 struct SportCreateView: View {
+
+    // MARK: - State
+
     @StateObject private var viewModel: SportCreateViewModel
+
+    // MARK: - Environment
+
     @Environment(\.dismiss) private var dismiss
 
+    // MARK: - Properties
+
     let sport: SportPlan
+
     var onFinish: (SportCreateModel) -> Void = { _ in }
+
+    // MARK: - Initialization
 
     init(
         sport: SportPlan = .football,
@@ -13,10 +25,13 @@ struct SportCreateView: View {
     ) {
         self.sport = sport
         self.onFinish = onFinish
+
         _viewModel = StateObject(
             wrappedValue: SportCreateViewModel(sport: sport)
         )
     }
+
+    // MARK: - Body
 
     var body: some View {
         ZStack {
@@ -24,17 +39,33 @@ struct SportCreateView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
+
+                // MARK: - Header
+
                 ActivityHeader(
                     interestTitle: "الرياضة",
                     interestColor: .sportTint,
                     stepTitle: "ابتكر",
                     stepIcon: "sparkles",
-                    onBack: { dismiss() }
+                    onBack: {
+                        dismiss()
+                    }
                 )
 
+                // MARK: - Plan Content
+
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: Spacing.space24) {
-                        VStack(alignment: .leading, spacing: Spacing.space8) {
+                    VStack(
+                        alignment: .leading,
+                        spacing: Spacing.space24
+                    ) {
+
+                        // MARK: - Title
+
+                        VStack(
+                            alignment: .leading,
+                            spacing: Spacing.space8
+                        ) {
                             Text("جهّز خطتك التدريبية")
                                 .font(.title1Heading)
                                 .foregroundStyle(Color.textPrimary)
@@ -54,12 +85,16 @@ struct SportCreateView: View {
                         }
                         .padding(.top, Spacing.space24)
 
+                        // MARK: - Exercise Type
+
                         optionSection(
                             title: "نوع التمرين",
                             options: sport.exerciseTypes,
                             selection: $viewModel.model.exerciseType,
                             label: { $0.title }
                         )
+
+                        // MARK: - Difficulty
 
                         optionSection(
                             title: "مستوى الصعوبة",
@@ -68,6 +103,8 @@ struct SportCreateView: View {
                             label: { $0.title }
                         )
 
+                        // MARK: - Space
+
                         optionSection(
                             title: "مساحة الملعب",
                             options: SportSpace.allCases,
@@ -75,7 +112,10 @@ struct SportCreateView: View {
                             label: { $0.title }
                         )
 
+                        // MARK: - Players and Duration
+
                         HStack(spacing: Spacing.space12) {
+
                             countPicker(
                                 title: "عدد اللاعبين",
                                 value: viewModel.model.playerCount,
@@ -91,7 +131,12 @@ struct SportCreateView: View {
                             )
                         }
 
-                        VStack(alignment: .leading, spacing: Spacing.space8) {
+                        // MARK: - Plan Name
+
+                        VStack(
+                            alignment: .leading,
+                            spacing: Spacing.space8
+                        ) {
                             Text("اسم الخطة")
                                 .font(.supTitle1)
                                 .foregroundStyle(Color.textPrimary)
@@ -120,10 +165,10 @@ struct SportCreateView: View {
                     .padding(.bottom, Spacing.space24)
                 }
 
+                // MARK: - Save Button
+
                 PrimaryButton(title: "احفظ الخطة") {
-                    viewModel.finish()
-                    onFinish(viewModel.model)
-                    dismiss()
+                    finishActivity()
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.top, Spacing.space12)
@@ -134,29 +179,58 @@ struct SportCreateView: View {
         }
     }
 
+    // MARK: - Completion
+
+    /// Saves the plan, notifies the parent, and closes the screen.
+    private func finishActivity() {
+        guard !viewModel.didFinish else {
+            return
+        }
+
+        viewModel.finish()
+
+        onFinish(viewModel.model)
+
+        dismiss()
+    }
+
+    // MARK: - Option Section
+
     private func optionSection<Option: Identifiable & Equatable>(
         title: String,
         options: [Option],
         selection: Binding<Option>,
         label: @escaping (Option) -> String
     ) -> some View {
-        VStack(alignment: .leading, spacing: Spacing.space8) {
+
+        VStack(
+            alignment: .leading,
+            spacing: Spacing.space8
+        ) {
             Text(title)
                 .font(.supTitle1)
                 .foregroundStyle(Color.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(
+                    maxWidth: .infinity,
+                    alignment: .leading
+                )
 
             HStack(spacing: 0) {
                 ForEach(options) { option in
-                    let isSelected = selection.wrappedValue == option
+
+                    let isSelected =
+                        selection.wrappedValue == option
 
                     Button {
                         selection.wrappedValue = option
                     } label: {
+
                         Text(label(option))
                             .font(.supTitle2)
                             .foregroundStyle(
-                                isSelected ? Color.white : Color.textPrimary
+                                isSelected
+                                    ? Color.white
+                                    : Color.textPrimary
                             )
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -173,9 +247,14 @@ struct SportCreateView: View {
                 }
             }
             .padding(Spacing.space4)
-            .glassEffect(.regular.interactive(), in: Capsule())
+            .glassEffect(
+                .regular.interactive(),
+                in: Capsule()
+            )
         }
     }
+
+    // MARK: - Count Picker
 
     private func countPicker(
         title: String,
@@ -183,7 +262,9 @@ struct SportCreateView: View {
         range: ClosedRange<Int>,
         onSelect: @escaping (Int) -> Void
     ) -> some View {
+
         HStack(spacing: Spacing.space8) {
+
             Menu {
                 ForEach(Array(range), id: \.self) { option in
                     Button("\(option)") {
@@ -191,9 +272,15 @@ struct SportCreateView: View {
                     }
                 }
             } label: {
+
                 HStack(spacing: Spacing.space8) {
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(
+                            .system(
+                                size: 12,
+                                weight: .semibold
+                            )
+                        )
 
                     Text("\(value)")
                         .font(.supTitle2)
@@ -201,7 +288,10 @@ struct SportCreateView: View {
                 .foregroundStyle(Color.textPrimary)
                 .frame(maxWidth: .infinity)
                 .frame(height: 44)
-                .glassEffect(.regular.interactive(), in: Capsule())
+                .glassEffect(
+                    .regular.interactive(),
+                    in: Capsule()
+                )
             }
 
             Text(title)
@@ -213,14 +303,28 @@ struct SportCreateView: View {
     }
 }
 
+// MARK: - Previews
+
 #Preview("Football") {
     SportCreateView(sport: .football)
-        .environment(\.locale, Locale(identifier: "ar"))
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(
+            \.locale,
+            Locale(identifier: "ar")
+        )
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
+        )
 }
 
 #Preview("Padel") {
     SportCreateView(sport: .padel)
-        .environment(\.locale, Locale(identifier: "ar"))
-        .environment(\.layoutDirection, .rightToLeft)
+        .environment(
+            \.locale,
+            Locale(identifier: "ar")
+        )
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
+        )
 }

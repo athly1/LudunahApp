@@ -1,15 +1,27 @@
+
 import SwiftUI
 
+/// Displays a sports learning activity as a sequence of cards.
 struct SportLearnView: View {
-    @StateObject private var viewModel: SportLearnViewModel
 
-    // activityID: النشاط المختار من الهوم
+    // MARK: - State
+
+    @StateObject private var viewModel: SportLearnViewModel
+    @State private var didFinish = false
+
+    // MARK: - Environment
+
+    @Environment(\.dismiss) private var dismiss
+
+    // MARK: - Initialization
+
     init(activityID: String? = nil) {
         _viewModel = StateObject(
             wrappedValue: SportLearnViewModel(activityID: activityID)
         )
     }
-    @Environment(\.dismiss) private var dismiss
+
+    // MARK: - Display Cards
 
     private var displayCards: [ActivityCard] {
         viewModel.cards.map { card in
@@ -35,28 +47,29 @@ struct SportLearnView: View {
         }
     }
 
+    // MARK: - Body
+
     var body: some View {
         ZStack {
             Color.pageBackground
                 .ignoresSafeArea()
 
             VStack(alignment: .leading, spacing: 0) {
+
+                // MARK: Header
+
                 ActivityHeader(
                     interestTitle: "الرياضة",
                     interestColor: .sportTint,
                     stepTitle: "تعلّم",
                     stepIcon: "lightbulb.max",
                     onBack: {
-                        if viewModel.index > 0 {
-                            withAnimation {
-                                viewModel.previousCard()
-                            }
-                        } else {
-                            dismiss()
-                        }
+                        previousCardOrDismiss()
                     }
                 )
                 .padding(.horizontal, Spacing.pageMargin)
+
+                // MARK: Progress
 
                 ProgressView(
                     value: viewModel.currentProgress,
@@ -67,6 +80,8 @@ struct SportLearnView: View {
                 .padding(.horizontal, Spacing.pageMargin)
                 .padding(.top, Spacing.pageMargin)
 
+                // MARK: Title
+
                 Text(viewModel.title)
                     .font(.title1Heading)
                     .foregroundStyle(Color.textPrimary)
@@ -75,6 +90,8 @@ struct SportLearnView: View {
                     .padding(.horizontal, Spacing.pageMargin)
                     .padding(.top, Spacing.chipHeight)
                     .padding(.bottom, Spacing.headerTitleOffset + 40)
+
+                // MARK: Learning Cards
 
                 CardsFlowView(
                     iconColor: .sportFieldBall,
@@ -90,9 +107,11 @@ struct SportLearnView: View {
 
                 Spacer(minLength: 0)
 
+                // MARK: Finish Button
+
                 if viewModel.isLastCard {
                     PrimaryButton(title: "انتهيت") {
-                        dismiss()
+                        finishActivity()
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, Spacing.pageMargin)
@@ -103,6 +122,36 @@ struct SportLearnView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .environment(\.layoutDirection, .rightToLeft)
         }
+    }
+
+    // MARK: - Navigation
+
+    private func previousCardOrDismiss() {
+        guard viewModel.index > 0 else {
+            dismiss()
+            return
+        }
+
+        withAnimation {
+            viewModel.previousCard()
+        }
+    }
+
+    // MARK: - Completion
+
+    /// Records completion once before dismissing the activity.
+    private func finishActivity() {
+        guard !didFinish, viewModel.isLastCard else {
+            return
+        }
+
+        didFinish = true
+
+        StorageService().recordCompletedActivity(
+            interest: .sport
+        )
+
+        dismiss()
     }
 }
 
