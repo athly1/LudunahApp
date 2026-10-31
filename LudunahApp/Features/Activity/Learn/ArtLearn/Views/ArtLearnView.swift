@@ -14,7 +14,7 @@
 //
 // Learn: @StateObject, @State, @Environment,
 //        Image, CardsFlowView, ProgressView,
-//        StorageService, AppRouter.
+//        StorageService
 
 import SwiftUI
 
@@ -44,9 +44,6 @@ struct ArtLearnView: View {
 
     // الرجوع للشاشة السابقة
     @Environment(\.dismiss) private var dismiss
-
-    // التنقل وتحديث حالة الإنجاز
-    @Environment(AppRouter.self) private var appRouter
 
     // MARK: - Body
 
@@ -206,32 +203,22 @@ struct ArtLearnView: View {
             .rightToLeft
         )
     }
-
     // MARK: - Finish Activity
 
     private func finishActivity() {
-
-        // منع تكرار تسجيل الإنجاز
-        guard !didFinish else {
-            return
-        }
-
-        // التأكد من الوصول إلى آخر بطاقة
-        guard viewModel.isLastCard else {
+        guard !didFinish, viewModel.isLastCard else {
             return
         }
 
         didFinish = true
 
-        // حفظ إنجاز النشاط في UserDefaults
         StorageService().recordCompletedActivity(
             interest: .art
         )
 
-        // إبلاغ AppRouter باكتمال النشاط
-        // والعودة إلى الرئيسية
-        appRouter.popToRoot()
+        dismiss()
     }
+
 }
 
 // MARK: - Preview
@@ -249,5 +236,4 @@ struct ArtLearnView: View {
         \.layoutDirection,
         .rightToLeft
     )
-    .environment(AppRouter())
 }

@@ -16,6 +16,7 @@
 // Learn: @State, @FocusState, LazyVGrid,
 //        @ViewBuilder, ForEach, Binding, sheet.
 
+
 import SwiftUI
 
 // MARK: - Art Create View
@@ -35,10 +36,7 @@ struct ArtCreateView: View {
         )
     }
 
-    // مدير التنقل
-    @Environment(AppRouter.self) private var appRouter
-
-    // الرجوع
+    // الرجوع وإغلاق النشاط
     @Environment(\.dismiss) private var dismiss
 
     // نافذة التعليمات
@@ -59,9 +57,7 @@ struct ArtCreateView: View {
     // MARK: - Body
 
     var body: some View {
-
         ScrollView {
-
             VStack(spacing: Spacing.space24) {
 
                 // MARK: - Shared Header
@@ -84,17 +80,16 @@ struct ArtCreateView: View {
                     // تحديد النشاط من JSON
                     if activity.id == "art-create-1" {
 
-                        // تصميم الشبكة القديم
+                        // تصميم الشبكة
                         gridActivity(activity)
 
                     } else if activity.id == "art-create-2" {
 
-                        // مختبر الألوان الجديد
+                        // مختبر الألوان
                         mixingActivity(activity)
                     }
 
                 } else {
-
                     Text(
                         viewModel.errorMessage
                             ?? "لا يوجد نشاط متاح."
@@ -111,9 +106,7 @@ struct ArtCreateView: View {
         // MARK: - Fixed Bottom Button
 
         .safeAreaInset(edge: .bottom) {
-
             if viewModel.activity != nil {
-
                 finishButton
                     .padding(.horizontal, Spacing.pageMargin)
                     .padding(.vertical, Spacing.space8)
@@ -135,7 +128,6 @@ struct ArtCreateView: View {
         // MARK: - Instructions Sheet
 
         .sheet(isPresented: $showInstructions) {
-
             instructionsContent
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.visible)
@@ -155,11 +147,8 @@ struct ArtCreateView: View {
                 .foregroundStyle(Color.textPrimary)
 
             Button {
-
                 showInstructions = true
-
             } label: {
-
                 Image(systemName: "info.circle")
                     .font(.system(size: 16))
                     .foregroundStyle(Color.textPrimary)
@@ -178,18 +167,16 @@ struct ArtCreateView: View {
     // MARK: - Grid Activity
 
     // النشاط الأول: صمم رمز يحكي يومك
-    // نستخدم نفس ترتيب واجهة الشبكة القديمة.
-
     private func gridActivity(
         _ activity: ArtCreateModel
     ) -> some View {
 
         VStack(spacing: Spacing.space24) {
 
-            // شبكة الرسم أولًا
+            // شبكة الرسم
             pixelGrid(activity)
 
-            // الألوان وزر التراجع في صف واحد
+            // الألوان وزر التراجع
             colorPalette(activity)
 
             // سؤال معنى الرمز
@@ -215,7 +202,6 @@ struct ArtCreateView: View {
             ) { index in
 
                 Button {
-
                     // إغلاق لوحة المفاتيح
                     isAnswerFocused = false
 
@@ -223,7 +209,6 @@ struct ArtCreateView: View {
                     viewModel.paintCell(at: index)
 
                 } label: {
-
                     Rectangle()
                         .fill(
                             cellColor(
@@ -231,16 +216,11 @@ struct ArtCreateView: View {
                                 colors: activity.colors
                             )
                         )
-
-                        // المحافظة على شكل المربع
                         .aspectRatio(
                             1,
                             contentMode: .fit
                         )
-
-                        // الحدود مثل التصميم القديم
                         .overlay {
-
                             Rectangle()
                                 .stroke(
                                     Color.gray.opacity(0.35),
@@ -253,13 +233,10 @@ struct ArtCreateView: View {
             }
         }
         .padding(Spacing.space16)
-
-        // خلفية الشبكة القديمة
         .background(
             Color.glassBackground,
             in: RoundedRectangle(cornerRadius: 20)
         )
-
         .shadow(
             color: Color.black.opacity(0.08),
             radius: 10,
@@ -269,7 +246,6 @@ struct ArtCreateView: View {
 
     // MARK: - Cell Color
 
-    // قراءة لون المربع من ViewModel
     private func cellColor(
         at index: Int,
         colors: [String]
@@ -278,7 +254,6 @@ struct ArtCreateView: View {
         guard viewModel.grid.indices.contains(index),
               let colorIndex = viewModel.grid[index],
               colors.indices.contains(colorIndex) else {
-
             return .white
         }
 
@@ -287,7 +262,6 @@ struct ArtCreateView: View {
 
     // MARK: - Color Palette
 
-    // نفس تصميم صف الألوان والتراجع القديم
     private func colorPalette(
         _ activity: ArtCreateModel
     ) -> some View {
@@ -301,18 +275,14 @@ struct ArtCreateView: View {
             ) { index in
 
                 Button {
-
-                    // اختيار اللون الحالي
                     viewModel.selectedColorIndex = index
 
                 } label: {
-
                     Circle()
                         .fill(
                             Color(hex: activity.colors[index])
                         )
                         .overlay {
-
                             Circle()
                                 .stroke(
                                     viewModel.selectedColorIndex == index
@@ -334,11 +304,9 @@ struct ArtCreateView: View {
             // MARK: - Undo Button
 
             Button {
-
                 viewModel.undo()
 
             } label: {
-
                 Text("تراجع")
                     .font(.dailyMinutesStyle)
                     .foregroundStyle(Color.textPrimary)
@@ -350,7 +318,6 @@ struct ArtCreateView: View {
                     .padding(.horizontal, Spacing.space12)
                     .frame(height: 38)
                     .overlay {
-
                         RoundedRectangle(cornerRadius: 12)
                             .stroke(
                                 Color.textPrimary.opacity(0.4),
@@ -366,7 +333,6 @@ struct ArtCreateView: View {
 
     // MARK: - Reflection Section
 
-    // سؤال النشاط الأول
     private func reflectionSection(
         _ activity: ArtCreateModel
     ) -> some View {
@@ -439,12 +405,10 @@ struct ArtCreateView: View {
 
                     // اللونان الأساسيان
                     HStack(spacing: Spacing.space24) {
-
                         ForEach(
                             round.colors,
                             id: \.self
                         ) { color in
-
                             Circle()
                                 .fill(Color(hex: color))
                                 .frame(
@@ -499,7 +463,6 @@ struct ArtCreateView: View {
                                 height: 100
                             )
                             .overlay {
-
                                 Image(systemName: "questionmark")
                                     .font(.system(size: 34))
                                     .foregroundStyle(Color.textPrimary)
@@ -523,20 +486,16 @@ struct ArtCreateView: View {
                     ) { option in
 
                         Button {
-
                             viewModel.selectAnswer(option)
 
                         } label: {
-
                             HStack {
-
                                 Text(option)
                                     .font(.titleCards)
 
                                 Spacer()
 
                                 if viewModel.selectedAnswer == option {
-
                                     Image(
                                         systemName: "checkmark.circle.fill"
                                     )
@@ -568,7 +527,6 @@ struct ArtCreateView: View {
                             ? "اختيار اللون المفضل"
                             : "الجولة التالية"
                     ) {
-
                         viewModel.nextRound()
                     }
 
@@ -578,7 +536,6 @@ struct ArtCreateView: View {
                         title: "اكشف النتيجة",
                         isDisabled: viewModel.selectedAnswer == nil
                     ) {
-
                         viewModel.revealResult()
                     }
                 }
@@ -607,11 +564,9 @@ struct ArtCreateView: View {
                 ) { index in
 
                     Button {
-
                         viewModel.favoriteRoundIndex = index
 
                     } label: {
-
                         VStack(spacing: Spacing.space8) {
 
                             Circle()
@@ -626,7 +581,6 @@ struct ArtCreateView: View {
                                 )
                                 .padding(5)
                                 .overlay {
-
                                     Circle()
                                         .stroke(
                                             viewModel.favoriteRoundIndex == index
@@ -686,7 +640,6 @@ struct ArtCreateView: View {
             title: "أنهيت",
             isDisabled: !viewModel.canFinish || isFinishing
         ) {
-
             finishActivity()
         }
     }
@@ -709,8 +662,6 @@ struct ArtCreateView: View {
                     .multilineTextAlignment(.center)
 
                 ScrollView {
-
-                    // عرض تعليمات النشاط من JSON
                     DoStepsCard(
                         howTo: activity.howTo,
                         stepRingColor: .artChipBackground
@@ -721,7 +672,6 @@ struct ArtCreateView: View {
             Spacer(minLength: 0)
 
             PrimaryButton(title: "فهمت") {
-
                 showInstructions = false
             }
         }
@@ -744,6 +694,7 @@ struct ArtCreateView: View {
             return
         }
 
+        // منع تسجيل الإنجاز أكثر من مرة
         isFinishing = true
 
         // إغلاق لوحة المفاتيح
@@ -754,47 +705,17 @@ struct ArtCreateView: View {
             interest: .art
         )
 
-        // العودة إلى الشاشة الرئيسية
-        appRouter.popToRoot()
+        // إغلاق النشاط
+        dismiss()
     }
 }
-
 
 // MARK: - Preview
 
 #Preview {
-
-    let router = AppRouter()
-
-    NavigationStack(
-        path: Binding(
-            get: { router.path },
-            set: { router.path = $0 }
+    ArtCreateView()
+        .environment(
+            \.layoutDirection,
+            .rightToLeft
         )
-    ) {
-
-        VStack(spacing: 20) {
-
-            Text("الرئيسية")
-                .font(.title)
-
-            Button("افتح Art Create") {
-
-                router.push(.activity(.art))
-            }
-        }
-        .navigationDestination(for: AppRoute.self) { route in
-
-            switch route {
-
-            case .activity:
-                ArtCreateView()
-
-            case .settings:
-                Text("الإعدادات")
-            }
-        }
-    }
-    .environment(router)
-    .environment(\.layoutDirection, .rightToLeft)
 }

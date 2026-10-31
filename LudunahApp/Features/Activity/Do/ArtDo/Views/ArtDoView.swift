@@ -18,6 +18,7 @@
 // Learn: @State, @StateObject, @ObservedObject,
 //        @Environment, ScrollView, sheet, functions.
 
+
 import SwiftUI
 import Combine
 
@@ -41,13 +42,11 @@ struct ArtDoView: View {
 
     // MARK: - Environment
 
-    @Environment(AppRouter.self) private var appRouter
     @Environment(\.dismiss) private var dismiss
 
     // MARK: - Initialization
 
     init(activityID: String? = nil) {
-
         _viewModel = State(
             initialValue: ArtDoViewModel(
                 activityID: activityID
@@ -57,7 +56,6 @@ struct ArtDoView: View {
 
     // MARK: - Current Timer
 
-    // مؤقت المرحلة الحالية
     private var currentTimer: TimerEngine? {
         timers.timer(at: viewModel.phaseIndex)
     }
@@ -65,7 +63,6 @@ struct ArtDoView: View {
     // MARK: - Body
 
     var body: some View {
-
         VStack(spacing: 0) {
 
             // MARK: - Shared Header
@@ -86,7 +83,6 @@ struct ArtDoView: View {
             // MARK: - Progress
 
             if viewModel.activity != nil {
-
                 ProgressView(
                     value: Double(
                         viewModel.stage == .ready
@@ -105,9 +101,7 @@ struct ArtDoView: View {
             // MARK: - Main Content
 
             ScrollView {
-
                 if let activity = viewModel.activity {
-
                     VStack(spacing: Spacing.space24) {
 
                         // عنوان النشاط
@@ -115,11 +109,8 @@ struct ArtDoView: View {
 
                         // محتوى النشاط حسب المرحلة
                         if viewModel.stage == .ready {
-
                             readyContent
-
                         } else if viewModel.stage == .running {
-
                             phaseContent
                         }
 
@@ -134,7 +125,6 @@ struct ArtDoView: View {
                     .padding(.bottom, Spacing.space24)
 
                 } else {
-
                     // رسالة في حال عدم تحميل النشاط
                     Text(
                         viewModel.errorMessage
@@ -179,7 +169,6 @@ struct ArtDoView: View {
         // MARK: - Instructions Sheet
 
         .sheet(isPresented: $showInstructions) {
-
             instructionsSheet
                 .presentationDetents([
                     .medium,
@@ -191,7 +180,6 @@ struct ArtDoView: View {
         // MARK: - Lifecycle
 
         .onAppear {
-
             // تجهيز مؤقتات النشاط المختار
             if let activity = viewModel.activity {
                 timers.configure(phases: activity.phases)
@@ -199,7 +187,6 @@ struct ArtDoView: View {
         }
 
         .onDisappear {
-
             // إيقاف المؤقتات عند مغادرة الشاشة
             timers.stopAll()
         }
@@ -215,7 +202,6 @@ struct ArtDoView: View {
             alignment: .firstTextBaseline,
             spacing: Spacing.space8
         ) {
-
             Text(title)
                 .font(.title1Heading)
                 .foregroundStyle(Color.textPrimary)
@@ -226,11 +212,8 @@ struct ArtDoView: View {
 
             // زر عرض التعليمات
             Button {
-
                 showInstructions = true
-
             } label: {
-
                 Image(systemName: "info.circle")
                     .font(.system(size: 18))
                     .foregroundStyle(Color.textPrimary)
@@ -249,12 +232,10 @@ struct ArtDoView: View {
     // MARK: - Ready Content
 
     private var readyContent: some View {
-
         VStack(spacing: Spacing.space24) {
 
             // مدة النشاط
             HStack(spacing: Spacing.space8) {
-
                 Image(systemName: "gauge.with.needle")
                     .foregroundStyle(Color.textPrimary)
                     .opacity(0.75)
@@ -277,7 +258,6 @@ struct ArtDoView: View {
     // MARK: - Activity Card
 
     private var activityCard: some View {
-
         VStack(spacing: Spacing.space16) {
 
             if let activity = viewModel.activity {
@@ -294,14 +274,11 @@ struct ArtDoView: View {
                 // MARK: - Symbols
 
                 if activity.displayType == "symbols" {
-
                     HStack(spacing: Spacing.space12) {
-
                         ForEach(
                             activity.symbols,
                             id: \.self
                         ) { symbol in
-
                             Image(systemName: symbol)
                                 .font(.system(size: 23))
                                 .foregroundStyle(
@@ -325,12 +302,10 @@ struct ArtDoView: View {
                     // MARK: - Colors
 
                     HStack(spacing: Spacing.space16) {
-
                         ForEach(
                             activity.colors,
                             id: \.self
                         ) { color in
-
                             Circle()
                                 .fill(Color(hex: color))
                                 .frame(
@@ -370,7 +345,6 @@ struct ArtDoView: View {
     // MARK: - Phase Content
 
     private var phaseContent: some View {
-
         VStack(spacing: Spacing.space24) {
 
             // رقم المرحلة
@@ -384,7 +358,6 @@ struct ArtDoView: View {
 
             // نص المرحلة من Art.json
             if let phase = viewModel.currentPhase {
-
                 Text(phase.text)
                     .font(.titleCards)
                     .foregroundStyle(Color.textPrimary)
@@ -404,9 +377,7 @@ struct ArtDoView: View {
 
     @ViewBuilder
     private var currentTimerView: some View {
-
         if let timer = currentTimer {
-
             CountdownTimerView(
                 engine: timer,
                 color: .artTimerRing,
@@ -422,11 +393,9 @@ struct ArtDoView: View {
     // MARK: - Instructions Sheet
 
     private var instructionsSheet: some View {
-
         VStack(spacing: Spacing.space24) {
 
             HStack(spacing: Spacing.space8) {
-
                 Image(systemName: "info.circle")
                     .foregroundStyle(Color.textPrimary)
 
@@ -438,9 +407,7 @@ struct ArtDoView: View {
             }
 
             ScrollView {
-
                 if let activity = viewModel.activity {
-
                     DoStepsCard(
                         howTo: activity.howTo,
                         stepRingColor: .artChipBackground
@@ -470,7 +437,6 @@ struct ArtDoView: View {
     // MARK: - Bottom Controls
 
     private var bottomControls: some View {
-
         VStack(spacing: Spacing.space12) {
 
             // مساحة ثابتة لزر الإيقاف المؤقت / أكمل
@@ -502,7 +468,6 @@ struct ArtDoView: View {
 
         // قبل بدء النشاط
         if viewModel.stage == .ready {
-
             PrimaryButton(
                 title: "ابدأ",
                 isDisabled: currentTimer == nil
@@ -512,7 +477,6 @@ struct ArtDoView: View {
 
         // المرحلة الأخيرة
         } else if viewModel.isLastPhase {
-
             PrimaryButton(
                 title: "انتهيت",
                 isDisabled: didFinish
@@ -522,7 +486,6 @@ struct ArtDoView: View {
 
         // المراحل السابقة
         } else {
-
             PrimaryButton(title: "التالي") {
                 nextPhase()
             }
@@ -532,7 +495,6 @@ struct ArtDoView: View {
     // MARK: - Start Activity
 
     private func startActivity() {
-
         guard viewModel.stage == .ready,
               let timer = currentTimer else {
             return
@@ -548,7 +510,6 @@ struct ArtDoView: View {
     // MARK: - Next Phase
 
     private func nextPhase() {
-
         guard viewModel.stage == .running,
               !viewModel.isLastPhase else {
             return
@@ -573,7 +534,6 @@ struct ArtDoView: View {
     // MARK: - Finish Activity
 
     private func finishActivity() {
-
         guard !didFinish,
               viewModel.stage == .running,
               viewModel.isLastPhase else {
@@ -594,9 +554,6 @@ struct ArtDoView: View {
             interest: .art
         )
 
-        // تحديث حالة الإنجاز
-        appRouter.popToRoot()
-
         // إغلاق النشاط
         dismiss()
     }
@@ -615,16 +572,11 @@ private struct ArtTimerPauseButton: View {
     // MARK: - Body
 
     var body: some View {
-
         // إخفاء الزر عند انتهاء الوقت
         if !timer.isFinished {
-
             Button {
-
                 togglePause()
-
             } label: {
-
                 Label(
                     timer.isRunning
                         ? "إيقاف مؤقت"
@@ -652,18 +604,14 @@ private struct ArtTimerPauseButton: View {
     // MARK: - Pause / Resume
 
     private func togglePause() {
-
         guard !timer.isFinished else {
             return
         }
 
         if timer.isRunning {
-
             // إيقاف المؤقت مؤقتًا
             timer.pause()
-
         } else {
-
             // استكمال العد التنازلي
             timer.resume()
         }
@@ -683,14 +631,12 @@ final class ArtDoTimers: ObservableObject {
     // MARK: - Configure
 
     func configure(phases: [ArtDoPhase]) {
-
         // منع تكرار إنشاء المؤقتات
         guard engines.isEmpty else {
             return
         }
 
         engines = phases.map { phase in
-
             TimerEngine(
                 duration: phase.durationSec
             )
@@ -700,7 +646,6 @@ final class ArtDoTimers: ObservableObject {
     // MARK: - Timer
 
     func timer(at index: Int) -> TimerEngine? {
-
         guard engines.indices.contains(index) else {
             return nil
         }
@@ -711,7 +656,6 @@ final class ArtDoTimers: ObservableObject {
     // MARK: - Stop All
 
     func stopAll() {
-
         for engine in engines {
             engine.pause()
         }
@@ -721,9 +665,7 @@ final class ArtDoTimers: ObservableObject {
 // MARK: - Preview
 
 #Preview {
-
     ArtDoView()
-        .environment(AppRouter())
         .environment(
             \.layoutDirection,
             .rightToLeft

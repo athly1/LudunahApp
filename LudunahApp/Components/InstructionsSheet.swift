@@ -64,8 +64,6 @@ struct InstructionsSheet: View {
     // Closes the card and returns to Home (provided by HomeView).
     var onClose: () -> Void
 
-    // Used to open the temporary screens.
-    @Environment(AppRouter.self) private var appRouter
 
     // `activity` is the challenge the user tapped on Home.
     init(
@@ -190,13 +188,6 @@ struct InstructionsSheet: View {
                             .frame(width: 40, height: 5)
                             .padding(.top, 10)
                     }
-                    // When an Art screen finishes (popToRoot), close everything.
-                    .onChange(of: appRouter.finishedActivityCount) { _, _ in
-                        if showActivity {
-                            appRouter.markCompleted(viewModel.interest)
-                            showActivity = false
-                        }
-                    }
                     .gesture(
                         DragGesture().onEnded { value in
                             if value.translation.height > 80 {
@@ -286,6 +277,5 @@ struct SetOfShips: View {
     
     //called at home
     InstructionsSheet(interest: .gaming, InterestImage: "GameLudunah" )
-        .environment(AppRouter())
         .environment(\.layoutDirection, .rightToLeft)
 }

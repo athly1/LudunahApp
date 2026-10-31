@@ -12,54 +12,62 @@
 import SwiftUI
 import Observation
 
+// MARK: - App Routes
+
 enum AppRoute: Hashable {
     case activity(Interest)
     case settings
 }
 
+// MARK: - App Router
+
 @Observable
 final class AppRouter {
 
+    // MARK: - Properties
+
     var path = NavigationPath()
+
     private let storage = StorageService()
-    // التحديات التي انتهى المستخدم منها
+
+    // اهتمامات المستخدم المكتملة اليوم
     private(set) var completedInterests: Set<Interest> = []
 
-    // الانتقال إلى شاشة جديدة
+    // MARK: - Initialization
+
+    init() {
+        refreshCompletedInterests()
+    }
+
+    // MARK: - Navigation
+
     func push(_ route: AppRoute) {
         path.append(route)
     }
 
-    // الرجوع إلى الشاشة السابقة
     func pop() {
         guard !path.isEmpty else { return }
         path.removeLast()
     }
 
-    // يزيد كل ما انتهى المستخدم من نشاط (يستخدمه InstructionsSheet لإغلاق الشاشة)
-    private(set) var finishedActivityCount = 0
-    init() {
-        refreshCompletedInterests()
-    }
+    // MARK: - Activity Completion
 
-    /// Loads today's completed interests from local storage.
+    // تحديث الإنجازات من التخزين المحلي
     func refreshCompletedInterests() {
         completedInterests = storage.completedInterests()
     }
-    func popToRoot() {
-        path = NavigationPath()
-        finishedActivityCount += 1
-    }
 
-    // تسجيل الإنجاز عند الانتهاء فقط
+    // تحديث حالة الإنجاز في الذاكرة فقط
     func markCompleted(_ interest: Interest) {
         completedInterests.insert(interest)
     }
 
-    // إزالة الإنجاز إذا استُبدل التحدي
+    // إزالة حالة الإنجاز من الذاكرة فقط
     func resetCompletion(_ interest: Interest) {
         completedInterests.remove(interest)
     }
+
+    // MARK: - Destinations
 
     @ViewBuilder
     func destination(for route: AppRoute) -> some View {
