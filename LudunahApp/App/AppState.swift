@@ -13,7 +13,10 @@ final class AppState {
 
     // MARK: - State
 
+    /// Whether the user has completed onboarding.
     private(set) var isOnboardingCompleted: Bool
+
+    /// The user's selected interests.
     private(set) var selectedInterests: Set<Interest>
 
     // MARK: - Dependencies
@@ -22,6 +25,7 @@ final class AppState {
 
     // MARK: - Initialization
 
+    /// Restores saved application state at startup.
     init(storage: StorageService = StorageService()) {
         self.storage = storage
         self.isOnboardingCompleted = storage.loadOnboardingCompleted()
