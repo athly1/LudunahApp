@@ -30,7 +30,7 @@ enum Interest: String, CaseIterable, Identifiable, Codable, Hashable {
         case .sport:
             return "الرياضة"
         case .gaming:
-            return "القايمنق"
+            return "الالعاب الالكترونية"
         }
     }
 
