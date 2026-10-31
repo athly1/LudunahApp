@@ -11,6 +11,16 @@
         }
       }
     },
+    "%@: %lld نشاط مكتمل" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$lld completed activities"
+          }
+        }
+      }
+    },
     "%lld" : {
 
     },
@@ -85,6 +95,9 @@
 
     },
     "البطاقة التالية" : {
+
+    },
+    "التقدم الأسبوعي" : {
 
     },
     "التنبيهات" : {
