@@ -64,7 +64,7 @@ struct EnergyCheckInView: View {
                         .fill(currentEnergyColor)
                         .frame(width: 56, height: 32)
                         .overlay {
-                            Text("\(energyValue)%")
+                            Text(energyValue, format: .percent.scale(1).precision(.fractionLength(0)))
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(Color.pageBackground)
                                 .minimumScaleFactor(0.7)
