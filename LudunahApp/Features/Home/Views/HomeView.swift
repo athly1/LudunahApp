@@ -2,23 +2,30 @@
 // HomeView.swift - الشاشة الرئيسية في لُدُونه.
 //
 // Contains:
-// - Settings navigation with debug messages.
+// - Settings navigation.
 // - Energy level check-in.
-// - Daily challenge cards.
-// - Challenge swapping.
+// - Daily challenge cards based on selected interests.
+// - Challenge swapping for selected interests.
 // - Instructions sheet.
 // - Completion status.
 //
 // Used by: RootView, AppRouter.
 //
-// Learn: @Environment, @State, NavigationStack,
-//        Button, overlay, onChange.
+// Learn: @Environment, @State, Button,
+//        conditional views, overlay, onChange.
 
 import SwiftUI
 
 struct HomeView: View {
 
+    // MARK: - Environment
+
     @Environment(AppRouter.self) private var appRouter
+
+    // قراءة الاهتمامات المختارة من الإعدادات
+    @Environment(AppState.self) private var appState
+
+    // MARK: - State
 
     @State private var energyValue = 50
 
@@ -31,6 +38,8 @@ struct HomeView: View {
     // رسائل الخطأ
     @State private var showSwapError = false
     @State private var swapErrorMessage = ""
+
+    // MARK: - Body
 
     var body: some View {
 
@@ -71,138 +80,169 @@ struct HomeView: View {
                 Text("تحدياتك")
                     .font(.title1Heading)
                     .foregroundStyle(Color.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
 
                 // MARK: - Art Challenge
 
-                DailyChallengeCard(
-                    title: alternateActivities[1]?.title
-                        ?? "التكوين البصري الصامت",
+                // عرض الفن فقط إذا اختاره المستخدم
+                if appState.selectedInterests.contains(.art) {
 
-                    category: "الفن السعودي",
+                    DailyChallengeCard(
+                        title: alternateActivities[1]?.title
+                            ?? "التكوين البصري الصامت",
 
-                    minutes: alternateActivities[1]?.durationMin ?? 5,
+                        category: "الفن السعودي",
 
-                    isCompleted: appRouter.completedInterests.contains(.art),
+                        minutes: alternateActivities[1]?.durationMin ?? 5,
 
-                    iconName: "artLudunah",
+                        isCompleted: appRouter.completedInterests.contains(.art),
 
-                    iconBackground: Color.challengeArtBadge,
+                        iconName: "artLudunah",
 
-                    onSwap: {
-                        swapChallenge(
-                            id: 1,
-                            interest: .art,
-                            originalTitle: "التكوين البصري الصامت"
-                        )
-                    },
+                        iconBackground: Color.challengeArtBadge,
 
-                    onTap: {
-                        showInstructions(
-                            id: 1,
-                            interest: .art,
-                            image: "artLudunah",
-                            defaultTitle: "التكوين البصري الصامت"
-                        )
-                    }
-                )
+                        onSwap: {
+                            swapChallenge(
+                                id: 1,
+                                interest: .art,
+                                originalTitle: "التكوين البصري الصامت"
+                            )
+                        },
+
+                        onTap: {
+                            showInstructions(
+                                id: 1,
+                                interest: .art,
+                                image: "artLudunah",
+                                defaultTitle: "التكوين البصري الصامت"
+                            )
+                        }
+                    )
+                }
 
                 // MARK: - Gaming Challenge
 
-                DailyChallengeCard(
-                    title: alternateActivities[2]?.title
-                        ?? "خريطة اللعبة في رأسك",
+                // عرض الألعاب فقط إذا اختارها المستخدم
+                if appState.selectedInterests.contains(.gaming) {
 
-                    category: "الرياضات الإلكترونية",
+                    DailyChallengeCard(
+                        title: alternateActivities[2]?.title
+                            ?? "خريطة اللعبة في رأسك",
 
-                    minutes: alternateActivities[2]?.durationMin ?? 5,
+                        category: "الرياضات الإلكترونية",
 
-                    isCompleted: appRouter.completedInterests.contains(.gaming),
+                        minutes: alternateActivities[2]?.durationMin ?? 5,
 
-                    iconName: "GameLudunah",
+                        isCompleted: appRouter.completedInterests.contains(.gaming),
 
-                    iconBackground: Color.challengeGamingBadge,
+                        iconName: "GameLudunah",
 
-                    onSwap: {
-                        swapChallenge(
-                            id: 2,
-                            interest: .gaming,
-                            originalTitle: "خريطة اللعبة في رأسك"
-                        )
-                    },
+                        iconBackground: Color.challengeGamingBadge,
 
-                    onTap: {
-                        showInstructions(
-                            id: 2,
-                            interest: .gaming,
-                            image: "GameLudunah",
-                            defaultTitle: "خريطة اللعبة في رأسك"
-                        )
-                    }
-                )
+                        onSwap: {
+                            swapChallenge(
+                                id: 2,
+                                interest: .gaming,
+                                originalTitle: "خريطة اللعبة في رأسك"
+                            )
+                        },
+
+                        onTap: {
+                            showInstructions(
+                                id: 2,
+                                interest: .gaming,
+                                image: "GameLudunah",
+                                defaultTitle: "خريطة اللعبة في رأسك"
+                            )
+                        }
+                    )
+                }
 
                 // MARK: - Sport Challenge
 
-                DailyChallengeCard(
-                    title: alternateActivities[3]?.title
-                        ?? "الجدران جزء من اللعبة",
+                // عرض الرياضة فقط إذا اختارها المستخدم
+                if appState.selectedInterests.contains(.sport) {
 
-                    category: "كرة القدم",
+                    DailyChallengeCard(
+                        title: alternateActivities[3]?.title
+                            ?? "الجدران جزء من اللعبة",
 
-                    minutes: alternateActivities[3]?.durationMin ?? 8,
+                        category: "كرة القدم",
 
-                    isCompleted: appRouter.completedInterests.contains(.sport),
+                        minutes: alternateActivities[3]?.durationMin ?? 8,
 
-                    iconName: "SportLudunah",
+                        isCompleted: appRouter.completedInterests.contains(.sport),
 
-                    iconBackground: Color.challengeSportBadge,
+                        iconName: "SportLudunah",
 
-                    onSwap: {
-                        swapChallenge(
-                            id: 3,
-                            interest: .sport,
-                            originalTitle: "الجدران جزء من اللعبة"
-                        )
-                    },
+                        iconBackground: Color.challengeSportBadge,
 
-                    onTap: {
-                        showInstructions(
-                            id: 3,
-                            interest: .sport,
-                            image: "SportLudunah",
-                            defaultTitle: "الجدران جزء من اللعبة"
-                        )
-                    }
-                )
+                        onSwap: {
+                            swapChallenge(
+                                id: 3,
+                                interest: .sport,
+                                originalTitle: "الجدران جزء من اللعبة"
+                            )
+                        },
+
+                        onTap: {
+                            showInstructions(
+                                id: 3,
+                                interest: .sport,
+                                image: "SportLudunah",
+                                defaultTitle: "الجدران جزء من اللعبة"
+                            )
+                        }
+                    )
+                }
 
             }
             .padding(Spacing.pageMargin)
         }
+
+        // MARK: - Design System
+
         .background(Color.pageBackground.ignoresSafeArea())
         .environment(\.layoutDirection, .rightToLeft)
         .toolbar(.hidden, for: .navigationBar)
 
         // MARK: - Energy Changes
 
-        .onChange(of: EnergyLevel.from(value: energyValue)) { _, _ in
+        .onChange(
+            of: EnergyLevel.from(value: energyValue)
+        ) { _, _ in
 
-            swapChallenge(
-                id: 1,
-                interest: .art,
-                originalTitle: "التكوين البصري الصامت"
-            )
+            // تبديل تحديات الاهتمامات المختارة فقط
 
-            swapChallenge(
-                id: 2,
-                interest: .gaming,
-                originalTitle: "خريطة اللعبة في رأسك"
-            )
+            if appState.selectedInterests.contains(.art) {
 
-            swapChallenge(
-                id: 3,
-                interest: .sport,
-                originalTitle: "الجدران جزء من اللعبة"
-            )
+                swapChallenge(
+                    id: 1,
+                    interest: .art,
+                    originalTitle: "التكوين البصري الصامت"
+                )
+            }
+
+            if appState.selectedInterests.contains(.gaming) {
+
+                swapChallenge(
+                    id: 2,
+                    interest: .gaming,
+                    originalTitle: "خريطة اللعبة في رأسك"
+                )
+            }
+
+            if appState.selectedInterests.contains(.sport) {
+
+                swapChallenge(
+                    id: 3,
+                    interest: .sport,
+                    originalTitle: "الجدران جزء من اللعبة"
+                )
+            }
         }
 
         // MARK: - Instructions Sheet
@@ -298,7 +338,7 @@ struct HomeView: View {
         defaultTitle: String
     ) -> Activity? {
 
-        // 1. النشاط البديل
+        // 1. النشاط البديل بعد التبديل
         if let swapped = alternateActivities[id] {
             return swapped
         }
@@ -311,7 +351,9 @@ struct HomeView: View {
         }
 
         // 3. أول نشاط يناسب مستوى الطاقة
-        let step = EnergyLevel.from(value: energyValue).activityStep
+        let step = EnergyLevel
+            .from(value: energyValue)
+            .activityStep
 
         return all.first(where: { $0.type == step })
     }
@@ -381,4 +423,5 @@ struct ChallengeSheetItem: Identifiable {
 
     HomeView()
         .environment(AppRouter())
+        .environment(AppState())
 }
