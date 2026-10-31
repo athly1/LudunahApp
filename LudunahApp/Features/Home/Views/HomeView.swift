@@ -235,11 +235,13 @@ struct HomeView: View {
 
         .task {
             refreshWeeklyProgress()
+            appRouter.refreshCompletedInterests()
         }
 
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
                 refreshWeeklyProgress()
+                appRouter.refreshCompletedInterests()
             }
         }
 
@@ -339,6 +341,7 @@ struct HomeView: View {
         }
 
         refreshWeeklyProgress()
+        appRouter.refreshCompletedInterests()
     }
 
     // MARK: - Open Instructions
@@ -411,32 +414,21 @@ struct HomeView: View {
             let activities = try ContentService
                 .loadActivities(for: interest)
                 .filter { $0.type == requiredStep }
-
             let currentTitle = alternateActivities[id]?.title
-                ?? originalTitle
-
+            ?? originalTitle
             let alternatives = activities.filter {
                 $0.title != currentTitle
             }
-
             guard let selected = alternatives.randomElement() else {
                 swapErrorMessage =
-                    "لا يوجد تحدٍ بديل مناسب لمستوى طاقتك في هذه الفئة."
-
+                "لا يوجد تحدٍ بديل مناسب لمستوى طاقتك في هذه الفئة."
                 showSwapError = true
                 return
             }
-
-            alternateActivities[id] = selected
-
-            // Current completion behavior is preserved.
-            // We will fix this in the daily completion step.
-            appRouter.resetCompletion(interest)
-
-        } catch {
+            alternateActivities[id] = selected }
+            catch {
             swapErrorMessage =
                 "تعذّر تحميل الأنشطة. تحققي من ملفات JSON."
-
             showSwapError = true
         }
     }

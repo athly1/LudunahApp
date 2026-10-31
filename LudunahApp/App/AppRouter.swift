@@ -21,7 +21,7 @@ enum AppRoute: Hashable {
 final class AppRouter {
 
     var path = NavigationPath()
-
+    private let storage = StorageService()
     // التحديات التي انتهى المستخدم منها
     private(set) var completedInterests: Set<Interest> = []
 
@@ -38,7 +38,14 @@ final class AppRouter {
 
     // يزيد كل ما انتهى المستخدم من نشاط (يستخدمه InstructionsSheet لإغلاق الشاشة)
     private(set) var finishedActivityCount = 0
+    init() {
+        refreshCompletedInterests()
+    }
 
+    /// Loads today's completed interests from local storage.
+    func refreshCompletedInterests() {
+        completedInterests = storage.completedInterests()
+    }
     func popToRoot() {
         path = NavigationPath()
         finishedActivityCount += 1
