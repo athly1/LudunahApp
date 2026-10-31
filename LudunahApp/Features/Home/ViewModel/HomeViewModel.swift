@@ -1,57 +1,78 @@
-// HomeViewModel.swift - logic for the Home screen.
-//
-// Contains:
-// - An @Observable class with: energy level, selected interest for the sheet, weekly progress.
-// - Methods: select energy, build today's task, refresh progress.
-//
-// Used by: HomeView.
 
 import Foundation
 import Observation
 
+// MARK: - Home ViewModel
+
+/// Manages challenge selection based on the user's interests
+/// and current energy level.
+///
+/// HomeView handles presentation, while this ViewModel
+/// selects activities and manages challenge replacement.
 @Observable
 final class HomeViewModel {
 
+    // MARK: - Energy
+
+    /// User-selected energy value (0...100).
     var energyValue: Int = 50
 
-    private(set) var selectedActivities: [Interest: Activity] = [:]
-    private(set) var errorMessage: String?
-
+    /// Energy category derived from the current value.
     var energyLevel: EnergyLevel {
         EnergyLevel.from(value: energyValue)
     }
 
-    // تحميل نشاط مناسب لكل اهتمام مختار
+    // MARK: - Challenge State
+
+    /// Currently selected activity for each interest.
+    private(set) var selectedActivities: [Interest: Activity] = [:]
+
+    /// Latest error encountered while loading activities.
+    private(set) var errorMessage: String?
+
+    // MARK: - Challenge Loading
+
+    /// Selects a random activity matching the current energy level
+    /// for each selected interest.
+    ///
+    /// Existing selections are replaced whenever this method runs.
     func loadChallenges(for interests: Set<Interest>) {
-        var activities: [Interest: Activity] = [:]
+        var newSelections: [Interest: Activity] = [:]
         errorMessage = nil
 
         for interest in interests {
             do {
-                let available = try ContentService
+                let matchingActivities = try ContentService
                     .loadActivities(for: interest)
                     .filter { $0.type == energyLevel.activityStep }
 
-                if let selected = available.randomElement() {
-                    activities[interest] = selected
+                if let activity = matchingActivities.randomElement() {
+                    newSelections[interest] = activity
                 }
             } catch {
                 errorMessage = "تعذّر تحميل أنشطة \(interest.title)."
             }
         }
 
-        selectedActivities = activities
+        selectedActivities = newSelections
     }
 
-    // استرجاع النشاط الحالي لاهتمام معين
+    // MARK: - Challenge Access
+
+    /// Returns the selected activity for an interest.
     func activity(for interest: Interest) -> Activity? {
         selectedActivities[interest]
     }
 
-    // تبديل النشاط مع الحفاظ على مستوى الطاقة
+    // MARK: - Challenge Replacement
+
+    /// Replaces the current activity with a different activity
+    /// from the same interest and energy category.
+    ///
+    /// Returns false if no alternative exists or loading fails.
     @discardableResult
     func swapChallenge(for interest: Interest) -> Bool {
-        guard let current = selectedActivities[interest] else {
+        guard let currentActivity = selectedActivities[interest] else {
             return false
         }
 
@@ -60,14 +81,14 @@ final class HomeViewModel {
                 .loadActivities(for: interest)
                 .filter {
                     $0.type == energyLevel.activityStep &&
-                    $0.id != current.id
+                    $0.id != currentActivity.id
                 }
 
-            guard let next = alternatives.randomElement() else {
+            guard let replacement = alternatives.randomElement() else {
                 return false
             }
 
-            selectedActivities[interest] = next
+            selectedActivities[interest] = replacement
             errorMessage = nil
             return true
 
