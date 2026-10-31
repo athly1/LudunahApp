@@ -1,18 +1,8 @@
-// WeeklyProgressChart.swift - completed activities for the last 7 days.
-//
-// Contains:
-// - A bar chart: day on the x axis, count on the y axis.
-// - Input: list of day + count values from HomeViewModel.
-// - Empty state when there is no progress.
-//
-// Used by: HomeView.
-// Learn: Swift Charts (Chart, BarMark)
-
-
 
 import SwiftUI
 
-/// Displays real activity completion counts for the last seven days.
+/// Displays activity completion counts for the last seven days.
+/// Uses custom SwiftUI bars and shows the count for each day.
 struct WeeklyProgressChart: View {
 
     let counts: [Int]
@@ -71,7 +61,7 @@ struct WeeklyProgressChart: View {
                 .foregroundStyle(Color.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(alignment: .bottom, spacing: 12) {
+            HStack(alignment: .bottom, spacing: 8) {
                 ForEach(days) { day in
                     dayColumn(for: day)
                 }
@@ -89,11 +79,8 @@ struct WeeklyProgressChart: View {
 
     // MARK: - Day Column
 
-    private func dayColumn(
-        for day: DayProgress
-    ) -> some View {
-
-        VStack(spacing: 12) {
+    private func dayColumn(for day: DayProgress) -> some View {
+        VStack(spacing: 8) {
 
             Spacer(minLength: 0)
 
@@ -102,6 +89,10 @@ struct WeeklyProgressChart: View {
                     .fill(Color.textPrimary.opacity(0.08))
                     .frame(height: 7)
             } else {
+                Text("\(day.count)")
+                    .font(.caption)
+                    .foregroundStyle(Color.textPrimary)
+
                 RoundedRectangle(cornerRadius: 12)
                     .fill(
                         Color(
@@ -110,14 +101,14 @@ struct WeeklyProgressChart: View {
                             blue: 0.89
                         )
                     )
-                    .frame(
-                        height: barHeight(for: day.count)
-                    )
+                    .frame(height: barHeight(for: day.count))
             }
 
             Text(shortDayName(for: day.date))
-                .font(.supTitle2)
+                .font(.caption)
                 .foregroundStyle(Color.textPrimary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
                 .frame(maxWidth: .infinity)
         }
         .frame(maxWidth: .infinity)
@@ -130,15 +121,12 @@ struct WeeklyProgressChart: View {
     // MARK: - Bar Height
 
     private func barHeight(for count: Int) -> CGFloat {
-        let maxHeight: CGFloat = 130
+        let maxHeight: CGFloat = 110
         let minHeight: CGFloat = 24
 
         let ratio = CGFloat(count) / CGFloat(maximumCount)
 
-        return max(
-            minHeight,
-            maxHeight * ratio
-        )
+        return max(minHeight, maxHeight * ratio)
     }
 
     // MARK: - Day Names
@@ -147,13 +135,13 @@ struct WeeklyProgressChart: View {
         let calendar = Calendar.current
 
         switch calendar.component(.weekday, from: date) {
-        case 1: return "أ"  // Sunday
-        case 2: return "إ"  // Monday
-        case 3: return "ث"  // Tuesday
-        case 4: return "ر"  // Wednesday
-        case 5: return "خ"  // Thursday
-        case 6: return "ج"  // Friday
-        case 7: return "س"  // Saturday
+        case 1: return "أحد"
+        case 2: return "إثن"
+        case 3: return "ثلا"
+        case 4: return "أرب"
+        case 5: return "خمي"
+        case 6: return "جمع"
+        case 7: return "سبت"
         default: return ""
         }
     }
