@@ -1,13 +1,22 @@
 
 import Foundation
 
+// MARK: - Storage Service
+
 /// Manages local persistence for onboarding, interests,
-/// sport training plans, and activity progress.
+/// sport training plans, and activity completion history.
+///
+/// StorageService is the single place responsible for
+/// reading and writing these values using UserDefaults.
 final class StorageService {
 
-    // MARK: - Properties
+    // MARK: - Dependencies
 
-    private let defaults = UserDefaults.standard
+    private let defaults: UserDefaults
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+    }
 
     // MARK: - Storage Keys
 
@@ -20,117 +29,69 @@ final class StorageService {
 
     // MARK: - Onboarding
 
-    /// Saves the user's onboarding completion status.
+    /// Persists the onboarding completion status.
     func saveOnboardingCompleted(_ completed: Bool) {
         defaults.set(completed, forKey: Keys.onboardingCompleted)
     }
 
-    /// Returns whether onboarding has been completed.
+    /// Returns whether the user has completed onboarding.
     func loadOnboardingCompleted() -> Bool {
         defaults.bool(forKey: Keys.onboardingCompleted)
     }
 
     // MARK: - Interests
 
-    /// Saves the user's selected interests.
+    /// Persists the user's selected interests.
     func saveSelectedInterests(_ interests: Set<Interest>) {
-        guard let data = try? JSONEncoder().encode(interests) else {
-            return
-        }
-
-        defaults.set(data, forKey: Keys.selectedInterests)
+        save(interests, forKey: Keys.selectedInterests)
     }
 
-    /// Loads the user's selected interests.
+    /// Loads selected interests or returns an empty set.
     func loadSelectedInterests() -> Set<Interest> {
-        guard let data = defaults.data(forKey: Keys.selectedInterests) else {
-            return []
-        }
-
-        return (try? JSONDecoder().decode(
-            Set<Interest>.self,
-            from: data
-        )) ?? []
+        load(Set<Interest>.self, forKey: Keys.selectedInterests) ?? []
     }
 
-    // MARK: - Sport Create Plans
+    // MARK: - Sport Training Plans
 
-    /// Saves a new sport training plan.
+    /// Adds a training plan without removing existing plans.
     func saveSportCreatePlan(_ plan: SportCreateModel) {
         var plans = loadSportCreatePlans()
         plans.append(plan)
 
-        guard let data = try? JSONEncoder().encode(plans) else {
-            return
-        }
-
-        defaults.set(data, forKey: Keys.sportCreatePlans)
+        save(plans, forKey: Keys.sportCreatePlans)
     }
 
     /// Loads all saved sport training plans.
     func loadSportCreatePlans() -> [SportCreateModel] {
-        guard let data = defaults.data(forKey: Keys.sportCreatePlans) else {
-            return []
-        }
-
-        return (try? JSONDecoder().decode(
-            [SportCreateModel].self,
-            from: data
-        )) ?? []
+        load([SportCreateModel].self, forKey: Keys.sportCreatePlans) ?? []
     }
 
     // MARK: - Activity Progress
 
-    /// Records a completed activity for the given interest.
+    /// Records a new activity completion for the given interest.
+    ///
+    /// Every completion is stored as a separate record.
     func recordCompletedActivity(interest: Interest) {
         var progress = loadActivityProgress()
+        progress.append(ActivityProgress(interest: interest))
 
-        let newRecord = ActivityProgress(interest: interest)
-        progress.append(newRecord)
-
-        saveActivityProgress(progress)
+        save(progress, forKey: Keys.activityProgress)
     }
 
-    /// Persists the activity progress history.
-    private func saveActivityProgress(_ progress: [ActivityProgress]) {
-        guard let data = try? JSONEncoder().encode(progress) else {
-            return
-        }
-
-        defaults.set(data, forKey: Keys.activityProgress)
-    }
-
-    /// Loads the complete activity progress history.
+    /// Loads the complete activity completion history.
     func loadActivityProgress() -> [ActivityProgress] {
-        guard let data = defaults.data(forKey: Keys.activityProgress) else {
-            return []
-        }
-
-        return (try? JSONDecoder().decode(
-            [ActivityProgress].self,
-            from: data
-        )) ?? []
+        load([ActivityProgress].self, forKey: Keys.activityProgress) ?? []
     }
 
-    /// Returns the interests completed on the specified day.
+    /// Returns distinct interests completed on a given day.
     ///
-    /// Each interest appears only once, even if multiple
-    /// activities were completed for that interest.
-    ///
-    /// - Parameters:
-    ///   - date: The day to check. Defaults to today.
-    ///   - calendar: Calendar used for day comparison.
-    /// - Returns: A set of interests completed on that day.
+    /// Multiple completions for the same interest count as one.
     func completedInterests(
         on date: Date = Date(),
         calendar: Calendar = .current
     ) -> Set<Interest> {
-        let progress = loadActivityProgress()
-
-        let interests = progress
-            .filter {
-                calendar.isDate($0.date, inSameDayAs: date)
-            }
+        let interests = loadActivityProgress()
+            .filter { calendar.isDate($0.date, inSameDayAs: date) }
             .map(\.interest)
 
         return Set(interests)
@@ -138,8 +99,10 @@ final class StorageService {
 
     // MARK: - Weekly Progress
 
-    /// Returns completed activity counts for the last seven days.
-    /// The oldest day is first, and today is last.
+    /// Returns the number of activities completed on each
+    /// of the last seven calendar days, oldest day first.
+    ///
+    /// Multiple completions on the same day are counted separately.
     func weeklyCompletedCounts() -> [Int] {
         let calendar = Calendar.current
         let today = Date()
@@ -164,16 +127,42 @@ final class StorageService {
 
     // MARK: - Reset
 
-    /// Removes activity progress without affecting other data.
+    /// Removes activity history without affecting other saved data.
     func resetProgress() {
         defaults.removeObject(forKey: Keys.activityProgress)
     }
 
-    /// Removes all data managed by StorageService.
+    /// Clears all values managed by this service.
     func resetEverything() {
         defaults.removeObject(forKey: Keys.onboardingCompleted)
         defaults.removeObject(forKey: Keys.selectedInterests)
         defaults.removeObject(forKey: Keys.activityProgress)
         defaults.removeObject(forKey: Keys.sportCreatePlans)
+    }
+
+    // MARK: - Private Persistence Helpers
+
+    /// Encodes and saves a Codable value.
+    private func save<T: Encodable>(
+        _ value: T,
+        forKey key: String
+    ) {
+        guard let data = try? JSONEncoder().encode(value) else {
+            return
+        }
+
+        defaults.set(data, forKey: key)
+    }
+
+    /// Loads and decodes a Codable value.
+    private func load<T: Decodable>(
+        _ type: T.Type,
+        forKey key: String
+    ) -> T? {
+        guard let data = defaults.data(forKey: key) else {
+            return nil
+        }
+
+        return try? JSONDecoder().decode(type, from: data)
     }
 }
