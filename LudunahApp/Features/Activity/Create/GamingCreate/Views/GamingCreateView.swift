@@ -1,30 +1,37 @@
+
 import SwiftUI
 
+/// Displays a gaming Create activity and its instructions.
 struct gamingCreateView: View {
 
-    @StateObject private var viewModel: GamingCreateViewModel
+    // MARK: - State
 
-    // activityID: النشاط المختار من الهوم
+    @StateObject private var viewModel: GamingCreateViewModel
+    @State private var didFinish = false
+
+    // MARK: - Environment
+
+    @Environment(\.dismiss) private var dismiss
+
+    // MARK: - Initialization
+
     init(activityID: String? = nil) {
         _viewModel = StateObject(
             wrappedValue: GamingCreateViewModel(activityID: activityID)
         )
     }
 
-    //Close the page
-    @Environment(\.dismiss) private var dismiss
-    
+    // MARK: - Body
+
     var body: some View {
-
         ZStack {
-
             Color.pageBackground
                 .ignoresSafeArea()
 
-            // The main page is a VStack
             VStack(spacing: 0) {
 
-                // MARK: - header: back button + title + chips
+                // MARK: Header
+
                 ActivityHeader(
                     interestTitle: "الألعاب الإلكترونية",
                     interestColor: .gamingChip,
@@ -37,35 +44,41 @@ struct gamingCreateView: View {
                 .padding(.horizontal, Spacing.pageMargin)
                 .padding(.bottom, Spacing.pageMargin)
 
-                // MARK: - Title of today's Create
+                // MARK: Activity Title
+
                 Text(viewModel.title)
                     .font(.supTitle1)
                     .foregroundStyle(Color.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
                     .padding(.horizontal, Spacing.pageMargin)
                     .padding(.bottom, Spacing.space12)
 
-                // MARK: - Centered Illustration
+                // MARK: Illustration
 
-                // resizable() allows the image to change size.
-                // scaledToFit() preserves its original proportions.
-                // A full-width frame with center alignment centers the image.
                 Image(.gameIlllustration1)
                     .resizable()
                     .scaledToFit()
                     .frame(width: 130)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .center
+                    )
                     .padding(.bottom, Spacing.space16)
                     .padding(.top, Spacing.space16)
 
-                // MARK: - Materials Needed
+                // MARK: Materials
 
-                CreateMaterialsView(materials: viewModel.materials)
-                    .padding(.bottom, Spacing.space32)
+                CreateMaterialsView(
+                    materials: viewModel.materials
+                )
+                .padding(.bottom, Spacing.space32)
 
-                // MARK: - Steps to Create
+                // MARK: Instructions
+
                 ScrollView(showsIndicators: false) {
-
                     DoStepsCard(
                         howTo: viewModel.steps,
                         stepRingColor: Color.mapSequers
@@ -73,67 +86,90 @@ struct gamingCreateView: View {
                     .padding(.horizontal, Spacing.pageMargin)
                     .padding(.bottom, Spacing.space32)
                 }
-                
-                
+
                 Spacer(minLength: 0)
-                
-                // MARK: - Done Button
+
+                // MARK: Finish Button
+
                 PrimaryButton(title: "انتهيت") {
-                    dismiss()
+                    finishActivity()
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .frame(
+            maxWidth: .infinity,
+            maxHeight: .infinity,
+            alignment: .leading
+        )
         .environment(\.layoutDirection, .rightToLeft)
+    }
 
+    // MARK: - Completion
+
+    /// Records the activity once and closes the screen.
+    private func finishActivity() {
+        guard !didFinish else {
+            return
+        }
+
+        didFinish = true
+
+        StorageService().recordCompletedActivity(
+            interest: .gaming
+        )
+
+        dismiss()
     }
 }
 
+// MARK: - Materials Component
 
-// MARK: -  Shows the materials needed for a Create activity.
+/// Displays the materials needed for a Create activity.
 struct CreateMaterialsView: View {
 
-    // Materials supplied by the ViewModel.
     let materials: [String]
 
-    // Select an icon for each material.
-    private func materialIcon(for material: String) -> String {
+    // MARK: - Material Icons
 
+    private func materialIcon(for material: String) -> String {
         switch material {
         case "ورقة":
             return "doc.text"
+
         case "قلم":
             return "pencil.tip"
+
         case "مساحة اللعب":
             return "dpad"
+
         default:
             return "sparkles"
         }
     }
 
+    // MARK: - Body
+
     var body: some View {
-
-        VStack(alignment: .leading, spacing: Spacing.space12) {
-
-            // MARK: - Title
-
+        VStack(
+            alignment: .leading,
+            spacing: Spacing.space12
+        ) {
             Text("جهّز أدواتك")
                 .font(.supTitle2)
                 .foregroundStyle(Color.textPrimary)
 
-            // MARK: - Materials
             HStack(spacing: 12) {
-
                 ForEach(materials, id: \.self) { material in
-
                     VStack(spacing: 8) {
 
-                        Image(systemName: materialIcon(for: material))
-                            .font(.title2)
-                            .foregroundStyle(Color.mapSequers)
-                            .frame(width: 32, height: 32)
-                            .background(Color.gamingTint)
-                            .clipShape(Circle())
+                        Image(
+                            systemName: materialIcon(for: material)
+                        )
+                        .font(.title2)
+                        .foregroundStyle(Color.mapSequers)
+                        .frame(width: 32, height: 32)
+                        .background(Color.gamingTint)
+                        .clipShape(Circle())
 
                         Text(material)
                             .font(.caption)
@@ -142,14 +178,24 @@ struct CreateMaterialsView: View {
                             .lineLimit(2)
                             .minimumScaleFactor(0.85)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 34, alignment: .top)
+                            .frame(
+                                height: 34,
+                                alignment: .top
+                            )
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
                     .padding(.horizontal, 6)
                     .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 24))
-                    .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 8)
+                    .clipShape(
+                        RoundedRectangle(cornerRadius: 24)
+                    )
+                    .shadow(
+                        color: .black.opacity(0.12),
+                        radius: 12,
+                        x: 0,
+                        y: 8
+                    )
                 }
             }
         }
@@ -157,10 +203,11 @@ struct CreateMaterialsView: View {
     }
 }
 
+// MARK: - Preview Support
 
-
-/// TEST ONLY
+/// Preview-only navigation container.
 struct TestCreateNavigation: View {
+
     var body: some View {
         NavigationStack {
             NavigationLink("Test Create Activity") {
@@ -172,8 +219,5 @@ struct TestCreateNavigation: View {
 }
 
 #Preview {
-
     TestCreateNavigation()
-        
 }
-

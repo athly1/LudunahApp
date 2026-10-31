@@ -258,19 +258,21 @@ struct gamingDoView: View {
     }
 
     // MARK: - Finish Activity
-
     private func finishActivity() {
-
         guard hasStarted && !isDone else {
             return
         }
 
         isDone = true
-
         timerEngine.pause()
+
+        StorageService().recordCompletedActivity(
+            interest: .gaming
+        )
 
         dismiss()
     }
+
 }
 
 // MARK: - Preview

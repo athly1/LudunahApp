@@ -1,95 +1,91 @@
+
 import SwiftUI
 
+/// Displays a gaming learning activity as a sequence of cards.
 struct gameLearnView: View {
 
-    //linking ViewModel, with it $ is used when using a projected value where binding happens in 2 way, where its binded with a published property
-    
-    //Note Use Use the $ when the var is @Binding when where the child view needs to change a value owned by its parent.
-    @StateObject private var viewModel: GamingLearnViewModel
+    // MARK: - State
 
-    // activityID: النشاط المختار من الهوم
+    @StateObject private var viewModel: GamingLearnViewModel
+    @State private var didFinish = false
+
+    // MARK: - Environment
+
+    @Environment(\.dismiss) private var dismiss
+
+    // MARK: - Initialization
+
     init(activityID: String? = nil) {
         _viewModel = StateObject(
             wrappedValue: GamingLearnViewModel(activityID: activityID)
         )
     }
-    
-    //Exit button
-    @Environment(\.dismiss) private var dismiss
-    
-    var body: some View {
 
+    // MARK: - Body
+
+    var body: some View {
         ZStack {
             Color.pageBackground
                 .ignoresSafeArea()
 
-            // The main page is a VStack
-            VStack(alignment: .leading,spacing:0) {
+            VStack(alignment: .leading, spacing: 0) {
 
-                // MARK: - Fixed Header, Progress, and Title
+                // MARK: Header
 
-                // Shared header: back button + title + chips
                 ActivityHeader(
                     interestTitle: "الألعاب الإلكترونية",
                     interestColor: .gamingChip,
                     stepTitle: "تعلّم",
                     stepIcon: "lightbulb.max",
                     onBack: {
-                        if viewModel.index > 0 {
-                            withAnimation {
-                                viewModel.index -= 1
-                            } }
-                            else {
-                                dismiss()
-                            }
-                        }
+                        previousCardOrDismiss()
+                    }
                 )
                 .padding(.horizontal, Spacing.pageMargin)
 
-                // MARK: - Progress follows the index owned by this view.
+                // MARK: Progress
+
                 ProgressView(
-                    value: viewModel.currentProgress,
-                    total: Double(viewModel.totalCards)
+                    value: viewModel.totalCards == 0
+                        ? 0
+                        : viewModel.currentProgress,
+                    total: Double(max(viewModel.totalCards, 1))
                 )
-                .scaleEffect(y: 1.5) // Make the bar a bit thicker
+                .scaleEffect(y: 1.5)
                 .tint(.actionPrimary)
                 .padding(.horizontal, Spacing.pageMargin)
                 .padding(.top, Spacing.pageMargin)
 
-                // MARK: - Title of today's learning topic
+                // MARK: Title
+
                 Text(viewModel.title)
                     .font(.title1Heading)
                     .foregroundStyle(Color.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .frame(
+                        maxWidth: .infinity,
+                        alignment: .leading
+                    )
                     .padding(.horizontal, Spacing.pageMargin)
                     .padding(.top, Spacing.chipHeight)
                     .padding(.bottom, Spacing.headerTitleOffset + 40)
 
-                // MARK: - Card Area
-                
-                // CardsFlowView contains the ScrollView
+                // MARK: Learning Cards
+
                 CardsFlowView(
                     iconColor: .mapSequers,
                     iconActivityBackground: .gamingTint,
                     cards: viewModel.cards,
                     index: viewModel.index,
                     onNext: {
-                        // Update the parent-owned index.
-                        // The progress bar updates automatically.
-                            if viewModel.index < viewModel.totalCards - 1{
-                                withAnimation {
-                                    viewModel.index += 1
-                                }
-                            }
+                        nextCard()
                     }
                 )
-                // MARK: - Bottom End Button
 
-                //the button outside the ScrollView.
-                // It stays at the bottom and takes the available width.
+                // MARK: Finish
+
                 if viewModel.isLastCard {
-                    PrimaryButton(title: "انتهيت",) {
-                        dismiss()
+                    PrimaryButton(title: "انتهيت") {
+                        finishActivity()
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, Spacing.pageMargin)
@@ -99,8 +95,46 @@ struct gameLearnView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        // Keep the Arabic layout direction.
         .environment(\.layoutDirection, .rightToLeft)
+    }
+
+    // MARK: - Navigation
+
+    private func previousCardOrDismiss() {
+        guard viewModel.index > 0 else {
+            dismiss()
+            return
+        }
+
+        withAnimation {
+            viewModel.index -= 1
+        }
+    }
+
+    private func nextCard() {
+        guard viewModel.index < viewModel.totalCards - 1 else {
+            return
+        }
+
+        withAnimation {
+            viewModel.index += 1
+        }
+    }
+
+    // MARK: - Completion
+
+    private func finishActivity() {
+        guard !didFinish, viewModel.isLastCard else {
+            return
+        }
+
+        didFinish = true
+
+        StorageService().recordCompletedActivity(
+            interest: .gaming
+        )
+
+        dismiss()
     }
 }
 
