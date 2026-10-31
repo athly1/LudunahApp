@@ -1,20 +1,4 @@
 
-// HomeView.swift - الشاشة الرئيسية في لُدُونه.
-//
-// Contains:
-// - Settings navigation.
-// - Energy level check-in.
-// - Daily challenge cards based on selected interests.
-// - Challenge swapping for selected interests.
-// - Instructions sheet.
-// - Completion status.
-//
-// Used by: RootView, AppRouter.
-//
-// Learn: @Environment, @State, Button,
-//        conditional views, overlay, onChange.
-
-
 import SwiftUI
 
 /// The main screen of Ludunah.
@@ -28,8 +12,7 @@ struct HomeView: View {
 
     // MARK: - State
 
-    @State private var energyValue = 50
-    @State private var alternateActivities: [Int: Activity] = [:]
+    @State private var viewModel = HomeViewModel()
     @State private var selectedChallenge: ChallengeSheetItem?
 
     @State private var showSwapError = false
@@ -40,6 +23,8 @@ struct HomeView: View {
     // MARK: - Body
 
     var body: some View {
+        @Bindable var model = viewModel
+
         ScrollView {
             Spacer(minLength: -32)
 
@@ -69,7 +54,7 @@ struct HomeView: View {
                 // MARK: - Energy Check-In
 
                 EnergyCheckInView(
-                    energyValue: $energyValue
+                    energyValue: $model.energyValue
                 )
 
                 // MARK: - Challenges Title
@@ -84,38 +69,24 @@ struct HomeView: View {
 
                 // MARK: - Art Challenge
 
-                if appState.selectedInterests.contains(.art) {
+                if appState.selectedInterests.contains(.art),
+                   let activity = viewModel.activity(for: .art) {
 
                     DailyChallengeCard(
-                        title: alternateActivities[1]?.title
-                            ?? "التكوين البصري الصامت",
-
+                        title: activity.title,
                         category: "الفن السعودي",
-
-                        minutes: alternateActivities[1]?.durationMin
-                            ?? 5,
-
+                        minutes: activity.durationMin ?? 5,
                         isCompleted: appRouter.completedInterests
                             .contains(.art),
-
                         iconName: "artLudunah",
-
                         iconBackground: Color.challengeArtBadge,
-
                         onSwap: {
-                            swapChallenge(
-                                id: 1,
-                                interest: .art,
-                                originalTitle: "التكوين البصري الصامت"
-                            )
+                            swapChallenge(for: .art)
                         },
-
                         onTap: {
                             showInstructions(
-                                id: 1,
                                 interest: .art,
-                                image: "artLudunah",
-                                defaultTitle: "التكوين البصري الصامت"
+                                image: "artLudunah"
                             )
                         }
                     )
@@ -123,38 +94,24 @@ struct HomeView: View {
 
                 // MARK: - Gaming Challenge
 
-                if appState.selectedInterests.contains(.gaming) {
+                if appState.selectedInterests.contains(.gaming),
+                   let activity = viewModel.activity(for: .gaming) {
 
                     DailyChallengeCard(
-                        title: alternateActivities[2]?.title
-                            ?? "خريطة اللعبة في رأسك",
-
+                        title: activity.title,
                         category: "الرياضات الإلكترونية",
-
-                        minutes: alternateActivities[2]?.durationMin
-                            ?? 5,
-
+                        minutes: activity.durationMin ?? 5,
                         isCompleted: appRouter.completedInterests
                             .contains(.gaming),
-
                         iconName: "GameLudunah",
-
                         iconBackground: Color.challengeGamingBadge,
-
                         onSwap: {
-                            swapChallenge(
-                                id: 2,
-                                interest: .gaming,
-                                originalTitle: "خريطة اللعبة في رأسك"
-                            )
+                            swapChallenge(for: .gaming)
                         },
-
                         onTap: {
                             showInstructions(
-                                id: 2,
                                 interest: .gaming,
-                                image: "GameLudunah",
-                                defaultTitle: "خريطة اللعبة في رأسك"
+                                image: "GameLudunah"
                             )
                         }
                     )
@@ -162,38 +119,24 @@ struct HomeView: View {
 
                 // MARK: - Sport Challenge
 
-                if appState.selectedInterests.contains(.sport) {
+                if appState.selectedInterests.contains(.sport),
+                   let activity = viewModel.activity(for: .sport) {
 
                     DailyChallengeCard(
-                        title: alternateActivities[3]?.title
-                            ?? "الجدران جزء من اللعبة",
-
+                        title: activity.title,
                         category: "كرة القدم",
-
-                        minutes: alternateActivities[3]?.durationMin
-                            ?? 8,
-
+                        minutes: activity.durationMin ?? 8,
                         isCompleted: appRouter.completedInterests
                             .contains(.sport),
-
                         iconName: "SportLudunah",
-
                         iconBackground: Color.challengeSportBadge,
-
                         onSwap: {
-                            swapChallenge(
-                                id: 3,
-                                interest: .sport,
-                                originalTitle: "الجدران جزء من اللعبة"
-                            )
+                            swapChallenge(for: .sport)
                         },
-
                         onTap: {
                             showInstructions(
-                                id: 3,
                                 interest: .sport,
-                                image: "SportLudunah",
-                                defaultTitle: "الجدران جزء من اللعبة"
+                                image: "SportLudunah"
                             )
                         }
                     )
@@ -218,7 +161,6 @@ struct HomeView: View {
                     )
                 }
                 .padding(.top, Spacing.space16)
-
             }
             .padding(Spacing.pageMargin)
         }
@@ -231,12 +173,17 @@ struct HomeView: View {
         .environment(\.layoutDirection, .rightToLeft)
         .toolbar(.hidden, for: .navigationBar)
 
-        // MARK: - Progress Loading
+        // MARK: - Initial Loading
 
         .task {
+            viewModel.loadChallenges(
+                for: appState.selectedInterests
+            )
             refreshWeeklyProgress()
             appRouter.refreshCompletedInterests()
         }
+
+        // MARK: - App Becomes Active
 
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
@@ -247,33 +194,16 @@ struct HomeView: View {
 
         // MARK: - Energy Changes
 
-        .onChange(
-            of: EnergyLevel.from(value: energyValue)
-        ) { _, _ in
+        .onChange(of: viewModel.energyLevel) { _, _ in
+            viewModel.loadChallenges(
+                for: appState.selectedInterests
+            )
+        }
 
-            if appState.selectedInterests.contains(.art) {
-                swapChallenge(
-                    id: 1,
-                    interest: .art,
-                    originalTitle: "التكوين البصري الصامت"
-                )
-            }
+        // MARK: - Interest Changes
 
-            if appState.selectedInterests.contains(.gaming) {
-                swapChallenge(
-                    id: 2,
-                    interest: .gaming,
-                    originalTitle: "خريطة اللعبة في رأسك"
-                )
-            }
-
-            if appState.selectedInterests.contains(.sport) {
-                swapChallenge(
-                    id: 3,
-                    interest: .sport,
-                    originalTitle: "الجدران جزء من اللعبة"
-                )
-            }
+        .onChange(of: appState.selectedInterests) { _, interests in
+            viewModel.loadChallenges(for: interests)
         }
 
         // MARK: - Instructions Sheet
@@ -347,98 +277,39 @@ struct HomeView: View {
     // MARK: - Open Instructions
 
     private func showInstructions(
-        id: Int,
         interest: Interest,
-        image: String,
-        defaultTitle: String
+        image: String
     ) {
+        guard let activity = viewModel.activity(for: interest) else {
+            return
+        }
+
         withAnimation(.easeInOut(duration: 0.3)) {
             selectedChallenge = ChallengeSheetItem(
                 interest: interest,
                 image: image,
-                activity: currentActivity(
-                    id: id,
-                    interest: interest,
-                    defaultTitle: defaultTitle
-                )
+                activity: activity
             )
         }
-    }
-
-    // MARK: - Current Activity
-
-    private func currentActivity(
-        id: Int,
-        interest: Interest,
-        defaultTitle: String
-    ) -> Activity? {
-
-        // Use the swapped activity, if one exists.
-        if let swapped = alternateActivities[id] {
-            return swapped
-        }
-
-        let all = (
-            try? ContentService.loadActivities(
-                for: interest
-            )
-        ) ?? []
-
-        // Otherwise, find the default challenge.
-        if let match = all.first(
-            where: { $0.title == defaultTitle }
-        ) {
-            return match
-        }
-
-        // Fall back to the current energy level.
-        let step = EnergyLevel
-            .from(value: energyValue)
-            .activityStep
-
-        return all.first { $0.type == step }
     }
 
     // MARK: - Swap Challenge
 
-    private func swapChallenge(
-        id: Int,
-        interest: Interest,
-        originalTitle: String
-    ) {
-        let requiredStep = EnergyLevel
-            .from(value: energyValue)
-            .activityStep
+    private func swapChallenge(for interest: Interest) {
+        let didSwap = viewModel.swapChallenge(for: interest)
 
-        do {
-            let activities = try ContentService
-                .loadActivities(for: interest)
-                .filter { $0.type == requiredStep }
-            let currentTitle = alternateActivities[id]?.title
-            ?? originalTitle
-            let alternatives = activities.filter {
-                $0.title != currentTitle
-            }
-            guard let selected = alternatives.randomElement() else {
-                swapErrorMessage =
-                "لا يوجد تحدٍ بديل مناسب لمستوى طاقتك في هذه الفئة."
-                showSwapError = true
-                return
-            }
-            alternateActivities[id] = selected
+        guard !didSwap else { return }
 
-            } catch {
-                swapErrorMessage =
-                    "تعذّر تحميل الأنشطة. تحققي من ملفات JSON."
-                showSwapError = true
-            }
+        swapErrorMessage = viewModel.errorMessage
+            ?? "لا يوجد تحدٍ بديل مناسب لمستوى طاقتك في هذه الفئة."
+
+        showSwapError = true
     }
 }
 
 // MARK: - Challenge Sheet Item
 
 struct ChallengeSheetItem: Identifiable {
-
     let id = UUID()
     let interest: Interest
     let image: String

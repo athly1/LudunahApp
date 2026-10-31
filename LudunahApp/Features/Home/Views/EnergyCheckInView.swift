@@ -58,7 +58,6 @@ struct EnergyCheckInView: View {
                             .opacity(currentEnergyLevel == .low ? 1 : 0.4)
                     }
                     .frame(height: 16)
-                    .frame(height: 16)
 
                     // مؤشر الطاقة والنسبة المئوية
                     Capsule()
@@ -85,6 +84,8 @@ struct EnergyCheckInView: View {
                 .gesture(
                     DragGesture(minimumDistance: 0)
                         .onChanged { value in
+                            guard width > 0 else { return }
+
                             let percentage = (1 - value.location.x / width) * 100
 
                             energyValue = min(
