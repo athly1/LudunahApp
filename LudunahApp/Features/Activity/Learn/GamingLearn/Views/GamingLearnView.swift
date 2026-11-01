@@ -84,7 +84,7 @@ struct gameLearnView: View {
                 // MARK: Finish
 
                 if viewModel.isLastCard {
-                    PrimaryButton(title: "انتهيت") {
+                    PrimaryButton(title:  "اتمام التحدي") {
                         finishActivity()
                     }
                     .frame(maxWidth: .infinity)

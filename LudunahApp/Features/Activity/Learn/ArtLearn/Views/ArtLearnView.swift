@@ -172,7 +172,7 @@ struct ArtLearnView: View {
             // يظهر فقط عند الوصول إلى آخر بطاقة
             if viewModel.isLastCard {
 
-                PrimaryButton(title: "أنهيت") {
+                PrimaryButton(title:  "اتمام التحدي") {
 
                     finishActivity()
                 }
