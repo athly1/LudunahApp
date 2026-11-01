@@ -40,13 +40,13 @@
     "Key" : {
       "extractionState" : "manual"
     },
-    "Test Create Activity" : {
-
-    },
     "أكمل" : {
 
     },
     "أمامك %lld دقائق" : {
+
+    },
+    "إيقاف المؤقت" : {
 
     },
     "إيقاف مؤقت" : {

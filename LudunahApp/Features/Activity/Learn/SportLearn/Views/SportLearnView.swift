@@ -110,7 +110,7 @@ struct SportLearnView: View {
                 // MARK: Finish Button
 
                 if viewModel.isLastCard {
-                    PrimaryButton(title: "انتهيت") {
+                    PrimaryButton(title:  "اتمام التحدي") {
                         finishActivity()
                     }
                     .frame(maxWidth: .infinity)

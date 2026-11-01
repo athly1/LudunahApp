@@ -465,7 +465,7 @@ struct ArtDoView: View {
         // قبل بدء النشاط
         if viewModel.stage == .ready {
             PrimaryButton(
-                title: "ابدأ",
+                title: "ابدأ المؤقت",
                 isDisabled: currentTimer == nil
             ) {
                 startActivity()
@@ -474,7 +474,7 @@ struct ArtDoView: View {
         // المرحلة الأخيرة
         } else if viewModel.isLastPhase {
             PrimaryButton(
-                title: "انتهيت",
+                title: "اتمام التحدي",
                 isDisabled: didFinish
             ) {
                 finishActivity()
@@ -591,7 +591,7 @@ private struct ArtTimerPauseButton: View {
             .buttonStyle(.plain)
             .accessibilityLabel(
                 timer.isRunning
-                    ? "إيقاف مؤقت"
+                    ? "إيقاف المؤقت"
                     : "استكمال المؤقت"
             )
         }

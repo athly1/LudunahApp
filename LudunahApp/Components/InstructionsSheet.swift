@@ -174,7 +174,7 @@ struct InstructionsSheet: View {
 
                         
                             // MARK: - Start button
-                            PrimaryButton(title: "ابدأ التحدي") {
+                            PrimaryButton(title: "انتقل للتحدي") {
                                 startActivity()
                             }
                         

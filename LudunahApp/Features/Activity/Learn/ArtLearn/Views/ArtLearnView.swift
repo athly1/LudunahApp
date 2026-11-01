@@ -62,12 +62,10 @@ struct ArtLearnView: View {
 
                     // الرجوع إلى البطاقة السابقة
                     if viewModel.index > 0 {
-
-                        viewModel.previousCard()
-
+                        withAnimation {
+                            viewModel.previousCard()
+                        }
                     } else {
-
-                        // الخروج إذا كنا في أول بطاقة
                         dismiss()
                     }
                 }
@@ -148,9 +146,9 @@ struct ArtLearnView: View {
                     cards: viewModel.cards,
                     index: viewModel.index,
                     onNext: {
-
-                        // بدون withAnimation للحفاظ على السرعة
-                        viewModel.nextCard()
+                        withAnimation {
+                            viewModel.nextCard()
+                        }
                     }
                 )
                 .frame(maxHeight: .infinity)
@@ -172,7 +170,7 @@ struct ArtLearnView: View {
             // يظهر فقط عند الوصول إلى آخر بطاقة
             if viewModel.isLastCard {
 
-                PrimaryButton(title: "أنهيت") {
+                PrimaryButton(title:  "اتمام التحدي") {
 
                     finishActivity()
                 }
