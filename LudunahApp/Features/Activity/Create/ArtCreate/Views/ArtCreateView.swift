@@ -100,15 +100,20 @@ struct ArtCreateView: View {
         }
 
         // MARK: - Fixed Bottom Button
-
         .safeAreaInset(edge: .bottom) {
-            if viewModel.activity != nil {
-                finishButton
-                    .padding(.horizontal, Spacing.pageMargin)
-                    .padding(.vertical, Spacing.space8)
-                    .background(Color.pageBackground)
+            if let activity = viewModel.activity {
+
+                if activity.id == "art-create-1" ||
+                   (activity.id == "art-create-2" && viewModel.isMixingComplete) {
+
+                    finishButton
+                        .padding(.horizontal, Spacing.pageMargin)
+                        .padding(.vertical, Spacing.space8)
+                        .background(Color.pageBackground)
+                }
             }
         }
+
 
         // MARK: - Design System
 
