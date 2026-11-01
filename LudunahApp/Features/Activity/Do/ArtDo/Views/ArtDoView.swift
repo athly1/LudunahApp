@@ -102,7 +102,7 @@ struct ArtDoView: View {
 
             ScrollView {
                 if let activity = viewModel.activity {
-                    VStack(spacing: Spacing.space24) {
+                    VStack(spacing: Spacing.space16) {
 
                         // عنوان النشاط
                         activityTitle(activity.title)
@@ -121,8 +121,8 @@ struct ArtDoView: View {
                         .horizontal,
                         Spacing.pageMargin
                     )
-                    .padding(.top, Spacing.space24)
-                    .padding(.bottom, Spacing.space24)
+                    .padding(.top, Spacing.space12)
+                    .padding(.bottom, Spacing.space12)
 
                 } else {
                     // رسالة في حال عدم تحميل النشاط
@@ -436,30 +436,26 @@ struct ArtDoView: View {
 
     // MARK: - Bottom Controls
 
+    
     private var bottomControls: some View {
         VStack(spacing: Spacing.space12) {
 
-            // مساحة ثابتة لزر الإيقاف المؤقت / أكمل
-            // حتى لا تتغير أبعاد الشاشة عند بدء النشاط
-            ZStack {
-
-                // يظهر الزر فقط إذا كانت المرحلة
-                // الحالية تسمح بالإيقاف المؤقت
-                if viewModel.stage == .running,
-                   viewModel.canPauseCurrentPhase,
-                   let timer = currentTimer {
-
-                    ArtTimerPauseButton(
-                        timer: timer
-                    )
+            // إظهار مساحة الإيقاف المؤقت أثناء تشغيل النشاط فقط
+            if viewModel.stage == .running {
+                ZStack {
+                    if viewModel.canPauseCurrentPhase,
+                       let timer = currentTimer {
+                        ArtTimerPauseButton(timer: timer)
+                    }
                 }
+                .frame(height: 44)
             }
-            .frame(height: 44)
 
-            // الزر الرئيسي: ابدأ / التالي / انتهيت
+            // الزر الرئيسي
             mainButton
         }
     }
+
 
     // MARK: - Main Button
 
