@@ -12,7 +12,7 @@ struct SplashView: View {
                     .scaledToFit()
                     .frame(width: 120, height: 120)
 
-                Text("لُــدونــــة")
+                Text("لُــدُونــــه")
                     .font(.title1Heading)
                     .foregroundStyle(Color.textPrimary)
             }
