@@ -109,6 +109,7 @@ struct InstructionsSheet: View {
                                 Text(viewModel.title)
                                     .font(.popupTitle)
                                     .foregroundColor(.textPrimary)
+                                    .fixedSize(horizontal: false, vertical: true)
 
                                 HStack(spacing: Spacing.space8) {
                                     Text(viewModel.duration)
@@ -122,6 +123,7 @@ struct InstructionsSheet: View {
                                     Text(viewModel.interestTitle)
                                         .font(.titleCards)
                                         .foregroundColor(.textPrimary)
+                                        .fixedSize(horizontal: false, vertical: true)
                                         .padding(.horizontal, Spacing.space12)
                                         .frame(height: Spacing.chipHeight)
                                         .background(viewModel.interestColor)
@@ -135,6 +137,7 @@ struct InstructionsSheet: View {
                         Text(viewModel.description)
                             .font(.titleCards)
                             .foregroundColor(.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.top, Spacing.space24)
 
@@ -255,22 +258,25 @@ struct SetOfShips: View {
 
     var body: some View {
 
-        HStack(spacing: Spacing.space8) {
+        ScrollView(.horizontal, showsIndicators: false) {
 
-            ForEach(skills, id: \.self) { skill in
+            HStack(spacing: Spacing.space8) {
 
-                Text(skill)
-                    .font(.titleCards)
-                    .foregroundColor(.textPrimary)
-                    .padding(.horizontal, Spacing.space12)
-                    .frame(height: Spacing.chipHeight)
-                    .background(Color.white)
-                    .cornerRadius(999)
-            }
-        }.frame(maxWidth: .infinity, alignment: .leading)
+                ForEach(skills, id: \.self) { skill in
 
+                    Text(skill)
+                        .font(.titleCards)
+                        .foregroundColor(.textPrimary)
+                        .lineLimit(1)
+                        .padding(.horizontal, Spacing.space12)
+                        .frame(height: Spacing.chipHeight)
+                        .background(Color.white)
+                        .clipShape(Capsule())
+                }
+            }.padding(.bottom, Spacing.space24)
+
+        }
     }
-    
 }
 
 
