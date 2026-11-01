@@ -84,7 +84,7 @@ final class InstructionsSheetViewModel: ObservableObject {
 
         case .sport:
             interestTitle = "الرياضة"
-            interestColor = .sportChip
+            interestColor = .sportTint
             imageName = "figure.run"
         }
 
