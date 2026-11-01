@@ -1,21 +1,4 @@
 
-// gamingDoView.swift - واجهة تطبيق الألعاب الإلكترونية.
-//
-// Contains:
-// - Shared ActivityHeader with stable top position.
-// - Gaming activity title and instructions.
-// - Scrollable content for smaller screens.
-// - Countdown timer with Art Do direction.
-// - Fixed space for pause and resume controls.
-// - Start and finish actions.
-// - Stop timer when leaving the activity.
-//
-// Used by: InstructionsSheet (gaming, do).
-//
-// Learn: @StateObject, @State, @Environment,
-//        ScrollView, safeAreaInset,
-//        TimerEngine, CountdownTimerView, Button.
-
 import SwiftUI
 
 // MARK: - Gaming Do View
@@ -202,7 +185,7 @@ struct gamingDoView: View {
 
                         Label(
                             timerEngine.isRunning
-                                ? "إيقاف مؤقت"
+                                ? "إيقاف المؤقت"
                                 : "أكمل",
                             systemImage: timerEngine.isRunning
                                 ? "pause.fill"
@@ -223,7 +206,7 @@ struct gamingDoView: View {
             // MARK: - Main Button
 
             PrimaryButton(
-                title: hasStarted ? "انتهيت" : "ابدأ",
+                title: hasStarted ? "اتمام التحدي" : "ابدأ المؤقت",
                 isDisabled: isDone
             ) {
 

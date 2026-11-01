@@ -91,7 +91,7 @@ struct gamingCreateView: View {
 
                 // MARK: Finish Button
 
-                PrimaryButton(title: "انتهيت") {
+                PrimaryButton(title: "اتمام التحدي") {
                     finishActivity()
                 }
             }
@@ -203,21 +203,3 @@ struct CreateMaterialsView: View {
     }
 }
 
-// MARK: - Preview Support
-
-/// Preview-only navigation container.
-struct TestCreateNavigation: View {
-
-    var body: some View {
-        NavigationStack {
-            NavigationLink("Test Create Activity") {
-                gamingCreateView()
-                    .toolbar(.hidden, for: .navigationBar)
-            }
-        }
-    }
-}
-
-#Preview {
-    TestCreateNavigation()
-}

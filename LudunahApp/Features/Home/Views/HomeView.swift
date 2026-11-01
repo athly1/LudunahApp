@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 // MARK: - Home View
@@ -67,13 +66,16 @@ struct HomeView: View {
 
                 // MARK: - Challenges Title
 
-                Text("تحدياتك")
-                    .font(.title1Heading)
-                    .foregroundStyle(Color.textPrimary)
-                    .frame(
-                        maxWidth: .infinity,
-                        alignment: .leading
-                    )
+                HStack {
+                    Text("تحدياتك")
+                        .font(.title1Heading)
+                        .foregroundStyle(Color.textPrimary)
+
+                    Spacer()
+
+                    // نوع التحديات المقترحة حسب الطاقة
+                    EnergyLevelBadge(level: viewModel.energyLevel)
+                }
 
                 // MARK: - Art Challenge
 

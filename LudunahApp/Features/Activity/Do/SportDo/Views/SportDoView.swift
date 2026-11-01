@@ -83,7 +83,7 @@ struct SportDoView: View {
 
                     // MARK: - Finish Button
 
-                    PrimaryButton(title: "انتهيت") {
+                    PrimaryButton(title: "اتمام التحدي") {
                         finishActivity()
                     }
                     .frame(maxWidth: .infinity)

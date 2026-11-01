@@ -633,7 +633,7 @@ struct ArtCreateView: View {
     private var finishButton: some View {
 
         PrimaryButton(
-            title: "أنهيت",
+            title: "اتمام التحدي",
             isDisabled: !viewModel.canFinish || isFinishing
         ) {
             finishActivity()
